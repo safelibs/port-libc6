@@ -86,11 +86,13 @@ tests := \
   test_ifindex \
   tst-checks \
   tst-checks-posix \
+  tst-deadline \
   tst-ether_aton \
   tst-ether_line \
   tst-getni1 \
   tst-getni2 \
   tst-if_index-long \
+  tst-idna_name_classify \
   tst-inet6_rth \
   tst-inet6_scopeid_pton \
   tst-network \
@@ -125,8 +127,4 @@ ifeq ($(build-static-nss),yes)
 CFLAGS += -DSTATIC_NSS
 endif
 
-# The test uses dlopen indirectly and would otherwise load system
-# objects.
-tst-idna_name_classify-ENV = \
-  LD_LIBRARY_PATH=$(ld-library-path):$(common-objpfx):$(common-objpfx)elf
 $(objpfx)tst-idna_name_classify.out: $(gen-locales)
