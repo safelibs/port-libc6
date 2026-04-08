@@ -1,4 +1,4 @@
-/* Tests for atomic.h macros.
+/* Tests for public C11 atomics.
    Copyright (C) 2003-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -16,623 +16,252 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <stdio.h>
-#include <atomic.h>
+#include <limits.h>
+#include <stdbool.h>
+#include <stdatomic.h>
+#include <support/check.h>
 
-#ifndef atomic_t
-# define atomic_t int
+#ifndef TEST_ATOMIC_TYPE
+# define TEST_ATOMIC_TYPE atomic_int
 #endif
 
-/* Test various atomic.h macros.  */
+#ifndef TEST_VALUE_TYPE
+# define TEST_VALUE_TYPE int
+#endif
+
+static TEST_VALUE_TYPE
+bit_mask (unsigned int bit)
+{
+  return (TEST_VALUE_TYPE) (((unsigned long long) 1) << bit);
+}
+
+static TEST_VALUE_TYPE
+decrement_if_positive (TEST_ATOMIC_TYPE *mem)
+{
+  TEST_VALUE_TYPE current = atomic_load_explicit (mem, memory_order_relaxed);
+
+  while (current > 0)
+    {
+      TEST_VALUE_TYPE desired = current - 1;
+      if (atomic_compare_exchange_weak_explicit (mem, &current, desired,
+                                                 memory_order_acq_rel,
+                                                 memory_order_relaxed))
+        return current;
+    }
+
+  return current;
+}
+
+static bool
+add_negative (TEST_ATOMIC_TYPE *mem, TEST_VALUE_TYPE delta)
+{
+  TEST_VALUE_TYPE new_value
+    = atomic_fetch_add_explicit (mem, delta, memory_order_acq_rel) + delta;
+  return new_value < 0;
+}
+
+static bool
+add_zero (TEST_ATOMIC_TYPE *mem, TEST_VALUE_TYPE delta)
+{
+  TEST_VALUE_TYPE new_value
+    = atomic_fetch_add_explicit (mem, delta, memory_order_acq_rel) + delta;
+  return new_value == 0;
+}
+
+static bool
+bit_test_set (TEST_ATOMIC_TYPE *mem, unsigned int bit)
+{
+  TEST_VALUE_TYPE mask = bit_mask (bit);
+  return (atomic_fetch_or_explicit (mem, mask, memory_order_acq_rel) & mask)
+         != 0;
+}
+
+static void
+check_compare_exchange_weak (TEST_ATOMIC_TYPE *mem, TEST_VALUE_TYPE initial,
+                             TEST_VALUE_TYPE desired, memory_order success)
+{
+  TEST_VALUE_TYPE expected = initial;
+
+  atomic_store_explicit (mem, initial, memory_order_relaxed);
+  while (!atomic_compare_exchange_weak_explicit (mem, &expected, desired,
+                                                 success,
+                                                 memory_order_relaxed))
+    TEST_COMPARE (expected, initial);
+
+  TEST_COMPARE (atomic_load_explicit (mem, memory_order_relaxed), desired);
+  TEST_COMPARE (expected, initial);
+}
+
 static int
 do_test (void)
 {
-  atomic_t mem, expected;
-  int ret = 0;
+  TEST_ATOMIC_TYPE mem = ATOMIC_VAR_INIT (0);
+  TEST_VALUE_TYPE expected;
 
-#ifdef atomic_compare_and_exchange_val_acq
-  mem = 24;
-  if (atomic_compare_and_exchange_val_acq (&mem, 35, 24) != 24
-      || mem != 35)
-    {
-      puts ("atomic_compare_and_exchange_val_acq test 1 failed");
-      ret = 1;
-    }
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 11, memory_order_relaxed);
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 11);
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_acquire),
+                (TEST_VALUE_TYPE) 11);
 
-  mem = 12;
-  if (atomic_compare_and_exchange_val_acq (&mem, 10, 15) != 12
-      || mem != 12)
-    {
-      puts ("atomic_compare_and_exchange_val_acq test 2 failed");
-      ret = 1;
-    }
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 12, memory_order_relaxed);
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 12);
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 13, memory_order_release);
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 13);
 
-  mem = -15;
-  if (atomic_compare_and_exchange_val_acq (&mem, -56, -15) != -15
-      || mem != -56)
-    {
-      puts ("atomic_compare_and_exchange_val_acq test 3 failed");
-      ret = 1;
-    }
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 24, memory_order_relaxed);
+  expected = 24;
+  TEST_VERIFY (atomic_compare_exchange_strong_explicit (&mem, &expected, 35,
+                                                        memory_order_acquire,
+                                                        memory_order_relaxed));
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 35);
+  TEST_COMPARE (expected, (TEST_VALUE_TYPE) 24);
 
-  mem = -1;
-  if (atomic_compare_and_exchange_val_acq (&mem, 17, 0) != -1
-      || mem != -1)
-    {
-      puts ("atomic_compare_and_exchange_val_acq test 4 failed");
-      ret = 1;
-    }
-#endif
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 12, memory_order_relaxed);
+  expected = 15;
+  TEST_VERIFY (!atomic_compare_exchange_strong_explicit (&mem, &expected, 10,
+                                                         memory_order_acquire,
+                                                         memory_order_relaxed));
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 12);
+  TEST_COMPARE (expected, (TEST_VALUE_TYPE) 12);
 
-  mem = 24;
-  if (atomic_compare_and_exchange_bool_acq (&mem, 35, 24)
-      || mem != 35)
-    {
-      puts ("atomic_compare_and_exchange_bool_acq test 1 failed");
-      ret = 1;
-    }
-
-  mem = 12;
-  if (! atomic_compare_and_exchange_bool_acq (&mem, 10, 15)
-      || mem != 12)
-    {
-      puts ("atomic_compare_and_exchange_bool_acq test 2 failed");
-      ret = 1;
-    }
-
-  mem = -15;
-  if (atomic_compare_and_exchange_bool_acq (&mem, -56, -15)
-      || mem != -56)
-    {
-      puts ("atomic_compare_and_exchange_bool_acq test 3 failed");
-      ret = 1;
-    }
-
-  mem = -1;
-  if (! atomic_compare_and_exchange_bool_acq (&mem, 17, 0)
-      || mem != -1)
-    {
-      puts ("atomic_compare_and_exchange_bool_acq test 4 failed");
-      ret = 1;
-    }
-
-  mem = 64;
-  if (atomic_exchange_acq (&mem, 31) != 64
-      || mem != 31)
-    {
-      puts ("atomic_exchange_acq test failed");
-      ret = 1;
-    }
-
-  mem = 2;
-  if (atomic_exchange_and_add (&mem, 11) != 2
-      || mem != 13)
-    {
-      puts ("atomic_exchange_and_add test failed");
-      ret = 1;
-    }
-
-  mem = 2;
-  if (atomic_exchange_and_add_acq (&mem, 11) != 2
-      || mem != 13)
-    {
-      puts ("atomic_exchange_and_add test failed");
-      ret = 1;
-    }
-
-  mem = 2;
-  if (atomic_exchange_and_add_rel (&mem, 11) != 2
-      || mem != 13)
-    {
-      puts ("atomic_exchange_and_add test failed");
-      ret = 1;
-    }
-
-  mem = -21;
-  atomic_add (&mem, 22);
-  if (mem != 1)
-    {
-      puts ("atomic_add test failed");
-      ret = 1;
-    }
-
-  mem = -1;
-  atomic_increment (&mem);
-  if (mem != 0)
-    {
-      puts ("atomic_increment test failed");
-      ret = 1;
-    }
-
-  mem = 2;
-  if (atomic_increment_val (&mem) != 3)
-    {
-      puts ("atomic_increment_val test failed");
-      ret = 1;
-    }
-
-  mem = 0;
-  if (atomic_increment_and_test (&mem)
-      || mem != 1)
-    {
-      puts ("atomic_increment_and_test test 1 failed");
-      ret = 1;
-    }
-
-  mem = 35;
-  if (atomic_increment_and_test (&mem)
-      || mem != 36)
-    {
-      puts ("atomic_increment_and_test test 2 failed");
-      ret = 1;
-    }
-
-  mem = -1;
-  if (! atomic_increment_and_test (&mem)
-      || mem != 0)
-    {
-      puts ("atomic_increment_and_test test 3 failed");
-      ret = 1;
-    }
-
-  mem = 17;
-  atomic_decrement (&mem);
-  if (mem != 16)
-    {
-      puts ("atomic_decrement test failed");
-      ret = 1;
-    }
-
-  if (atomic_decrement_val (&mem) != 15)
-    {
-      puts ("atomic_decrement_val test failed");
-      ret = 1;
-    }
-
-  mem = 0;
-  if (atomic_decrement_and_test (&mem)
-      || mem != -1)
-    {
-      puts ("atomic_decrement_and_test test 1 failed");
-      ret = 1;
-    }
-
-  mem = 15;
-  if (atomic_decrement_and_test (&mem)
-      || mem != 14)
-    {
-      puts ("atomic_decrement_and_test test 2 failed");
-      ret = 1;
-    }
-
-  mem = 1;
-  if (! atomic_decrement_and_test (&mem)
-      || mem != 0)
-    {
-      puts ("atomic_decrement_and_test test 3 failed");
-      ret = 1;
-    }
-
-  mem = 1;
-  if (atomic_decrement_if_positive (&mem) != 1
-      || mem != 0)
-    {
-      puts ("atomic_decrement_if_positive test 1 failed");
-      ret = 1;
-    }
-
-  mem = 0;
-  if (atomic_decrement_if_positive (&mem) != 0
-      || mem != 0)
-    {
-      puts ("atomic_decrement_if_positive test 2 failed");
-      ret = 1;
-    }
-
-  mem = -1;
-  if (atomic_decrement_if_positive (&mem) != -1
-      || mem != -1)
-    {
-      puts ("atomic_decrement_if_positive test 3 failed");
-      ret = 1;
-    }
-
-  mem = -12;
-  if (! atomic_add_negative (&mem, 10)
-      || mem != -2)
-    {
-      puts ("atomic_add_negative test 1 failed");
-      ret = 1;
-    }
-
-  mem = 0;
-  if (atomic_add_negative (&mem, 100)
-      || mem != 100)
-    {
-      puts ("atomic_add_negative test 2 failed");
-      ret = 1;
-    }
-
-  mem = 15;
-  if (atomic_add_negative (&mem, -10)
-      || mem != 5)
-    {
-      puts ("atomic_add_negative test 3 failed");
-      ret = 1;
-    }
-
-  mem = -12;
-  if (atomic_add_negative (&mem, 14)
-      || mem != 2)
-    {
-      puts ("atomic_add_negative test 4 failed");
-      ret = 1;
-    }
-
-  mem = 0;
-  if (! atomic_add_negative (&mem, -1)
-      || mem != -1)
-    {
-      puts ("atomic_add_negative test 5 failed");
-      ret = 1;
-    }
-
-  mem = -31;
-  if (atomic_add_negative (&mem, 31)
-      || mem != 0)
-    {
-      puts ("atomic_add_negative test 6 failed");
-      ret = 1;
-    }
-
-  mem = -34;
-  if (atomic_add_zero (&mem, 31)
-      || mem != -3)
-    {
-      puts ("atomic_add_zero test 1 failed");
-      ret = 1;
-    }
-
-  mem = -36;
-  if (! atomic_add_zero (&mem, 36)
-      || mem != 0)
-    {
-      puts ("atomic_add_zero test 2 failed");
-      ret = 1;
-    }
-
-  mem = 113;
-  if (atomic_add_zero (&mem, -13)
-      || mem != 100)
-    {
-      puts ("atomic_add_zero test 3 failed");
-      ret = 1;
-    }
-
-  mem = -18;
-  if (atomic_add_zero (&mem, 20)
-      || mem != 2)
-    {
-      puts ("atomic_add_zero test 4 failed");
-      ret = 1;
-    }
-
-  mem = 10;
-  if (atomic_add_zero (&mem, -20)
-      || mem != -10)
-    {
-      puts ("atomic_add_zero test 5 failed");
-      ret = 1;
-    }
-
-  mem = 10;
-  if (! atomic_add_zero (&mem, -10)
-      || mem != 0)
-    {
-      puts ("atomic_add_zero test 6 failed");
-      ret = 1;
-    }
-
-  mem = 0;
-  atomic_bit_set (&mem, 1);
-  if (mem != 2)
-    {
-      puts ("atomic_bit_set test 1 failed");
-      ret = 1;
-    }
-
-  mem = 8;
-  atomic_bit_set (&mem, 3);
-  if (mem != 8)
-    {
-      puts ("atomic_bit_set test 2 failed");
-      ret = 1;
-    }
-
-#ifdef TEST_ATOMIC64
-  mem = 16;
-  atomic_bit_set (&mem, 35);
-  if (mem != 0x800000010LL)
-    {
-      puts ("atomic_bit_set test 3 failed");
-      ret = 1;
-    }
-#endif
-
-  mem = 0;
-  if (atomic_bit_test_set (&mem, 1)
-      || mem != 2)
-    {
-      puts ("atomic_bit_test_set test 1 failed");
-      ret = 1;
-    }
-
-  mem = 8;
-  if (! atomic_bit_test_set (&mem, 3)
-      || mem != 8)
-    {
-      puts ("atomic_bit_test_set test 2 failed");
-      ret = 1;
-    }
-
-#ifdef TEST_ATOMIC64
-  mem = 16;
-  if (atomic_bit_test_set (&mem, 35)
-      || mem != 0x800000010LL)
-    {
-      puts ("atomic_bit_test_set test 3 failed");
-      ret = 1;
-    }
-
-  mem = 0x100000000LL;
-  if (! atomic_bit_test_set (&mem, 32)
-      || mem != 0x100000000LL)
-    {
-      puts ("atomic_bit_test_set test 4 failed");
-      ret = 1;
-    }
-#endif
-
-#ifdef catomic_compare_and_exchange_val_acq
-  mem = 24;
-  if (catomic_compare_and_exchange_val_acq (&mem, 35, 24) != 24
-      || mem != 35)
-    {
-      puts ("catomic_compare_and_exchange_val_acq test 1 failed");
-      ret = 1;
-    }
-
-  mem = 12;
-  if (catomic_compare_and_exchange_val_acq (&mem, 10, 15) != 12
-      || mem != 12)
-    {
-      puts ("catomic_compare_and_exchange_val_acq test 2 failed");
-      ret = 1;
-    }
-
-  mem = -15;
-  if (catomic_compare_and_exchange_val_acq (&mem, -56, -15) != -15
-      || mem != -56)
-    {
-      puts ("catomic_compare_and_exchange_val_acq test 3 failed");
-      ret = 1;
-    }
-
-  mem = -1;
-  if (catomic_compare_and_exchange_val_acq (&mem, 17, 0) != -1
-      || mem != -1)
-    {
-      puts ("catomic_compare_and_exchange_val_acq test 4 failed");
-      ret = 1;
-    }
-#endif
-
-  mem = 24;
-  if (catomic_compare_and_exchange_bool_acq (&mem, 35, 24)
-      || mem != 35)
-    {
-      puts ("catomic_compare_and_exchange_bool_acq test 1 failed");
-      ret = 1;
-    }
-
-  mem = 12;
-  if (! catomic_compare_and_exchange_bool_acq (&mem, 10, 15)
-      || mem != 12)
-    {
-      puts ("catomic_compare_and_exchange_bool_acq test 2 failed");
-      ret = 1;
-    }
-
-  mem = -15;
-  if (catomic_compare_and_exchange_bool_acq (&mem, -56, -15)
-      || mem != -56)
-    {
-      puts ("catomic_compare_and_exchange_bool_acq test 3 failed");
-      ret = 1;
-    }
-
-  mem = -1;
-  if (! catomic_compare_and_exchange_bool_acq (&mem, 17, 0)
-      || mem != -1)
-    {
-      puts ("catomic_compare_and_exchange_bool_acq test 4 failed");
-      ret = 1;
-    }
-
-  mem = 2;
-  if (catomic_exchange_and_add (&mem, 11) != 2
-      || mem != 13)
-    {
-      puts ("catomic_exchange_and_add test failed");
-      ret = 1;
-    }
-
-  mem = -21;
-  catomic_add (&mem, 22);
-  if (mem != 1)
-    {
-      puts ("catomic_add test failed");
-      ret = 1;
-    }
-
-  mem = -1;
-  catomic_increment (&mem);
-  if (mem != 0)
-    {
-      puts ("catomic_increment test failed");
-      ret = 1;
-    }
-
-  mem = 2;
-  if (catomic_increment_val (&mem) != 3)
-    {
-      puts ("catomic_increment_val test failed");
-      ret = 1;
-    }
-
-  mem = 17;
-  catomic_decrement (&mem);
-  if (mem != 16)
-    {
-      puts ("catomic_decrement test failed");
-      ret = 1;
-    }
-
-  if (catomic_decrement_val (&mem) != 15)
-    {
-      puts ("catomic_decrement_val test failed");
-      ret = 1;
-    }
-
-  /* Tests for C11-like atomics.  */
-  mem = 11;
-  if (atomic_load_relaxed (&mem) != 11 || atomic_load_acquire (&mem) != 11)
-    {
-      puts ("atomic_load_{relaxed,acquire} test failed");
-      ret = 1;
-    }
-
-  atomic_store_relaxed (&mem, 12);
-  if (mem != 12)
-    {
-      puts ("atomic_store_relaxed test failed");
-      ret = 1;
-    }
-  atomic_store_release (&mem, 13);
-  if (mem != 13)
-    {
-      puts ("atomic_store_release test failed");
-      ret = 1;
-    }
-
-  mem = 14;
+  check_compare_exchange_weak (&mem, (TEST_VALUE_TYPE) 14,
+                               (TEST_VALUE_TYPE) 25, memory_order_relaxed);
   expected = 14;
-  if (!atomic_compare_exchange_weak_relaxed (&mem, &expected, 25)
-      || mem != 25 || expected != 14)
+  TEST_VERIFY (!atomic_compare_exchange_weak_explicit (&mem, &expected, 14,
+                                                       memory_order_relaxed,
+                                                       memory_order_relaxed));
+  TEST_COMPARE (expected, (TEST_VALUE_TYPE) 25);
+
+  check_compare_exchange_weak (&mem, (TEST_VALUE_TYPE) 14,
+                               (TEST_VALUE_TYPE) 25, memory_order_acquire);
+  check_compare_exchange_weak (&mem, (TEST_VALUE_TYPE) 14,
+                               (TEST_VALUE_TYPE) 25, memory_order_release);
+
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 64, memory_order_relaxed);
+  TEST_COMPARE (atomic_exchange_explicit (&mem, (TEST_VALUE_TYPE) 31,
+                                          memory_order_acq_rel),
+                (TEST_VALUE_TYPE) 64);
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 31);
+
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 2, memory_order_relaxed);
+  TEST_COMPARE (atomic_fetch_add_explicit (&mem, (TEST_VALUE_TYPE) 11,
+                                           memory_order_acq_rel),
+                (TEST_VALUE_TYPE) 2);
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 13);
+
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) -21, memory_order_relaxed);
+  atomic_fetch_add_explicit (&mem, (TEST_VALUE_TYPE) 22, memory_order_relaxed);
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 1);
+
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) -1, memory_order_relaxed);
+  atomic_fetch_add_explicit (&mem, (TEST_VALUE_TYPE) 1, memory_order_relaxed);
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 0);
+
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 2, memory_order_relaxed);
+  TEST_COMPARE (atomic_fetch_add_explicit (&mem, (TEST_VALUE_TYPE) 1,
+                                           memory_order_relaxed) + 1,
+                (TEST_VALUE_TYPE) 3);
+
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 17, memory_order_relaxed);
+  atomic_fetch_sub_explicit (&mem, (TEST_VALUE_TYPE) 1, memory_order_relaxed);
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 16);
+  TEST_COMPARE (atomic_fetch_sub_explicit (&mem, (TEST_VALUE_TYPE) 1,
+                                           memory_order_relaxed) - 1,
+                (TEST_VALUE_TYPE) 15);
+
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 1, memory_order_relaxed);
+  TEST_COMPARE (decrement_if_positive (&mem), (TEST_VALUE_TYPE) 1);
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 0);
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 0, memory_order_relaxed);
+  TEST_COMPARE (decrement_if_positive (&mem), (TEST_VALUE_TYPE) 0);
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 0);
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) -1, memory_order_relaxed);
+  TEST_COMPARE (decrement_if_positive (&mem), (TEST_VALUE_TYPE) -1);
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) -1);
+
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) -12, memory_order_relaxed);
+  TEST_VERIFY (add_negative (&mem, (TEST_VALUE_TYPE) 10));
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) -2);
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 0, memory_order_relaxed);
+  TEST_VERIFY (!add_negative (&mem, (TEST_VALUE_TYPE) 100));
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 100);
+
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) -36, memory_order_relaxed);
+  TEST_VERIFY (add_zero (&mem, (TEST_VALUE_TYPE) 36));
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 0);
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 10, memory_order_relaxed);
+  TEST_VERIFY (!add_zero (&mem, (TEST_VALUE_TYPE) -20));
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) -10);
+
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 0, memory_order_relaxed);
+  atomic_fetch_or_explicit (&mem, bit_mask (1), memory_order_relaxed);
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                bit_mask (1));
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 8, memory_order_relaxed);
+  atomic_fetch_or_explicit (&mem, bit_mask (3), memory_order_relaxed);
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 8);
+
+  if (sizeof (TEST_VALUE_TYPE) >= 8)
     {
-      puts ("atomic_compare_exchange_weak_relaxed test 1 failed");
-      ret = 1;
-    }
-  if (atomic_compare_exchange_weak_relaxed (&mem, &expected, 14)
-      || mem != 25 || expected != 25)
-    {
-      puts ("atomic_compare_exchange_weak_relaxed test 2 failed");
-      ret = 1;
-    }
-  mem = 14;
-  expected = 14;
-  if (!atomic_compare_exchange_weak_acquire (&mem, &expected, 25)
-      || mem != 25 || expected != 14)
-    {
-      puts ("atomic_compare_exchange_weak_acquire test 1 failed");
-      ret = 1;
-    }
-  if (atomic_compare_exchange_weak_acquire (&mem, &expected, 14)
-      || mem != 25 || expected != 25)
-    {
-      puts ("atomic_compare_exchange_weak_acquire test 2 failed");
-      ret = 1;
-    }
-  mem = 14;
-  expected = 14;
-  if (!atomic_compare_exchange_weak_release (&mem, &expected, 25)
-      || mem != 25 || expected != 14)
-    {
-      puts ("atomic_compare_exchange_weak_release test 1 failed");
-      ret = 1;
-    }
-  if (atomic_compare_exchange_weak_release (&mem, &expected, 14)
-      || mem != 25 || expected != 25)
-    {
-      puts ("atomic_compare_exchange_weak_release test 2 failed");
-      ret = 1;
+      atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 16, memory_order_relaxed);
+      atomic_fetch_or_explicit (&mem, bit_mask (35), memory_order_relaxed);
+      TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                    (TEST_VALUE_TYPE) 0x800000010LL);
     }
 
-  mem = 23;
-  if (atomic_exchange_acquire (&mem, 42) != 23 || mem != 42)
-    {
-      puts ("atomic_exchange_acquire test failed");
-      ret = 1;
-    }
-  mem = 23;
-  if (atomic_exchange_release (&mem, 42) != 23 || mem != 42)
-    {
-      puts ("atomic_exchange_release test failed");
-      ret = 1;
-    }
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 0, memory_order_relaxed);
+  TEST_VERIFY (!bit_test_set (&mem, 1));
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                bit_mask (1));
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 8, memory_order_relaxed);
+  TEST_VERIFY (bit_test_set (&mem, 3));
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 8);
 
-  mem = 23;
-  if (atomic_fetch_add_relaxed (&mem, 1) != 23 || mem != 24)
-    {
-      puts ("atomic_fetch_add_relaxed test failed");
-      ret = 1;
-    }
-  mem = 23;
-  if (atomic_fetch_add_acquire (&mem, 1) != 23 || mem != 24)
-    {
-      puts ("atomic_fetch_add_acquire test failed");
-      ret = 1;
-    }
-  mem = 23;
-  if (atomic_fetch_add_release (&mem, 1) != 23 || mem != 24)
-    {
-      puts ("atomic_fetch_add_release test failed");
-      ret = 1;
-    }
-  mem = 23;
-  if (atomic_fetch_add_acq_rel (&mem, 1) != 23 || mem != 24)
-    {
-      puts ("atomic_fetch_add_acq_rel test failed");
-      ret = 1;
-    }
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 3, memory_order_relaxed);
+  TEST_COMPARE (atomic_fetch_and_explicit (&mem, (TEST_VALUE_TYPE) 2,
+                                           memory_order_acquire),
+                (TEST_VALUE_TYPE) 3);
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 2);
 
-  mem = 3;
-  if (atomic_fetch_and_acquire (&mem, 2) != 3 || mem != 2)
-    {
-      puts ("atomic_fetch_and_acquire test failed");
-      ret = 1;
-    }
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 4, memory_order_relaxed);
+  TEST_COMPARE (atomic_fetch_or_explicit (&mem, (TEST_VALUE_TYPE) 2,
+                                          memory_order_relaxed),
+                (TEST_VALUE_TYPE) 4);
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 6);
 
-  mem = 4;
-  if (atomic_fetch_or_relaxed (&mem, 2) != 4 || mem != 6)
-    {
-      puts ("atomic_fetch_or_relaxed test failed");
-      ret = 1;
-    }
-  mem = 4;
-  if (atomic_fetch_or_acquire (&mem, 2) != 4 || mem != 6)
-    {
-      puts ("atomic_fetch_or_acquire test failed");
-      ret = 1;
-    }
+  atomic_store_explicit (&mem, (TEST_VALUE_TYPE) 7, memory_order_relaxed);
+  TEST_COMPARE (atomic_fetch_xor_explicit (&mem, (TEST_VALUE_TYPE) 3,
+                                           memory_order_acq_rel),
+                (TEST_VALUE_TYPE) 7);
+  TEST_COMPARE (atomic_load_explicit (&mem, memory_order_relaxed),
+                (TEST_VALUE_TYPE) 4);
 
-  /* This is a single-threaded test, so we can't test the effects of the
-     fences.  */
-  atomic_thread_fence_acquire ();
-  atomic_thread_fence_release ();
-  atomic_thread_fence_seq_cst ();
+  atomic_thread_fence (memory_order_acquire);
+  atomic_thread_fence (memory_order_release);
+  atomic_thread_fence (memory_order_seq_cst);
 
-  return ret;
+  return 0;
 }
 
 #include <support/test-driver.c>

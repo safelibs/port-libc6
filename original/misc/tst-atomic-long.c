@@ -1,4 +1,4 @@
-/* Tests for atomic.h macros.
+/* Tests for public C11 long atomics.
    Copyright (C) 2003-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -16,11 +16,6 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <bits/wordsize.h>
-
-#define atomic_t long
-#if __WORDSIZE == 64
-# define TEST_ATOMIC64 1
-#endif
-
+#define TEST_ATOMIC_TYPE atomic_long
+#define TEST_VALUE_TYPE long
 #include "tst-atomic.c"

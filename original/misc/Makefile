@@ -215,6 +215,8 @@ routines_no_fortify += \
   # routines_no_fortify
 
 generated += \
+  tst-allocate_once-mem.out \
+  tst-allocate_once.mtrace \
   tst-error1-mem.out \
   tst-error1.mtrace \
   # generated
@@ -230,6 +232,9 @@ gpl2lgpl := \
 tests := \
   bug-hsearch1 \
   bug18240 \
+  tst-allocate_once \
+  tst-atomic \
+  tst-atomic-long \
   tst-dbl-efgcvt \
   tst-dirname \
   tst-empty \
@@ -273,9 +278,11 @@ tests += tst-gethostid
 endif
 
 tests-static := tst-empty
+tests-static += tst-fd_to_filename
 
 ifeq ($(run-built-tests),yes)
-tests-special += $(objpfx)tst-error1-mem.out
+tests-special += $(objpfx)tst-error1-mem.out \
+  $(objpfx)tst-allocate_once-mem.out
 endif
 
 tests-container := \
@@ -337,9 +344,16 @@ $(objpfx)tst-error1-mem.out: $(objpfx)tst-error1.out
 	$(common-objpfx)malloc/mtrace $(objpfx)tst-error1.mtrace > $@; \
 	$(evaluate-test)
 
+tst-allocate_once-ENV = MALLOC_TRACE=$(objpfx)tst-allocate_once.mtrace \
+			LD_PRELOAD=$(common-objpfx)/malloc/libc_malloc_debug.so
+$(objpfx)tst-allocate_once-mem.out: $(objpfx)tst-allocate_once.out
+	$(common-objpfx)malloc/mtrace $(objpfx)tst-allocate_once.mtrace > $@; \
+	$(evaluate-test)
+
 tst-syslog-long-progname-ENV = GLIBC_TUNABLES=glibc.malloc.check=3 \
 			       LD_PRELOAD=libc_malloc_debug.so.0
 
+$(objpfx)tst-allocate_once: $(shared-thread-library)
 $(objpfx)tst-select: $(librt)
 $(objpfx)tst-select-time64: $(librt)
 $(objpfx)tst-pselect: $(librt)
