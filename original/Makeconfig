@@ -781,6 +781,9 @@ host-runtime-library-path = $(strip $(sort $(host-libstdcxx-dir) \
 						$(host-libgcc-s-dir)))
 host-runtime-library-path-colons = \
 $(subst $(empty) ,:,$(host-runtime-library-path))
+host-runtime-library-env = \
+$(if $(host-runtime-library-path-colons), \
+     LD_LIBRARY_PATH=$(host-runtime-library-path-colons))
 rtld-library-path = $(rpath-link)$(patsubst %,:%,$(sysdep-library-path))$(if $(host-runtime-library-path-colons),:$(host-runtime-library-path-colons))
 rtld-prefix = $(elf-objpfx)$(rtld-installed-name)			      \
 	      --library-path						      \
@@ -805,7 +808,9 @@ endif
 # $(run-program-env) is the default environment variable settings to
 # use when running a program built with the newly built library.
 run-program-env = GCONV_PATH=$(common-objpfx)iconvdata \
-		  LOCPATH=$(common-objpfx)localedata LC_ALL=C
+		  LOCPATH=$(common-objpfx)localedata LC_ALL=C \
+		  $(if $(filter yes,$(build-hardcoded-path-in-tests)), \
+		       $(host-runtime-library-env))
 # $(run-program-prefix) is a command that, when prepended to the name
 # of a program built with the newly built library, produces a command
 # that, executed on the build system on which "make" is run, runs that
@@ -833,7 +838,7 @@ built-program-cmd = $(built-program-cmd-before-env) $(run-program-env) \
 host-built-program-cmd = $(run-via-rtld-prefix) $(built-program-file)
 # $(ld-library-path) is the common content to be set in LD_LIBRARY_PATH
 # for running static binaries that may load dynamic objects.
-ld-library-path = $(objpfx):$(common-objpfx)$(addprefix :,$(sysdep-ld-library-path))
+ld-library-path = $(objpfx):$(common-objpfx)$(addprefix :,$(sysdep-ld-library-path))$(if $(host-runtime-library-path-colons),:$(host-runtime-library-path-colons))
 
 ifndef LD
 LD := ld -X
