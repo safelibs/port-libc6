@@ -91,8 +91,8 @@ tests := \
   tst-ether_line \
   tst-getni1 \
   tst-getni2 \
-  tst-if_index-long \
   tst-idna_name_classify \
+  tst-if_index-long \
   tst-inet6_rth \
   tst-inet6_scopeid_pton \
   tst-network \

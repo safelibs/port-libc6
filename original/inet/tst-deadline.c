@@ -1,4 +1,4 @@
-/* Tests for public timeout primitives related to deadline handling.
+/* Test public timeout behavior that depends on libc deadline handling.
    Copyright (C) 2017-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -16,290 +16,320 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <limits.h>
-#include <poll.h>
+#include <netinet/in.h>
+#include <rpc/clnt.h>
+#include <rpc/svc.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <support/check.h>
+#include <support/test-driver.h>
 #include <support/xunistd.h>
+#include <sys/socket.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 #include <time.h>
+#include <unistd.h>
 
-struct public_deadline
+static pid_t server_pid;
+
+extern bool_t xdr_uint32_t_glibc_2_2_5 (XDR *, uint32_t *) __THROW;
+extern bool_t xdr_void_glibc_2_2_5 (void) __THROW;
+extern CLIENT *clntudp_create_glibc_2_2_5 (struct sockaddr_in *, u_long,
+                                           u_long, struct timeval, int *)
+  __THROW;
+extern bool_t svc_register_glibc_2_2_5 (SVCXPRT *, rpcprog_t, rpcvers_t,
+                                        __dispatch_fn_t, rpcprot_t) __THROW;
+extern bool_t svc_sendreply_glibc_2_2_5 (SVCXPRT *, xdrproc_t, void *)
+  __THROW;
+extern SVCXPRT *svcudp_create_glibc_2_2_5 (int) __THROW;
+extern void svc_run_glibc_2_2_5 (void) __THROW;
+
+asm (".symver xdr_uint32_t_glibc_2_2_5, xdr_uint32_t@GLIBC_2.2.5");
+asm (".symver xdr_void_glibc_2_2_5, xdr_void@GLIBC_2.2.5");
+asm (".symver clntudp_create_glibc_2_2_5, clntudp_create@GLIBC_2.2.5");
+asm (".symver svc_register_glibc_2_2_5, svc_register@GLIBC_2.2.5");
+asm (".symver svc_sendreply_glibc_2_2_5, svc_sendreply@GLIBC_2.2.5");
+asm (".symver svcudp_create_glibc_2_2_5, svcudp_create@GLIBC_2.2.5");
+asm (".symver svc_run_glibc_2_2_5, svc_run@GLIBC_2.2.5");
+
+struct test_query
 {
-  bool infinite;
-  struct timeval absolute;
+  uint32_t a;
+  uint32_t b;
+  uint32_t timeout_ms;
+  uint32_t wait_for_seq;
+  uint32_t garbage_packets;
 };
 
-/* Find the maximum value which can be represented in time_t.  */
-static time_t
-time_t_max (void)
+static bool_t
+xdr_test_query (XDR *xdrs, void *data, ...)
 {
-  _Static_assert (0 > (time_t) -1, "time_t is signed");
-  uintmax_t current = 1;
-  while (true)
+  struct test_query *p = data;
+  return xdr_uint32_t_glibc_2_2_5 (xdrs, &p->a)
+    && xdr_uint32_t_glibc_2_2_5 (xdrs, &p->b)
+    && xdr_uint32_t_glibc_2_2_5 (xdrs, &p->timeout_ms)
+    && xdr_uint32_t_glibc_2_2_5 (xdrs, &p->wait_for_seq)
+    && xdr_uint32_t_glibc_2_2_5 (xdrs, &p->garbage_packets);
+}
+
+struct test_response
+{
+  uint32_t seq;
+  uint32_t sum;
+};
+
+static bool_t
+xdr_test_response (XDR *xdrs, void *data, ...)
+{
+  struct test_response *p = data;
+  return xdr_uint32_t_glibc_2_2_5 (xdrs, &p->seq)
+    && xdr_uint32_t_glibc_2_2_5 (xdrs, &p->sum);
+}
+
+enum
+  {
+    PROGNUM = 15717,
+    VERSNUM = 13689,
+    PROC_ADD = 1,
+    PROC_RESET_SEQ,
+    PROC_EXIT,
+    EXIT_MARKER = 55,
+  };
+
+static void
+server_dispatch (struct svc_req *request, SVCXPRT *transport)
+{
+  static uint32_t seq = 0;
+  ++seq;
+
+  switch (request->rq_proc)
     {
-      uintmax_t next = current * 2;
-      TEST_VERIFY_EXIT (next > current);
-      ++next;
-      if ((time_t) next < 0 || next != (uintmax_t) (time_t) next)
-        return current;
-      current = next;
+    case PROC_ADD:
+      {
+        struct test_query query;
+        memset (&query, 0, sizeof (query));
+        TEST_VERIFY_EXIT (svc_getargs (transport, xdr_test_query,
+                                       (void *) &query));
+
+        if (seq < query.wait_for_seq)
+          break;
+
+        if (query.garbage_packets > 0)
+          {
+            int per_packet_timeout = 0;
+            if (query.timeout_ms > 0)
+              per_packet_timeout
+                = query.timeout_ms * 1000 / query.garbage_packets;
+
+            char buf[20];
+            memset (&buf, 0xc0, sizeof (buf));
+            for (uint32_t i = 0; i < query.garbage_packets; ++i)
+              {
+                size_t len = (i * 13 + 1) % (sizeof (buf) + 1);
+                TEST_VERIFY (sendto (transport->xp_sock,
+                                     buf, len, MSG_NOSIGNAL,
+                                     (struct sockaddr *) &transport->xp_raddr,
+                                     transport->xp_addrlen) == len);
+                if (per_packet_timeout > 0)
+                  usleep (per_packet_timeout);
+              }
+          }
+        else if (query.timeout_ms > 0)
+          usleep (query.timeout_ms * 1000);
+
+        struct test_response response =
+          {
+            .seq = seq,
+            .sum = query.a + query.b,
+          };
+        TEST_VERIFY (svc_sendreply_glibc_2_2_5 (transport,
+                                                xdr_test_response,
+                                                (void *) &response));
+      }
+      break;
+
+    case PROC_RESET_SEQ:
+      seq = 0;
+      TEST_VERIFY (svc_sendreply_glibc_2_2_5
+                   (transport, (xdrproc_t) xdr_void_glibc_2_2_5, NULL));
+      break;
+
+    case PROC_EXIT:
+      TEST_VERIFY (svc_sendreply_glibc_2_2_5
+                   (transport, (xdrproc_t) xdr_void_glibc_2_2_5, NULL));
+      _exit (EXIT_MARKER);
+
+    default:
+      FAIL_EXIT1 ("invalid rq_proc value: %lu", request->rq_proc);
     }
 }
 
-static int
-compare_timeval (struct timeval left, struct timeval right)
+static void
+kill_server (void)
 {
-  if (timercmp (&left, &right, <))
-    return -1;
-  if (timercmp (&left, &right, >))
-    return 1;
-  return 0;
+  if (server_pid > 0)
+    kill (server_pid, SIGTERM);
 }
 
-static struct timeval
-current_time_now (void)
+static struct test_response
+test_call (CLIENT *clnt, struct test_query query, struct timeval timeout)
 {
-  struct timespec ts;
-  if (clock_gettime (CLOCK_MONOTONIC, &ts) == 0)
-    {
-      TEST_VERIFY (ts.tv_sec >= 0);
-      return (struct timeval)
-        {
-          .tv_sec = ts.tv_sec,
-          .tv_usec = ts.tv_nsec / 1000,
-        };
-    }
-
-  struct timeval tv;
-  TEST_COMPARE (gettimeofday (&tv, NULL), 0);
-  TEST_VERIFY (tv.tv_sec >= 0);
-  return tv;
+  struct test_response response;
+  TEST_COMPARE (clnt_call (clnt, PROC_ADD,
+                           xdr_test_query, (void *) &query,
+                           xdr_test_response, (void *) &response,
+                           timeout),
+                RPC_SUCCESS);
+  return response;
 }
 
-static struct public_deadline
-deadline_from_timeout (struct timeval current, struct timeval timeout)
+static void
+test_call_timeout (CLIENT *clnt, struct test_query query,
+                   struct timeval timeout)
 {
-  TEST_VERIFY_EXIT (timeout.tv_sec >= 0);
-  TEST_VERIFY_EXIT (timeout.tv_usec >= 0);
-  TEST_VERIFY_EXIT (timeout.tv_usec < 1000 * 1000);
-
-  uintmax_t sec = current.tv_sec;
-  sec += timeout.tv_sec;
-  if (sec < (uintmax_t) timeout.tv_sec)
-    return (struct public_deadline) { .infinite = true };
-
-  int usec = current.tv_usec + timeout.tv_usec;
-  if (usec >= 1000 * 1000)
-    {
-      usec -= 1000 * 1000;
-      if (sec + 1 < sec)
-        return (struct public_deadline) { .infinite = true };
-      ++sec;
-    }
-
-  if ((time_t) sec < 0 || sec != (uintmax_t) (time_t) sec)
-    return (struct public_deadline) { .infinite = true };
-
-  return (struct public_deadline)
-    {
-      .absolute =
-        {
-          .tv_sec = (time_t) sec,
-          .tv_usec = usec,
-        },
-    };
+  struct test_response response;
+  TEST_COMPARE (clnt_call (clnt, PROC_ADD,
+                           xdr_test_query, (void *) &query,
+                           xdr_test_response, (void *) &response,
+                           timeout),
+                RPC_TIMEDOUT);
 }
 
-static int
-deadline_to_ms (struct timeval current, struct public_deadline deadline)
+static void
+test_call_flush (CLIENT *clnt)
 {
-  if (deadline.infinite)
-    return INT_MAX;
-
-  if (compare_timeval (current, deadline.absolute) >= 0)
-    return 0;
-
-  time_t sec = deadline.absolute.tv_sec - current.tv_sec;
-  if (sec >= INT_MAX)
-    return INT_MAX;
-
-  int usec = deadline.absolute.tv_usec - current.tv_usec;
-  if (usec < 0)
-    {
-      TEST_VERIFY_EXIT (sec > 0);
-      --sec;
-      usec += 1000 * 1000;
-    }
-
-  usec += 999;
-  if (usec >= 1000 * 1000)
-    {
-      TEST_VERIFY_EXIT (sec < INT_MAX);
-      ++sec;
-      usec -= 1000 * 1000;
-    }
-
-  unsigned int msec = (unsigned int) usec / 1000;
-  if (sec > INT_MAX / 1000)
-    return INT_MAX;
-  msec += sec * 1000;
-  if (msec > INT_MAX)
-    return INT_MAX;
-  return (int) msec;
-}
-
-static struct public_deadline
-first_deadline (struct public_deadline left, struct public_deadline right)
-{
-  if (right.infinite || compare_timeval (left.absolute, right.absolute) < 0)
-    return left;
-  return right;
+  TEST_COMPARE (clnt_call (clnt, PROC_RESET_SEQ,
+                           (xdrproc_t) xdr_void_glibc_2_2_5, NULL,
+                           (xdrproc_t) xdr_void_glibc_2_2_5, NULL,
+                           ((struct timeval) { 5, 0 })),
+                RPC_SUCCESS);
 }
 
 static double
 get_ticks (void)
 {
+  struct timespec ts;
+  if (clock_gettime (CLOCK_MONOTONIC, &ts) == 0)
+    return ts.tv_sec + ts.tv_nsec * 1e-9;
+
   struct timeval tv;
   TEST_COMPARE (gettimeofday (&tv, NULL), 0);
   return tv.tv_sec + tv.tv_usec * 1e-6;
 }
 
 static void
-check_poll_timeout (int timeout_ms, double lower, double upper)
+check_runtime (const char *label, double seconds, double lower, double upper)
 {
-  int pipefd[2];
-  xpipe (pipefd);
-  struct pollfd fd =
+  if (test_verbose)
+    printf ("info: %s took %f seconds\n", label, seconds);
+  TEST_VERIFY (lower <= seconds);
+  TEST_VERIFY (seconds < upper);
+}
+
+static void
+test_udp_deadlines (int port)
+{
+  struct sockaddr_in sin =
     {
-      .fd = pipefd[0],
-      .events = POLLIN,
+      .sin_family = AF_INET,
+      .sin_addr.s_addr = htonl (INADDR_LOOPBACK),
+      .sin_port = htons (port),
     };
+  int sock = RPC_ANYSOCK;
+  CLIENT *clnt = clntudp_create_glibc_2_2_5
+    (&sin, PROGNUM, VERSNUM, (struct timeval) { 1, 500 * 1000 }, &sock);
+  TEST_VERIFY_EXIT (clnt != NULL);
+
   double before = get_ticks ();
-  TEST_COMPARE (poll (&fd, 1, timeout_ms), 0);
+  struct test_response response = test_call
+    (clnt,
+     (struct test_query) {
+       .a = 19, .b = 4, .timeout_ms = 500, .garbage_packets = 21,
+     },
+     (struct timeval) { 3, 0 });
   double after = get_ticks ();
-  TEST_VERIFY (lower <= after - before);
-  TEST_VERIFY (after - before < upper);
-  xclose (pipefd[1]);
-  xclose (pipefd[0]);
+  TEST_COMPARE (response.sum, (uint32_t) 23);
+  TEST_COMPARE (response.seq, (uint32_t) 1);
+  check_runtime ("garbage packets with eventual response", after - before,
+                 0.45, 1.2);
+  test_call_flush (clnt);
+
+  before = get_ticks ();
+  response = test_call
+    (clnt,
+     (struct test_query) {
+       .a = 170, .b = 40, .wait_for_seq = 2,
+     },
+     (struct timeval) { 3, 0 });
+  after = get_ticks ();
+  TEST_COMPARE (response.sum, (uint32_t) 210);
+  TEST_COMPARE (response.seq, (uint32_t) 2);
+  check_runtime ("one missed response before retry", after - before,
+                 1.45, 2.9);
+  test_call_flush (clnt);
+
+  before = get_ticks ();
+  test_call_timeout
+    (clnt,
+     (struct test_query) {
+       .a = 170, .b = 41, .wait_for_seq = 2,
+     },
+     (struct timeval) { 0, 750 * 1000 });
+  after = get_ticks ();
+  check_runtime ("overall timeout beats retry timeout", after - before,
+                 0.70, 1.4);
+  test_call_flush (clnt);
+
+  before = get_ticks ();
+  test_call_timeout
+    (clnt,
+     (struct test_query) {
+       .a = 170, .b = 42, .timeout_ms = 1200, .garbage_packets = 21,
+     },
+     (struct timeval) { 0, 750 * 1000 });
+  after = get_ticks ();
+  check_runtime ("garbage packets do not extend the total timeout",
+                 after - before, 0.70, 1.4);
+  test_call_flush (clnt);
+
+  TEST_COMPARE (clnt_call (clnt, PROC_EXIT,
+                           (xdrproc_t) xdr_void_glibc_2_2_5, NULL,
+                           (xdrproc_t) xdr_void_glibc_2_2_5, NULL,
+                           ((struct timeval) { 5, 0 })),
+                RPC_SUCCESS);
+  clnt_destroy (clnt);
 }
 
 static int
 do_test (void)
 {
-  {
-    struct timeval current = current_time_now ();
-    struct timeval next = current_time_now ();
-    TEST_VERIFY (current.tv_sec >= 0);
-    TEST_VERIFY (compare_timeval (next, current) >= 0);
-    TEST_VERIFY (next.tv_sec > 0 || next.tv_usec > 0);
-  }
+  SVCXPRT *transport = svcudp_create_glibc_2_2_5 (RPC_ANYSOCK);
+  TEST_VERIFY_EXIT (transport != NULL);
+  TEST_VERIFY_EXIT (svc_register_glibc_2_2_5
+                    (transport, PROGNUM, VERSNUM, server_dispatch, 0));
 
-  struct timeval current = { 1, 123456 };
-  struct public_deadline deadline
-    = deadline_from_timeout (current, (struct timeval) { 0, 1 });
-  TEST_VERIFY (!deadline.infinite);
-  TEST_COMPARE (deadline.absolute.tv_sec, (time_t) 1);
-  TEST_COMPARE (deadline.absolute.tv_usec, 123457);
-  TEST_COMPARE (deadline_to_ms (current, deadline), 1);
-
-  deadline = deadline_from_timeout (current, (struct timeval) { 0, 2 });
-  TEST_COMPARE (deadline.absolute.tv_sec, (time_t) 1);
-  TEST_COMPARE (deadline.absolute.tv_usec, 123458);
-  TEST_COMPARE (deadline_to_ms (current, deadline), 1);
-
-  deadline = deadline_from_timeout (current, (struct timeval) { 1, 0 });
-  TEST_COMPARE (deadline.absolute.tv_sec, (time_t) 2);
-  TEST_COMPARE (deadline.absolute.tv_usec, 123456);
-  TEST_COMPARE (deadline_to_ms (current, deadline), 1000);
-
-  for (int i = 0; i < 999; ++i)
+  server_pid = xfork ();
+  if (server_pid == 0)
     {
-      ++current.tv_usec;
-      TEST_COMPARE (deadline_to_ms (current, deadline), 1000);
+      svc_run_glibc_2_2_5 ();
+      FAIL_EXIT1 ("svc_run returned unexpectedly");
     }
+  atexit (kill_server);
 
-  ++current.tv_usec;
-  TEST_COMPARE (deadline_to_ms (current, deadline), 999);
+  test_udp_deadlines (transport->xp_port);
 
-  current = (struct timeval) { 9, 123456 };
-  deadline = (struct public_deadline) { .absolute = { 10, 122456 } };
-  TEST_COMPARE (deadline_to_ms (current, deadline), 999);
-  deadline = (struct public_deadline) { .absolute = { 10, 122457 } };
-  TEST_COMPARE (deadline_to_ms (current, deadline), 1000);
-  deadline = (struct public_deadline) { .absolute = { 10, 123455 } };
-  TEST_COMPARE (deadline_to_ms (current, deadline), 1000);
-  deadline = (struct public_deadline) { .absolute = { 10, 123456 } };
-  TEST_COMPARE (deadline_to_ms (current, deadline), 1000);
+  int status;
+  xwaitpid (server_pid, &status, 0);
+  server_pid = 0;
+  TEST_VERIFY (WIFEXITED (status) && WEXITSTATUS (status) == EXIT_MARKER);
 
-  deadline = (struct public_deadline) { .absolute = { INT_MAX - 1, 1 } };
-  TEST_COMPARE (deadline_to_ms (current, deadline), INT_MAX);
-
-  current = (struct timeval) { 9, 123456 };
-  deadline.absolute = current;
-  TEST_COMPARE (deadline_to_ms (current, deadline), 0);
-  current = (struct timeval) { 9, 123457 };
-  TEST_COMPARE (deadline_to_ms (current, deadline), 0);
-  current = (struct timeval) { 10, 0 };
-  TEST_COMPARE (deadline_to_ms (current, deadline), 0);
-  current = (struct timeval) { 10, 123455 };
-  TEST_COMPARE (deadline_to_ms (current, deadline), 0);
-  current = (struct timeval) { 10, 123456 };
-  TEST_COMPARE (deadline_to_ms (current, deadline), 0);
-
-  current = (struct timeval) { 9, 998000 };
-  for (int i = 0; i < 2000; ++i)
-    {
-      deadline = deadline_from_timeout (current, (struct timeval) { 1, i });
-      TEST_COMPARE (deadline.absolute.tv_sec, (time_t) 10);
-      TEST_COMPARE (deadline.absolute.tv_usec, 998000 + i);
-    }
-  for (int i = 2000; i < 3000; ++i)
-    {
-      deadline = deadline_from_timeout (current, (struct timeval) { 2, i });
-      TEST_COMPARE (deadline.absolute.tv_sec, (time_t) 12);
-      TEST_COMPARE (deadline.absolute.tv_usec, i - 2000);
-    }
-
-  deadline = deadline_from_timeout ((struct timeval) { 0, 999999 },
-                                    (struct timeval) { time_t_max (), 1 });
-  TEST_VERIFY (deadline.infinite);
-  deadline = deadline_from_timeout ((struct timeval) { 0, 999998 },
-                                    (struct timeval) { time_t_max (), 1 });
-  TEST_VERIFY (!deadline.infinite);
-  deadline = deadline_from_timeout ((struct timeval) { time_t_max (), 999999 },
-                                    (struct timeval) { 0, 1 });
-  TEST_VERIFY (deadline.infinite);
-  deadline = deadline_from_timeout ((struct timeval) { time_t_max () / 2 + 1, 0 },
-                                    (struct timeval) { time_t_max () / 2 + 1, 0 });
-  TEST_VERIFY (deadline.infinite);
-
-  deadline = first_deadline ((struct public_deadline) { .absolute = { 1, 2 } },
-                             (struct public_deadline) { .absolute = { 1, 3 } });
-  TEST_COMPARE (deadline.absolute.tv_sec, (time_t) 1);
-  TEST_COMPARE (deadline.absolute.tv_usec, 2);
-  deadline = first_deadline ((struct public_deadline) { .absolute = { 1, 3 } },
-                             (struct public_deadline) { .absolute = { 1, 2 } });
-  TEST_COMPARE (deadline.absolute.tv_sec, (time_t) 1);
-  TEST_COMPARE (deadline.absolute.tv_usec, 2);
-  deadline = first_deadline ((struct public_deadline) { .absolute = { 1, 2 } },
-                             (struct public_deadline) { .absolute = { 2, 1 } });
-  TEST_COMPARE (deadline.absolute.tv_sec, (time_t) 1);
-  TEST_COMPARE (deadline.absolute.tv_usec, 2);
-  deadline = first_deadline ((struct public_deadline) { .absolute = { 1, 2 } },
-                             (struct public_deadline) { .absolute = { 2, 4 } });
-  TEST_COMPARE (deadline.absolute.tv_sec, (time_t) 1);
-  TEST_COMPARE (deadline.absolute.tv_usec, 2);
-  deadline = first_deadline ((struct public_deadline) { .absolute = { 2, 4 } },
-                             (struct public_deadline) { .absolute = { 1, 2 } });
-  TEST_COMPARE (deadline.absolute.tv_sec, (time_t) 1);
-  TEST_COMPARE (deadline.absolute.tv_usec, 2);
-
-  check_poll_timeout (0, 0.0, 0.1);
-  check_poll_timeout (50, 0.03, 0.5);
-
+  SVC_DESTROY (transport);
   return 0;
 }
 
+#define TIMEOUT 20
 #include <support/test-driver.c>

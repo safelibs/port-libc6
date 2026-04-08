@@ -1,4 +1,5 @@
-/* Test public multibyte decoding used by IDNA processing.
+#define _GNU_SOURCE 1
+/* Test public IDNA name handling through getaddrinfo.
    Copyright (C) 2018-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -16,96 +17,82 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <errno.h>
 #include <locale.h>
-#include <stdbool.h>
+#include <netdb.h>
 #include <stdio.h>
-#include <string.h>
 #include <support/check.h>
-#include <wchar.h>
 
-enum public_name_classification
+/* Route names through the public IDNA conversion path without relying on
+   external name service configuration.  AI_NUMERICHOST ensures that names
+   reaching the lookup phase fail with EAI_NONAME instead of going out to
+   NSS or DNS.  */
+static int
+lookup_name (const char *name)
 {
-  public_name_ascii,
-  public_name_nonascii,
-  public_name_nonascii_backslash,
-  public_name_encoding_error,
-};
-
-static enum public_name_classification
-classify_name (const char *name)
-{
-  mbstate_t mbs = { 0 };
-  const char *p = name;
-  size_t remaining = strlen (name) + 1;
-  bool nonascii = false;
-  bool backslash = false;
-
-  while (true)
+  struct addrinfo hints =
     {
-      wchar_t wc;
-      errno = 0;
-      size_t result = mbrtowc (&wc, p, remaining, &mbs);
-      if (result == 0)
-        break;
-      if (result == (size_t) -1 || result == (size_t) -2)
-        return public_name_encoding_error;
-
-      p += result;
-      remaining -= result;
-      if (wc == L'\\')
-        backslash = true;
-      else if (wc > 127)
-        nonascii = true;
-    }
-
-  if (!nonascii)
-    return public_name_ascii;
-  return backslash ? public_name_nonascii_backslash : public_name_nonascii;
+      .ai_family = AF_UNSPEC,
+      .ai_socktype = 0,
+      .ai_protocol = 0,
+      .ai_flags = AI_IDN | AI_NUMERICHOST,
+    };
+  struct addrinfo *ai = NULL;
+  int ret = getaddrinfo (name, NULL, &hints, &ai);
+  if (ret == 0)
+    freeaddrinfo (ai);
+  return ret;
 }
 
 static void
 locale_insensitive_tests (void)
 {
-  TEST_COMPARE (classify_name (""), public_name_ascii);
-  TEST_COMPARE (classify_name ("abc"), public_name_ascii);
-  TEST_COMPARE (classify_name (".."), public_name_ascii);
-  TEST_COMPARE (classify_name ("\001abc\177"), public_name_ascii);
-  TEST_COMPARE (classify_name ("\\065bc"), public_name_ascii);
+  TEST_COMPARE (lookup_name (""), EAI_NONAME);
+  TEST_COMPARE (lookup_name ("abc"), EAI_NONAME);
+  TEST_COMPARE (lookup_name (".."), EAI_NONAME);
+  TEST_COMPARE (lookup_name ("\001abc\177"), EAI_NONAME);
+  TEST_COMPARE (lookup_name ("\\065bc"), EAI_NONAME);
+  TEST_COMPARE (lookup_name ("127.0.0.1"), 0);
+  TEST_COMPARE (lookup_name ("::1"), 0);
+}
+
+/* Valid non-ASCII names either pass through IDNA conversion and then fail as
+   non-numeric hosts, or they report that IDNA conversion is unavailable.  */
+static void
+check_convertible_or_encode (const char *name)
+{
+  int ret = lookup_name (name);
+  TEST_VERIFY (ret == EAI_NONAME || ret == EAI_IDN_ENCODE);
 }
 
 static int
 do_test (void)
 {
   puts ("info: C locale tests");
+  if (setlocale (LC_CTYPE, "C") == NULL)
+    FAIL_EXIT1 ("setlocale for C locale: %m");
   locale_insensitive_tests ();
-  TEST_COMPARE (classify_name ("abc\200def"), public_name_encoding_error);
-  TEST_COMPARE (classify_name ("abc\200\\def"), public_name_encoding_error);
-  TEST_COMPARE (classify_name ("abc\377def"), public_name_encoding_error);
+  TEST_COMPARE (lookup_name ("abc\200def"), EAI_IDN_ENCODE);
+  TEST_COMPARE (lookup_name ("abc\200\\def"), EAI_IDN_ENCODE);
+  TEST_COMPARE (lookup_name ("abc\377def"), EAI_IDN_ENCODE);
 
   puts ("info: en_US.ISO-8859-1 locale tests");
   if (setlocale (LC_CTYPE, "en_US.ISO-8859-1") == NULL)
     FAIL_EXIT1 ("setlocale for en_US.ISO-8859-1: %m");
   locale_insensitive_tests ();
-  TEST_COMPARE (classify_name ("abc\200def"), public_name_nonascii);
-  TEST_COMPARE (classify_name ("abc\377def"), public_name_nonascii);
-  TEST_COMPARE (classify_name ("abc\\\200def"),
-                public_name_nonascii_backslash);
-  TEST_COMPARE (classify_name ("abc\200\\def"),
-                public_name_nonascii_backslash);
+  check_convertible_or_encode ("abc\337def");
+  TEST_COMPARE (lookup_name ("abc\\\337def"), EAI_IDN_ENCODE);
+  TEST_COMPARE (lookup_name ("abc\337\\def"), EAI_IDN_ENCODE);
 
   puts ("info: en_US.UTF-8 locale tests");
   if (setlocale (LC_CTYPE, "en_US.UTF-8") == NULL)
     FAIL_EXIT1 ("setlocale for en_US.UTF-8: %m");
   locale_insensitive_tests ();
-  TEST_COMPARE (classify_name ("abc\xc3\x9f""def"), public_name_nonascii);
-  TEST_COMPARE (classify_name ("abc\\\xc3\x9f""def"),
-                public_name_nonascii_backslash);
-  TEST_COMPARE (classify_name ("abc\xc3\x9f\\def"),
-                public_name_nonascii_backslash);
-  TEST_COMPARE (classify_name ("abc\200def"), public_name_encoding_error);
-  TEST_COMPARE (classify_name ("abc\xc3""def"), public_name_encoding_error);
-  TEST_COMPARE (classify_name ("abc\xc3"), public_name_encoding_error);
+  check_convertible_or_encode ("abc\xc3\x9f""def");
+  TEST_COMPARE (lookup_name ("abc\\\xc3\x9f""def"), EAI_IDN_ENCODE);
+  TEST_COMPARE (lookup_name ("abc\xc3\x9f\\def"), EAI_IDN_ENCODE);
+  TEST_COMPARE (lookup_name ("abc\200def"), EAI_IDN_ENCODE);
+  TEST_COMPARE (lookup_name ("abc\xc3""def"), EAI_IDN_ENCODE);
+  TEST_COMPARE (lookup_name ("abc\xc3"), EAI_IDN_ENCODE);
 
   return 0;
 }

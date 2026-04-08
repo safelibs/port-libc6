@@ -1,4 +1,4 @@
-/* Test one-time public initialization primitives.
+/* Test public libc entry points that use allocate_once internally.
    Copyright (C) 2018-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -16,71 +16,130 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
+#include <errno.h>
 #include <mcheck.h>
-#include <stdatomic.h>
+#include <mntent.h>
+#include <pwd.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <support/check.h>
 #include <support/support.h>
 #include <support/xthread.h>
+#include <unistd.h>
 
-static pthread_once_t once_1 = PTHREAD_ONCE_INIT;
-static pthread_once_t once_2 = PTHREAD_ONCE_INIT;
-static pthread_once_t once_concurrent = PTHREAD_ONCE_INIT;
-static atomic_int init_calls_1 = ATOMIC_VAR_INIT (0);
-static atomic_int init_calls_2 = ATOMIC_VAR_INIT (0);
-static atomic_int init_calls_concurrent = ATOMIC_VAR_INIT (0);
-static char *string_1;
-static char *string_2;
-static char *string_concurrent;
 static pthread_barrier_t start_barrier;
 
-static void
-init_string_1 (void)
+static FILE *
+make_mount_stream (const char *contents)
 {
-  if (atomic_fetch_add_explicit (&init_calls_1, 1, memory_order_relaxed) != 0)
-    FAIL_EXIT1 ("first initializer ran more than once");
-  string_1 = xstrdup ("test string 1");
+  FILE *fp = tmpfile ();
+  TEST_VERIFY_EXIT (fp != NULL);
+  TEST_VERIFY_EXIT (fputs (contents, fp) >= 0);
+  rewind (fp);
+  return fp;
 }
 
 static void
-init_string_2 (void)
+check_getmntent_shared_buffer (void)
 {
-  if (atomic_fetch_add_explicit (&init_calls_2, 1, memory_order_relaxed) != 0)
-    FAIL_EXIT1 ("second initializer ran more than once");
-  string_2 = xstrdup ("test string 2");
+  FILE *first = make_mount_stream ("/dev/one /mnt/one ext4 defaults 0 1\n");
+  FILE *second
+    = make_mount_stream ("/dev/two /mnt/two xfs ro,nosuid 1 2\n");
+
+  struct mntent *entry = getmntent (first);
+  TEST_VERIFY_EXIT (entry != NULL);
+  TEST_COMPARE_STRING (entry->mnt_fsname, "/dev/one");
+  TEST_COMPARE_STRING (entry->mnt_dir, "/mnt/one");
+  TEST_COMPARE_STRING (entry->mnt_type, "ext4");
+  TEST_COMPARE_STRING (entry->mnt_opts, "defaults");
+  TEST_COMPARE (entry->mnt_freq, 0);
+  TEST_COMPARE (entry->mnt_passno, 1);
+
+  struct mntent *same_entry = getmntent (second);
+  TEST_VERIFY_EXIT (same_entry != NULL);
+  TEST_VERIFY (same_entry == entry);
+  TEST_COMPARE_STRING (same_entry->mnt_fsname, "/dev/two");
+  TEST_COMPARE_STRING (same_entry->mnt_dir, "/mnt/two");
+  TEST_COMPARE_STRING (same_entry->mnt_type, "xfs");
+  TEST_COMPARE_STRING (same_entry->mnt_opts, "ro,nosuid");
+  TEST_COMPARE (same_entry->mnt_freq, 1);
+  TEST_COMPARE (same_entry->mnt_passno, 2);
+
+  TEST_COMPARE (fclose (second), 0);
+  TEST_COMPARE (fclose (first), 0);
 }
 
-static void
-init_string_concurrent (void)
+static size_t
+password_buffer_size (void)
 {
-  if (atomic_fetch_add_explicit (&init_calls_concurrent, 1,
-                                 memory_order_relaxed) != 0)
-    FAIL_EXIT1 ("concurrent initializer ran more than once");
-  string_concurrent = xstrdup ("threaded string");
-}
-
-static char *
-get_string_1 (void)
-{
-  xpthread_once (&once_1, init_string_1);
-  return string_1;
-}
-
-static char *
-get_string_2 (void)
-{
-  xpthread_once (&once_2, init_string_2);
-  return string_2;
+  long result = sysconf (_SC_GETPW_R_SIZE_MAX);
+  return result > 0 ? result : 4096;
 }
 
 static void *
-threaded_getter (void *closure)
+threaded_getpwuid (void *closure)
 {
   TEST_VERIFY (closure == NULL);
   xpthread_barrier_wait (&start_barrier);
-  xpthread_once (&once_concurrent, init_string_concurrent);
-  return string_concurrent;
+
+  size_t buflen = password_buffer_size ();
+  char *buffer = xmalloc (buflen);
+  char *name = NULL;
+
+  for (int i = 0; i < 32; ++i)
+    {
+      struct passwd pwd;
+      struct passwd *result = NULL;
+      int ret;
+      while ((ret = getpwuid_r (0, &pwd, buffer, buflen, &result)) == ERANGE)
+        {
+          buflen *= 2;
+          buffer = xrealloc (buffer, buflen);
+        }
+      TEST_COMPARE (ret, 0);
+      TEST_VERIFY_EXIT (result != NULL);
+      TEST_COMPARE (result->pw_uid, (uid_t) 0);
+      TEST_VERIFY (result->pw_name != NULL);
+      TEST_VERIFY (result->pw_name[0] != '\0');
+
+      if (name == NULL)
+        name = xstrdup (result->pw_name);
+      else
+        TEST_COMPARE_STRING (name, result->pw_name);
+    }
+
+  free (buffer);
+  return name;
+}
+
+static void
+check_concurrent_getpwuid_r (void)
+{
+  enum { thread_count = 8 };
+  pthread_t threads[thread_count];
+
+  xpthread_barrier_init (&start_barrier, NULL, thread_count + 1);
+  for (int i = 0; i < thread_count; ++i)
+    threads[i] = xpthread_create (NULL, threaded_getpwuid, NULL);
+
+  xpthread_barrier_wait (&start_barrier);
+
+  char *first_name = NULL;
+  for (int i = 0; i < thread_count; ++i)
+    {
+      char *name = xpthread_join (threads[i]);
+      TEST_VERIFY_EXIT (name != NULL);
+      if (first_name == NULL)
+        first_name = name;
+      else
+        {
+          TEST_COMPARE_STRING (first_name, name);
+          free (name);
+        }
+    }
+  xpthread_barrier_destroy (&start_barrier);
+  free (first_name);
 }
 
 static int
@@ -88,38 +147,9 @@ do_test (void)
 {
   mtrace ();
 
-  char *first = get_string_1 ();
-  TEST_VERIFY_EXIT (first != NULL);
-  TEST_COMPARE (strcmp (first, "test string 1"), 0);
-  TEST_VERIFY (first == get_string_1 ());
-  TEST_COMPARE (atomic_load_explicit (&init_calls_1, memory_order_relaxed), 1);
+  check_getmntent_shared_buffer ();
+  check_concurrent_getpwuid_r ();
 
-  char *second = get_string_2 ();
-  TEST_VERIFY_EXIT (second != NULL);
-  TEST_COMPARE (strcmp (second, "test string 2"), 0);
-  TEST_VERIFY (second == get_string_2 ());
-  TEST_VERIFY (first != second);
-  TEST_COMPARE (atomic_load_explicit (&init_calls_2, memory_order_relaxed), 1);
-
-  enum { thread_count = 8 };
-  pthread_t threads[thread_count];
-  xpthread_barrier_init (&start_barrier, NULL, thread_count + 1);
-  for (int i = 0; i < thread_count; ++i)
-    threads[i] = xpthread_create (NULL, threaded_getter, NULL);
-
-  xpthread_barrier_wait (&start_barrier);
-  for (int i = 0; i < thread_count; ++i)
-    TEST_VERIFY (xpthread_join (threads[i]) == string_concurrent);
-  xpthread_barrier_destroy (&start_barrier);
-
-  TEST_VERIFY_EXIT (string_concurrent != NULL);
-  TEST_COMPARE (strcmp (string_concurrent, "threaded string"), 0);
-  TEST_COMPARE (atomic_load_explicit (&init_calls_concurrent,
-                                      memory_order_relaxed), 1);
-
-  free (string_concurrent);
-  free (second);
-  free (first);
   return 0;
 }
 
