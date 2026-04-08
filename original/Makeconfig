@@ -760,9 +760,31 @@ endif
 # How to run a program we just linked with our library.
 # The program binary is assumed to be $(word 2,$^).
 built-program-file = $(dir $(word 2,$^))$(notdir $(word 2,$^))
+# When the freshly built loader is installed at a non-system prefix,
+# --library-path can hide host runtime dependencies such as libstdc++
+# and libgcc_s from test binaries that need them.  Resolve those DSOs
+# through the toolchain once and append their runtime directories to the
+# explicit search path.
+ifneq (,$(CXX))
+host-libstdcxx-dir := $(shell lib=`$(CXX) --print-file-name=libstdc++.so 2>/dev/null`; \
+			      if test "$$lib" != libstdc++.so; then \
+				dirname `readlink -f "$$lib"`; \
+			      fi)
+else
+host-libstdcxx-dir :=
+endif
+host-libgcc-s-dir := $(shell lib=`$(CC) --print-file-name=libgcc_s.so.1 2>/dev/null`; \
+			    if test "$$lib" != libgcc_s.so.1; then \
+			      dirname `readlink -f "$$lib"`; \
+			    fi)
+host-runtime-library-path = $(strip $(sort $(host-libstdcxx-dir) \
+						$(host-libgcc-s-dir)))
+host-runtime-library-path-colons = \
+$(subst $(empty) ,:,$(host-runtime-library-path))
+rtld-library-path = $(rpath-link)$(patsubst %,:%,$(sysdep-library-path))$(if $(host-runtime-library-path-colons),:$(host-runtime-library-path-colons))
 rtld-prefix = $(elf-objpfx)$(rtld-installed-name)			      \
 	      --library-path						      \
-	      $(rpath-link)$(patsubst %,:%,$(sysdep-library-path))
+	      $(rtld-library-path)
 ifeq (yes,$(build-shared))
 comma = ,
 sysdep-library-path = \

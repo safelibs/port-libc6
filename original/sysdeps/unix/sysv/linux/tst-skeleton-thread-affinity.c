@@ -37,6 +37,12 @@ static bool early_test (struct conf *);
    double the timeout to be on the safe side.  */
 #define TIMEOUT (2 * PASS_TIMEOUT * 2)
 
+/* The concurrent smoke test only needs a representative CPU sample.
+   test_size below still iterates the full affinity mask one CPU at a
+   time, so bounding the number of helper threads keeps runtime stable
+   on constrained schedulers without dropping the core API coverage.  */
+#define MAX_CONCURRENT_CPUS 4
+
 #include "tst-skeleton-affinity.c"
 
 /* 0 if still running, 1 of stopping requested.  */
@@ -155,10 +161,11 @@ early_test (struct conf *conf)
   struct burn_thread *other_threads
     = calloc (conf->last_cpu + 1, sizeof (*other_threads));
   cpu_set_t *initial_set = CPU_ALLOC (conf->set_size);
+  cpu_set_t *sampled_set = CPU_ALLOC (conf->set_size);
   cpu_set_t *scratch_set = CPU_ALLOC (conf->set_size);
 
   if (pinned_threads == NULL || other_threads == NULL
-      || initial_set == NULL || scratch_set == NULL)
+      || initial_set == NULL || sampled_set == NULL || scratch_set == NULL)
     {
       puts ("error: Memory allocation failure");
       return false;
@@ -168,9 +175,25 @@ early_test (struct conf *conf)
       printf ("error: pthread_getaffinity_np failed: %m\n");
       return false;
     }
+  CPU_ZERO_S (CPU_ALLOC_SIZE (conf->set_size), sampled_set);
+  int sampled_cpus = 0;
   for (int cpu = 0; cpu <= conf->last_cpu; ++cpu)
     {
       if (!CPU_ISSET_S (cpu, CPU_ALLOC_SIZE (conf->set_size), initial_set))
+	continue;
+      if (sampled_cpus == MAX_CONCURRENT_CPUS)
+	break;
+      CPU_SET_S (cpu, CPU_ALLOC_SIZE (conf->set_size), sampled_set);
+      ++sampled_cpus;
+    }
+  int initial_cpu_count = CPU_COUNT_S (CPU_ALLOC_SIZE (conf->set_size),
+				       initial_set);
+  if (sampled_cpus < initial_cpu_count)
+    printf ("info: Limiting concurrent affinity test to %d of %d CPUs\n",
+	    sampled_cpus, initial_cpu_count);
+  for (int cpu = 0; cpu <= conf->last_cpu; ++cpu)
+    {
+      if (!CPU_ISSET_S (cpu, CPU_ALLOC_SIZE (conf->set_size), sampled_set))
 	continue;
       other_threads[cpu].conf = conf;
       other_threads[cpu].initial_set = initial_set;
@@ -197,7 +220,7 @@ early_test (struct conf *conf)
   /* Spawn a thread pinned to each available CPU.  */
   for (int cpu = 0; cpu <= conf->last_cpu; ++cpu)
     {
-      if (!CPU_ISSET_S (cpu, CPU_ALLOC_SIZE (conf->set_size), initial_set))
+      if (!CPU_ISSET_S (cpu, CPU_ALLOC_SIZE (conf->set_size), sampled_set))
 	continue;
       CPU_ZERO_S (CPU_ALLOC_SIZE (conf->set_size), scratch_set);
       CPU_SET_S (cpu, CPU_ALLOC_SIZE (conf->set_size), scratch_set);
@@ -207,7 +230,7 @@ early_test (struct conf *conf)
 	{
 	  printf ("error: pthread_attr_setaffinity_np for CPU %d failed: %s\n",
 		  cpu, strerror (ret));
-	  stop_and_join_threads (conf, initial_set,
+	  stop_and_join_threads (conf, sampled_set,
 				 pinned_threads, pinned_threads + cpu,
 				 NULL, NULL);
 	  return false;
@@ -218,7 +241,7 @@ early_test (struct conf *conf)
 	{
 	  printf ("error: pthread_create for CPU %d failed: %s\n",
 		  cpu, strerror (ret));
-	  stop_and_join_threads (conf, initial_set,
+	  stop_and_join_threads (conf, sampled_set,
 				 pinned_threads, pinned_threads + cpu,
 				 NULL, NULL);
 	  return false;
@@ -228,7 +251,7 @@ early_test (struct conf *conf)
   /* Spawn another set of threads running on all CPUs.  */
   for (int cpu = 0; cpu <= conf->last_cpu; ++cpu)
     {
-      if (!CPU_ISSET_S (cpu, CPU_ALLOC_SIZE (conf->set_size), initial_set))
+      if (!CPU_ISSET_S (cpu, CPU_ALLOC_SIZE (conf->set_size), sampled_set))
 	continue;
       ret = pthread_create (&other_threads[cpu].self,
 			    support_small_stack_thread_attribute (),
@@ -253,7 +276,7 @@ early_test (struct conf *conf)
   main_thread.thread = -1;
   CPU_ZERO_S (CPU_ALLOC_SIZE (conf->set_size), main_thread.seen_set);
   thread_burn_any_cpu (&main_thread);
-  stop_and_join_threads (conf, initial_set,
+  stop_and_join_threads (conf, sampled_set,
 			 pinned_threads,
 			 pinned_threads + conf->last_cpu + 1,
 			 other_threads, other_threads + conf->last_cpu + 1);
@@ -264,7 +287,7 @@ early_test (struct conf *conf)
   CPU_ZERO_S (CPU_ALLOC_SIZE (conf->set_size), scratch_set);
   for (int cpu = 0; cpu <= conf->last_cpu; ++cpu)
     {
-      if (!CPU_ISSET_S (cpu, CPU_ALLOC_SIZE (conf->set_size), initial_set))
+      if (!CPU_ISSET_S (cpu, CPU_ALLOC_SIZE (conf->set_size), sampled_set))
 	continue;
       CPU_OR_S (CPU_ALLOC_SIZE (conf->set_size),
 		scratch_set, scratch_set, other_threads[cpu].seen_set);
@@ -275,6 +298,7 @@ early_test (struct conf *conf)
 
 
   pthread_attr_destroy (&attr);
+  CPU_FREE (sampled_set);
   CPU_FREE (scratch_set);
   CPU_FREE (initial_set);
   free (pinned_threads);

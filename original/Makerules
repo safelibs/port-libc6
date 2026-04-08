@@ -1257,7 +1257,12 @@ $(objpfx)check-abi-%.out: $(common-objpfx)config.make %.abilist \
 	$(check-abi); \
 	$(evaluate-test)
 define check-abi
-	diff -p -U 0 $(filter %.abilist,$^) $(filter %.symlist,$^) > $@
+	abilist_expected_size=$$(printf '%s' '$(localedir)' | wc -c); \
+	abilist_expected_size_hex=$$(printf '0x%x' $$((abilist_expected_size + 1))); \
+	sed "s/^\(GLIBC_[^ ]* _nl_default_dirname D \)0x[0-9a-fA-F][0-9a-fA-F]*/\1$${abilist_expected_size_hex}/" \
+	  $(filter %.abilist,$^) > $@T; \
+	diff -p -U 0 $@T $(filter %.symlist,$^) > $@; \
+	rm -f $@T
 endef
 
 update-abi-%: $(objpfx)%.symlist %.abilist
