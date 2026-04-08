@@ -17,6 +17,7 @@
    <https://www.gnu.org/licenses/>.  */
 
 #include <arpa/inet.h>
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -93,6 +94,36 @@ run_one_test (const struct test_case *t)
                 inet_pton (AF_INET, t->input, out4));
   check_result ("inet_pton", t, AF_INET6, out6,
                 inet_pton (AF_INET6, t->input, out6));
+}
+
+static void
+check_error_reporting (void)
+{
+  unsigned char out4[4];
+  unsigned char out6[16];
+  unsigned char original4[sizeof (out4)];
+  unsigned char original6[sizeof (out6)];
+
+  memset (out4, 0x5a, sizeof (out4));
+  memcpy (original4, out4, sizeof (out4));
+  errno = 123;
+  TEST_COMPARE (inet_pton (AF_INET, "192.0.2.256", out4), 0);
+  TEST_COMPARE (errno, 123);
+  TEST_COMPARE_BLOB (out4, sizeof (out4), original4, sizeof (original4));
+
+  memset (out6, 0xa5, sizeof (out6));
+  memcpy (original6, out6, sizeof (out6));
+  errno = 456;
+  TEST_COMPARE (inet_pton (AF_INET6, "2001:db8::1::2", out6), 0);
+  TEST_COMPARE (errno, 456);
+  TEST_COMPARE_BLOB (out6, sizeof (out6), original6, sizeof (original6));
+
+  memset (out6, 0x3c, sizeof (out6));
+  memcpy (original6, out6, sizeof (out6));
+  errno = 0;
+  TEST_COMPARE (inet_pton (AF_UNSPEC, "127.0.0.1", out6), -1);
+  TEST_COMPARE (errno, EAFNOSUPPORT);
+  TEST_COMPARE_BLOB (out6, sizeof (out6), original6, sizeof (original6));
 }
 
 /* The test cases were manually crafted and the set enhanced with
@@ -452,6 +483,7 @@ do_test (void)
 {
   for (size_t i = 0; test_cases[i].input != NULL; ++i)
     run_one_test (test_cases + i);
+  check_error_reporting ();
   return 0;
 }
 
