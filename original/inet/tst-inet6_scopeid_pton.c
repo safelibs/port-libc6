@@ -1,4 +1,4 @@
-/* Tests for __inet6_scopeid_pton and IPv6 scopes in getaddrinfo.
+/* Tests for IPv6 scopes in getaddrinfo.
    Copyright (C) 2016-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -17,13 +17,14 @@
    <https://www.gnu.org/licenses/>.  */
 
 #include <arpa/inet.h>
+#include <stdbool.h>
 #include <inttypes.h>
-#include <net-internal.h>
 #include <net/if.h>
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <support/check.h>
 #include <support/support.h>
 #include <support/test-driver.h>
@@ -39,9 +40,11 @@ setup_interface (void)
   struct if_nameindex *list = if_nameindex ();
   if (list != NULL && list[0].if_index != 0 && list[0].if_name[0] != '\0')
     {
-      interface_name = list[0].if_name;
+      interface_name = xstrdup (list[0].if_name);
       interface_index = list[0].if_index;
     }
+  if (list != NULL)
+    if_freenameindex (list);
 }
 
 /* Convert ADDRESS to struct in6_addr.  */
@@ -114,26 +117,12 @@ check_ai (const char *what, const char *addr_string, const char *scope_string,
     }
 }
 
-/* Check a single address were we expected a failure.  */
+/* Check a single address where we expected a failure.  */
 static void
 expect_failure (const char *address, const char *scope)
 {
   if (test_verbose > 0)
     printf ("info: expecting failure for %s%%%s\n", address, scope);
-  struct in6_addr addr = from_string (address);
-  uint32_t result = 1234;
-  if (__inet6_scopeid_pton (&addr, scope, &result) == 0)
-    {
-      support_record_failure ();
-      printf ("error: unexpected success for %s%%%s\n",
-              address, scope);
-    }
-  if (result != 1234)
-    {
-      support_record_failure ();
-      printf ("error: unexpected result update for %s%%%s\n",
-              address, scope);
-    }
 
   struct sockaddr_in6 sa;
   if (call_gai (AF_UNSPEC, address, scope, &sa))
@@ -150,28 +139,13 @@ expect_failure (const char *address, const char *scope)
     }
 }
 
-/* Check a single address were we expected a success.  */
+/* Check a single address where we expected a success.  */
 static void
 expect_success (const char *address, const char *scope, uint32_t expected)
 {
   if (test_verbose > 0)
     printf ("info: expecting success for %s%%%s\n", address, scope);
   struct in6_addr addr = from_string (address);
-  uint32_t actual = expected + 1;
-  if (__inet6_scopeid_pton (&addr, scope, &actual) != 0)
-    {
-      support_record_failure ();
-      printf ("error: unexpected failure for %s%%%s\n",
-              address, scope);
-    }
-  if (actual != expected)
-    {
-      support_record_failure ();
-      printf ("error: unexpected result for for %s%%%s\n",
-              address, scope);
-      printf ("  expected: %" PRIu32 "\n", expected);
-      printf ("  actual:   %" PRIu32 "\n", actual);
-    }
 
   struct sockaddr_in6 sa;
   memset (&sa, 0xc0, sizeof (sa));

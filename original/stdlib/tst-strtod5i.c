@@ -1,4 +1,4 @@
-/* Tests of __strtod_internal in a locale using decimal comma.
+/* Tests of locale-aware scanf parsing in a locale using decimal comma.
    Copyright (C) 2007-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -17,6 +17,7 @@
    <https://www.gnu.org/licenses/>.  */
 
 #include <locale.h>
+#include <support/check.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -63,6 +64,21 @@ static const struct
 #define NTESTS (sizeof (tests) / sizeof (tests[0]))
 
 
+static void
+check_one (int index, const char *input, int group, double expected)
+{
+  double actual = 1.0;
+  int nread = -1;
+  int ret = (group
+             ? sscanf (input, "%'lf%n", &actual, &nread)
+             : sscanf (input, "%lf%n", &actual, &nread));
+
+  TEST_COMPARE (ret, 1);
+  TEST_COMPARE (nread, strlen (input));
+  if (actual != expected || signbit (actual) != signbit (expected))
+    FAIL_EXIT1 ("%d: got %g, expected %g", index, actual, expected);
+}
+
 static int
 do_test (void)
 {
@@ -75,24 +91,7 @@ do_test (void)
   int status = 0;
 
   for (int i = 0; i < NTESTS; ++i)
-    {
-      char *ep;
-      double r = __strtod_internal (tests[i].in, &ep, tests[i].group);
-
-      if (*ep != '\0')
-	{
-	  printf ("%d: got rest string \"%s\", expected \"\"\n", i, ep);
-	  status = 1;
-	}
-
-      if (r != tests[i].expected
-	  || copysign (10.0, r) != copysign (10.0, tests[i].expected))
-	{
-	  printf ("%d: got wrong results %g, expected %g\n",
-		  i, r, tests[i].expected);
-	  status = 1;
-	}
-    }
+    check_one (i, tests[i].in, tests[i].group, tests[i].expected);
 
   return status;
 }

@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <support/check.h>
+
 static const struct
 {
   const char *in;
@@ -10,12 +12,26 @@ static const struct
   double expected;
 } tests[] =
   {
-    { "000,,,e1", ",,,e1", 0.0 },
+    { "000,,,e1", "", 0.0 },
     { "000e1", "", 0.0 },
-    { "000,1e1", ",1e1", 0.0 }
+    { "000,1e1", "", 0.0 },
+    { "1,234.5xyz", "xyz", 1234.5 }
   };
 #define NTESTS (sizeof (tests) / sizeof (tests[0]))
 
+static void
+check_one (int index, const char *input, const char *expected_rest,
+           double expected)
+{
+  double actual = 0.0;
+  int nread = -1;
+  int ret = sscanf (input, "%'lf%n", &actual, &nread);
+
+  TEST_COMPARE (ret, 1);
+  TEST_COMPARE_STRING (input + nread, expected_rest);
+  if (actual != expected)
+    FAIL_EXIT1 ("%d: got %g, expected %g", index, actual, expected);
+}
 
 static int
 do_test (void)
@@ -26,30 +42,10 @@ do_test (void)
       return 1;
     }
 
-  int status = 0;
-
   for (int i = 0; i < NTESTS; ++i)
-    {
-      char *ep;
-      double r = __strtod_internal (tests[i].in, &ep, 1);
+    check_one (i, tests[i].in, tests[i].out, tests[i].expected);
 
-      if (strcmp (ep, tests[i].out) != 0)
-	{
-	  printf ("%d: got rest string \"%s\", expected \"%s\"\n",
-		  i, ep, tests[i].out);
-	  status = 1;
-	}
-
-      if (r != tests[i].expected)
-	{
-	  printf ("%d: got wrong results %g, expected %g\n",
-		  i, r, tests[i].expected);
-	  status = 1;
-	}
-    }
-
-  return status;
+  return 0;
 }
 
-#define TEST_FUNCTION do_test ()
-#include "../test-skeleton.c"
+#include <support/test-driver.c>

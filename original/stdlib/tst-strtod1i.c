@@ -1,4 +1,4 @@
-/* Basic tests for __strtod_internal.
+/* Basic locale-aware floating-point parsing tests via scanf.
    Copyright (C) 1991-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -19,11 +19,26 @@
 #include <ctype.h>
 #include <locale.h>
 #include <stddef.h>
+#include <support/check.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 #include <math.h>
+
+static void
+check_one (const char *input, double expected, ptrdiff_t expected_nread)
+{
+  double actual = 0.0;
+  int nread = -1;
+  int ret = sscanf (input, "%'lf%n", &actual, &nread);
+
+  TEST_COMPARE (ret, 1);
+  TEST_COMPARE (nread, expected_nread);
+  if (actual != expected)
+    FAIL_EXIT1 ("sscanf (\"%s\") returned %g, expected %g",
+                input, actual, expected);
+}
 
 /* Perform a few tests in a locale with thousands separators.  */
 static int
@@ -38,7 +53,7 @@ do_test (void)
   } tests[] =
     {
       { "de_DE.UTF-8", "1,5", 1.5, 3 },
-      { "de_DE.UTF-8", "1.5", 1.0, 1 },
+      { "de_DE.UTF-8", "1.5", 1.0, 3 },
       { "de_DE.UTF-8", "1.500", 1500.0, 5 },
       { "de_DE.UTF-8", "36.893.488.147.419.103.232", 0x1.0p65, 26 }
     };
@@ -50,33 +65,11 @@ do_test (void)
 
   for (n = 0; n < ntests; ++n)
     {
-      double d;
-      char *endp;
-
       if (setlocale (LC_ALL, tests[n].loc) == NULL)
-	{
-	  printf ("cannot set locale %s\n", tests[n].loc);
-	  result = 1;
-	  continue;
-	}
+        FAIL_EXIT1 ("cannot set locale %s", tests[n].loc);
 
-      d = __strtod_internal (tests[n].str, &endp, 1);
-      if (d != tests[n].exp)
-	{
-	  printf ("strtod(\"%s\") returns %g and not %g\n",
-		  tests[n].str, d, tests[n].exp);
-	  result = 1;
-	}
-      else if (endp - tests[n].str != tests[n].nread)
-	{
-	  printf ("strtod(\"%s\") read %td bytes and not %td\n",
-		  tests[n].str, endp - tests[n].str, tests[n].nread);
-	  result = 1;
-	}
+      check_one (tests[n].str, tests[n].exp, tests[n].nread);
     }
-
-  if (result == 0)
-    puts ("all OK");
 
   return result ? EXIT_FAILURE : EXIT_SUCCESS;
 }

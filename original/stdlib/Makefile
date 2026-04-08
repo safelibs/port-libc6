@@ -353,14 +353,17 @@ tests := \
   # tests
 
 tests-internal := \
+  tst-tls-atexit \
+  tst-tls-atexit-nodelete \
+  # tests-internal
+
+tests += \
   tst-qsort4 \
   tst-strtod1i \
   tst-strtod3 \
   tst-strtod4 \
   tst-strtod5i \
-  tst-tls-atexit \
-  tst-tls-atexit-nodelete \
-  # tests-internal
+  # tests
 
 tests-static := \
   tst-secure-getenv \

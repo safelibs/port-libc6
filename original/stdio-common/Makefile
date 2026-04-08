@@ -280,9 +280,9 @@ generated += \
   siglist-aux.S \
   # generated
 
-tests-internal = \
+tests += \
   tst-grouping_iterator \
-  # tests-internal
+  # tests
 
 test-srcs = \
   tst-printf \

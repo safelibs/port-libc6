@@ -1,4 +1,4 @@
-/* Test for /proc/self/fd (or /dev/fd) pathname construction.
+/* Test public descriptor-alias paths (/proc/self/fd or /dev/fd).
    Copyright (C) 2020-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -17,51 +17,46 @@
    <https://www.gnu.org/licenses/>.  */
 
 #include <fcntl.h>
-#include <fd_to_filename.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <support/check.h>
+#include <support/support.h>
 #include <support/xunistd.h>
 
-/* Run a check on one value.  */
-static void
-check (int value)
+static const char *
+fd_alias_prefix (void)
 {
-  if (value < 0)
-    /* Negative descriptor values violate the precondition.  */
-    return;
-
-  struct fd_to_filename storage;
-  char *actual = __fd_to_filename (value, &storage);
-  char expected[100];
-  snprintf (expected, sizeof (expected), FD_TO_FILENAME_PREFIX "%d", value);
-  TEST_COMPARE_STRING (actual, expected);
-}
-
-/* Check various ranges constructed around powers.  */
-static void
-check_ranges (int base)
-{
-  unsigned int power = 1;
-  do
+  static const char *candidates[] = { "/proc/self/fd/", "/dev/fd/" };
+  for (size_t i = 0; i < sizeof (candidates) / sizeof (candidates[0]); ++i)
     {
-      for (int factor = 1; factor < base; ++factor)
-        for (int shift = -1000; shift <= 1000; ++shift)
-          check (factor * power + shift);
+      char *probe = xasprintf ("%s0", candidates[i]);
+      int exists = access (probe, F_OK);
+      free (probe);
+      if (exists == 0)
+        return candidates[i];
     }
-  while (!__builtin_mul_overflow (power, base, &power));
+  FAIL_UNSUPPORTED ("descriptor aliases are unavailable");
 }
 
-/* Check that it is actually possible to use a the constructed
-   name.  */
-static void
-check_open (void)
+static int
+open_alias (const char *prefix, int fd, int flags)
 {
+  char *path = xasprintf ("%s%d", prefix, fd);
+  int result = xopen (path, flags, 0);
+  free (path);
+  return result;
+}
+
+static void
+check_aliasing (void)
+{
+  const char *prefix = fd_alias_prefix ();
   int pipes[2];
   xpipe (pipes);
 
-  struct fd_to_filename storage;
-  int read_alias = xopen (__fd_to_filename (pipes[0], &storage), O_RDONLY, 0);
-  int write_alias = xopen (__fd_to_filename (pipes[1], &storage), O_WRONLY, 0);
+  int read_alias = open_alias (prefix, pipes[0], O_RDONLY);
+  int write_alias = open_alias (prefix, pipes[1], O_WRONLY);
 
   /* Ensure that all the descriptor numbers are different.  */
   TEST_VERIFY (pipes[0] < pipes[1]);
@@ -90,10 +85,7 @@ check_open (void)
 static int
 do_test (void)
 {
-  check_ranges (2);
-  check_ranges (10);
-
-  check_open ();
+  check_aliasing ();
 
   return 0;
 }

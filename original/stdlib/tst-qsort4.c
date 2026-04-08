@@ -1,4 +1,4 @@
-/* Test the heapsort implementation behind qsort.
+/* Test qsort_r on adversarial inputs.
    Copyright (C) 2023-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -16,15 +16,16 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-#include "qsort.c"
-
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <support/check.h>
 #include <support/support.h>
 
 static int
 cmp (const void *a1, const void *b1, void *closure)
 {
+  (void) closure;
   const signed char *a = a1;
   const signed char *b = b1;
   return *a - *b;
@@ -35,7 +36,7 @@ check_one_sort (signed char *array, int length)
 {
   signed char *copy = xmalloc (length);
   memcpy (copy, array, length);
-  heapsort_r (copy, length - 1, 1, cmp, NULL);
+  qsort_r (copy, length, sizeof (*copy), cmp, NULL);
 
   /* Verify that the result is sorted.  */
   for (int i = 1; i < length; ++i)
@@ -56,14 +57,14 @@ check_one_sort (signed char *array, int length)
 
   /* Verify that no elements went away or were added.  */
   {
-    int expected_counts[256];
+    int expected_counts[256] = { 0 };
     for (int i = 0; i < length; ++i)
       ++expected_counts[array[i] & 0xff];
-    int actual_counts[256];
+    int actual_counts[256] = { 0 };
     for (int i = 0; i < length; ++i)
       ++actual_counts[copy[i] & 0xff];
     for (int i = 0; i < 256; ++i)
-      TEST_COMPARE (expected_counts[i], expected_counts[i]);
+      TEST_COMPARE (expected_counts[i], actual_counts[i]);
   }
 
   free (copy);

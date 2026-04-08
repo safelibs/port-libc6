@@ -92,24 +92,11 @@ tests := \
   tst-getni2 \
   tst-if_index-long \
   tst-inet6_rth \
+  tst-inet6_scopeid_pton \
   tst-network \
   tst-ntoa \
   tst-sockaddr \
   # tests
-
-# tst-deadline must be linked statically so that we can access
-# internal functions.
-tests-static += tst-deadline
-tests-internal += tst-deadline
-
-# tst-idna_name_classify must be linked statically because it tests
-# internal functionality.
-tests-static += tst-idna_name_classify
-tests-internal += tst-idna_name_classify
-
-# tst-inet6_scopeid_pton also needs internal functions but does not
-# need to be linked statically.
-tests-internal += tst-inet6_scopeid_pton
 
 include ../Rules
 

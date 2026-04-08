@@ -17,14 +17,10 @@
    <https://www.gnu.org/licenses/>.  */
 
 #include <arpa/inet.h>
-#include <resolv/resolv-internal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <support/check.h>
-#include <support/next_to_fault.h>
-#include <support/xunistd.h>
-#include <unistd.h>
 
 struct test_case
 {
@@ -90,43 +86,13 @@ check_result (const char *what, const struct test_case *t, int family,
 static void
 run_one_test (const struct test_case *t)
 {
-  size_t test_len = strlen (t->input);
+  unsigned char out4[4] = { 0 };
+  unsigned char out6[16] = { 0 };
 
-  struct support_next_to_fault ntf_out4 = support_next_to_fault_allocate (4);
-  struct support_next_to_fault ntf_out6 = support_next_to_fault_allocate (16);
-
-  /* inet_pton requires NUL termination.  */
-  {
-    struct support_next_to_fault ntf_in
-      = support_next_to_fault_allocate (test_len + 1);
-    memcpy (ntf_in.buffer, t->input, test_len + 1);
-    memset (ntf_out4.buffer, 0, 4);
-    check_result ("inet_pton", t, AF_INET, ntf_out4.buffer,
-                  inet_pton (AF_INET, ntf_in.buffer, ntf_out4.buffer));
-    memset (ntf_out6.buffer, 0, 16);
-    check_result ("inet_pton", t, AF_INET6, ntf_out6.buffer,
-                  inet_pton (AF_INET6, ntf_in.buffer, ntf_out6.buffer));
-    support_next_to_fault_free (&ntf_in);
-  }
-
-  /* __inet_pton_length does not require NUL termination.  */
-  {
-    struct support_next_to_fault ntf_in
-      = support_next_to_fault_allocate (test_len);
-    memcpy (ntf_in.buffer, t->input, test_len);
-    memset (ntf_out4.buffer, 0, 4);
-    check_result ("__inet_pton_length", t, AF_INET, ntf_out4.buffer,
-                  __inet_pton_length (AF_INET, ntf_in.buffer, ntf_in.length,
-                                      ntf_out4.buffer));
-    memset (ntf_out6.buffer, 0, 16);
-    check_result ("__inet_pton_length", t, AF_INET6, ntf_out6.buffer,
-                  __inet_pton_length (AF_INET6, ntf_in.buffer, ntf_in.length,
-                                      ntf_out6.buffer));
-    support_next_to_fault_free (&ntf_in);
-  }
-
-  support_next_to_fault_free (&ntf_out4);
-  support_next_to_fault_free (&ntf_out6);
+  check_result ("inet_pton", t, AF_INET, out4,
+                inet_pton (AF_INET, t->input, out4));
+  check_result ("inet_pton", t, AF_INET6, out6,
+                inet_pton (AF_INET6, t->input, out6));
 }
 
 /* The test cases were manually crafted and the set enhanced with

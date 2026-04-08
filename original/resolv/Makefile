@@ -73,10 +73,8 @@ routines := \
   resolv_context \
   # routines
 
-tests = tst-aton tst-leaks tst-inet_ntop
+tests = tst-aton tst-leaks tst-inet_ntop tst-inet_aton_exact tst-inet_pton
 tests-container = tst-leaks2
-
-tests-internal += tst-inet_aton_exact
 
 
 generate := mtrace-tst-leaks.out tst-leaks.mtrace tst-leaks2.mtrace
@@ -148,9 +146,6 @@ extra-test-objs += tst-no-libidn2.os
 LDFLAGS-tst-no-libidn2.so = -Wl,-soname,libidn2.so.0
 
 endif # $(build-shared)
-
-# This test accesses __inet_ntop_length, an internal libc function.
-tests-internal += tst-inet_pton
 
 # This test accesses the __p_secstodate compat symbol.
 ifeq ($(have-GLIBC_2.26)$(build-shared),yesyes)

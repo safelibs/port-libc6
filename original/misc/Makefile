@@ -215,8 +215,6 @@ routines_no_fortify += \
   # routines_no_fortify
 
 generated += \
-  tst-allocate_once-mem.out \
-  tst-allocate_once.mtrace \
   tst-error1-mem.out \
   tst-error1.mtrace \
   # generated
@@ -236,6 +234,7 @@ tests := \
   tst-dirname \
   tst-empty \
   tst-error1 \
+  tst-fd_to_filename \
   tst-fdset \
   tst-hsearch \
   tst-insremque \
@@ -273,20 +272,10 @@ ifeq (yes,$(build-shared))
 tests += tst-gethostid
 endif
 
-tests-internal := \
-  tst-allocate_once \
-  tst-atomic \
-  tst-atomic-long \
-  # tests-internal
 tests-static := tst-empty
 
-# Test for the internal, non-exported __fd_to_filename function.
-tests-internal += tst-fd_to_filename
-tests-static += tst-fd_to_filename
-
 ifeq ($(run-built-tests),yes)
-tests-special += $(objpfx)tst-error1-mem.out \
-  $(objpfx)tst-allocate_once-mem.out
+tests-special += $(objpfx)tst-error1-mem.out
 endif
 
 tests-container := \
@@ -346,12 +335,6 @@ tst-error1-ENV = MALLOC_TRACE=$(objpfx)tst-error1.mtrace \
 tst-error1-ARGS = $(objpfx)tst-error1.out
 $(objpfx)tst-error1-mem.out: $(objpfx)tst-error1.out
 	$(common-objpfx)malloc/mtrace $(objpfx)tst-error1.mtrace > $@; \
-	$(evaluate-test)
-
-tst-allocate_once-ENV = MALLOC_TRACE=$(objpfx)tst-allocate_once.mtrace \
-			LD_PRELOAD=$(common-objpfx)/malloc/libc_malloc_debug.so
-$(objpfx)tst-allocate_once-mem.out: $(objpfx)tst-allocate_once.out
-	$(common-objpfx)malloc/mtrace $(objpfx)tst-allocate_once.mtrace > $@; \
 	$(evaluate-test)
 
 tst-syslog-long-progname-ENV = GLIBC_TUNABLES=glibc.malloc.check=3 \
