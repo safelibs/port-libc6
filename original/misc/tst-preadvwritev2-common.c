@@ -103,20 +103,43 @@ do_test_with_invalid_iov (void)
 static void
 do_test_with_invalid_flags (void)
 {
-  /* Set the next bit from the mask of all supported flags.  */
-  int invalid_flag = RWF_SUPPORTED != 0 ? __builtin_clz (RWF_SUPPORTED) : 2;
-  invalid_flag = 0x1 << ((sizeof (int) * CHAR_BIT) - invalid_flag);
-
   char buf[32];
   const struct iovec vec = { .iov_base = buf, .iov_len = sizeof (buf) };
-  if (preadv2 (temp_fd, &vec, 1, 0, invalid_flag) != -1)
+  unsigned int invalid_flag = 0;
+
+  /* Newer kernels may support additional low-order RWF_* bits that this
+     source tree does not know about.  Search for a high-order bit that both
+     syscalls still reject as unsupported.  */
+  for (int bit = sizeof (unsigned int) * CHAR_BIT - 1; bit >= 0; --bit)
+    {
+      unsigned int candidate = 1U << bit;
+
+      if ((candidate & RWF_SUPPORTED) != 0)
+        continue;
+
+      if (preadv2 (temp_fd, &vec, 1, 0, (int) candidate) != -1
+          || errno != ENOTSUP)
+        continue;
+
+      if (pwritev2 (temp_fd, &vec, 1, 0, (int) candidate) != -1
+          || errno != ENOTSUP)
+        continue;
+
+      invalid_flag = candidate;
+      break;
+    }
+
+  if (invalid_flag == 0)
+    FAIL_UNSUPPORTED ("could not find an unsupported preadv2/pwritev2 flag");
+
+  if (preadv2 (temp_fd, &vec, 1, 0, (int) invalid_flag) != -1)
     FAIL_EXIT1 ("preadv2 did not fail with an invalid flag");
   if (errno != ENOTSUP)
     FAIL_EXIT1 ("preadv2 failure did not set errno to ENOTSUP (%d)", errno);
 
   /* This might fail for compat syscall (32 bits running on 64 bits kernel)
      due a kernel issue.  */
-  if (pwritev2 (temp_fd, &vec, 1, 0, invalid_flag) != -1)
+  if (pwritev2 (temp_fd, &vec, 1, 0, (int) invalid_flag) != -1)
     FAIL_EXIT1 ("pwritev2 did not fail with an invalid flag");
   if (errno != ENOTSUP)
     FAIL_EXIT1 ("pwritev2 failure did not set errno to ENOTSUP (%d)", errno);

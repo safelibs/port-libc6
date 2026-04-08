@@ -256,11 +256,19 @@ def read_all_ulps(srcdir):
     """Read all platforms' libm-test-ulps files."""
     all_ulps = {}
     for dirpath, dirnames, filenames in os.walk(srcdir):
-        if 'libm-test-ulps' in filenames:
+        # Ignore source-control and quilt metadata directories such as .git
+        # and .pc.  They may contain backup copies of libm-test-ulps without
+        # the corresponding libm-test-ulps-name metadata.
+        dirnames[:] = [d for d in dirnames if not d.startswith('.')]
+        if 'libm-test-ulps' in filenames and 'libm-test-ulps-name' in filenames:
             with open(os.path.join(dirpath, 'libm-test-ulps-name')) as f:
                 name = f.read().rstrip()
             all_ulps[name] = Ulps()
             all_ulps[name].read(os.path.join(dirpath, 'libm-test-ulps'))
+        elif 'libm-test-ulps' in filenames:
+            raise FileNotFoundError(
+                'missing libm-test-ulps-name next to %s'
+                % os.path.join(dirpath, 'libm-test-ulps'))
     return all_ulps
 
 
