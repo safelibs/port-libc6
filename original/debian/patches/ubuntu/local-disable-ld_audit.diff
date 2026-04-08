@@ -1,0 +1,18 @@
+Description: pro-actively disable LD_AUDIT for setuid binaries, regardless
+ of where the libraries are loaded from. This is to try to make sure that
+ CVE-2010-3856 cannot sneak back in. Upstream is unlikely to take this,
+ since it limits the functionality of LD_AUDIT.
+Author: Kees Cook <kees@ubuntu.com>
+Author: Adam Conrad <adconrad@0c3.net>
+
+--- a/elf/rtld.c
++++ b/elf/rtld.c
+@@ -260,7 +260,7 @@
+ 	++list->current_tail;
+ 
+       /* If the name is valid, return it.  */
+-      if (dso_name_valid_for_suid (list->fname))
++      if (! __glibc_unlikely (__libc_enable_secure) && dso_name_valid_for_suid (list->fname))
+ 	return list->fname;
+ 
+       /* Otherwise wrap around to find the next list element. .  */

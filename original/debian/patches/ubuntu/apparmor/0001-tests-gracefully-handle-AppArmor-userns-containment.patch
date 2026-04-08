@@ -1,0 +1,71 @@
+From e614454dba5ac72207d21bb62a3db68efed49218 Mon Sep 17 00:00:00 2001
+From: Simon Chopin <simon.chopin@canonical.com>
+Date: Thu, 1 Feb 2024 12:34:02 +0100
+Subject: [PATCH] tests: gracefully handle AppArmor userns containment
+
+Recent AppArmor containment allows restricting unprivileged user
+namespaces, which is enabled by default on recent Ubuntu systems.
+
+When that happens, the affected tests will now be considered unsupported
+rather than simply failing.
+
+Further information:
+
+* https://gitlab.com/apparmor/apparmor/-/wikis/unprivileged_userns_restriction
+* https://ubuntu.com/blog/ubuntu-23-10-restricted-unprivileged-user-namespaces
+
+Signed-off-by: Simon Chopin <simon.chopin@canonical.com>
+
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/glibc/+bug/2048375
+Forwarded: https://sourceware.org/pipermail/libc-alpha/2024-February/154376.html
+---
+ support/test-container.c                   | 7 +++++--
+ sysdeps/unix/sysv/linux/tst-pidfd_getpid.c | 3 ++-
+ 2 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/support/test-container.c b/support/test-container.c
+index adf2b30215..af66cece51 100644
+--- a/support/test-container.c
++++ b/support/test-container.c
+@@ -682,6 +682,8 @@ check_for_unshare_hints (int require_pidns)
+     { "/proc/sys/kernel/unprivileged_userns_clone", 0, 1, 0 },
+     /* ALT Linux has an alternate way of doing the same.  */
+     { "/proc/sys/kernel/userns_restrict", 1, 0, 0 },
++    /* AppArmor can also disable unprivileged user namespaces */
++    { "/proc/sys/kernel/apparmor_restrict_unprivileged_userns", 1, 0, 0 },
+     /* Linux kernel >= 4.9 has a configurable limit on the number of
+        each namespace.  Some distros set the limit to zero to disable the
+        corresponding namespace as a "security policy".  */
+@@ -1108,10 +1110,11 @@ main (int argc, char **argv)
+     {
+       /* Older kernels may not support all the options, or security
+ 	 policy may block this call.  */
+-      if (errno == EINVAL || errno == EPERM || errno == ENOSPC)
++      if (errno == EINVAL || errno == EPERM
++          || errno == ENOSPC || errno == EACCES)
+ 	{
+ 	  int saved_errno = errno;
+-	  if (errno == EPERM || errno == ENOSPC)
++	  if (errno == EPERM || errno == ENOSPC || errno == EACCES)
+ 	    check_for_unshare_hints (require_pidns);
+ 	  FAIL_UNSUPPORTED ("unable to unshare user/fs: %s", strerror (saved_errno));
+ 	}
+diff --git a/sysdeps/unix/sysv/linux/tst-pidfd_getpid.c b/sysdeps/unix/sysv/linux/tst-pidfd_getpid.c
+index 0354da5abb..ef62fbe941 100644
+--- a/sysdeps/unix/sysv/linux/tst-pidfd_getpid.c
++++ b/sysdeps/unix/sysv/linux/tst-pidfd_getpid.c
+@@ -61,7 +61,8 @@ do_test (void)
+ 	  {
+ 	    /* Older kernels may not support all the options, or security
+ 	       policy may block this call.  */
+-	    if (errno == EINVAL || errno == EPERM || errno == ENOSPC)
++	    if (errno == EINVAL || errno == EPERM
++	        || errno == ENOSPC || errno == EACCES)
+ 	      exit (EXIT_UNSUPPORTED);
+ 	    FAIL_EXIT1 ("unshare user/fs/pid failed: %m");
+ 	  }
+
+base-commit: 42cc619dfbc44e263239c2de870bae11ad65810a
+-- 
+2.40.1
+

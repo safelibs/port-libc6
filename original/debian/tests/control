@@ -1,0 +1,3 @@
+Tests: rebuild
+Depends: @builddeps@, fakeroot, binutils, linux-libc-dev [linux-any], gcc
+Restrictions: allow-stderr, needs-sudo

@@ -1,0 +1,32 @@
+The GNU Libc Reference manual has to be removed for licensing reasons.
+But some files have a dependency on manual/errno.texi; the easiest
+solution is to drop those dependencies and make sure that MAKEINFO=:
+so that no target depends on manual/*.texi files.
+
+---
+ stdio-common/Makefile      |    2 
+ sysdeps/mach/hurd/Makefile |    2 
+ 3 files changed, 184 insertions(+), 2 deletions(-)
+
+--- a/stdio-common/Makefile
++++ b/stdio-common/Makefile
+@@ -251,7 +251,7 @@
+   # generated
+ endif # $(run-built-tests)
+ 
+-tests-special += $(objpfx)tst-errno-manual.out
++# tests-special += $(objpfx)tst-errno-manual.out
+ 
+ include ../Rules
+ 
+--- a/sysdeps/mach/hurd/Makefile
++++ b/sysdeps/mach/hurd/Makefile
+@@ -88,7 +88,7 @@
+ 	echo >> $@t
+ 	mv -f $@t $@
+ 
+-$(hurd)/bits/errno.h: $(common-objpfx)stamp-errnos ;
++$(hurd)/bits/errno-disabled.h: $(common-objpfx)stamp-errnos ;
+ $(common-objpfx)stamp-errnos: $(hurd)/errnos.awk $(errno.texinfo) \
+ 			      $(mach-errnos-deps) $(common-objpfx)errnos.d
+ 	mkdir -p $(hurd-objpfx)bits

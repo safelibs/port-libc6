@@ -1,0 +1,1969 @@
+GIT update of https://sourceware.org/git/glibc.git/release/2.39/master from glibc-2.39 to 983f34a1252de3ca6f2305c211d86530ea42010e
+
+diff --git a/ADVISORIES b/ADVISORIES
+new file mode 100644
+index 0000000000..d4e33f2df3
+--- /dev/null
++++ b/ADVISORIES
+@@ -0,0 +1,2 @@
++For the GNU C Library Security Advisories, see the git master branch:
++https://sourceware.org/git/?p=glibc.git;a=tree;f=advisories;hb=HEAD
+diff --git a/advisories/GLIBC-SA-2023-0001 b/advisories/GLIBC-SA-2023-0001
+deleted file mode 100644
+index 3d19c91b6a..0000000000
+--- a/advisories/GLIBC-SA-2023-0001
++++ /dev/null
+@@ -1,14 +0,0 @@
+-printf: incorrect output for integers with thousands separator and width field
+-
+-When the printf family of functions is called with a format specifier
+-that uses an <apostrophe> (enable grouping) and a minimum width
+-specifier, the resulting output could be larger than reasonably expected
+-by a caller that computed a tight bound on the buffer size.  The
+-resulting larger than expected output could result in a buffer overflow
+-in the printf family of functions.
+-
+-CVE-Id: CVE-2023-25139
+-Public-Date: 2023-02-02
+-Vulnerable-Commit: e88b9f0e5cc50cab57a299dc7efe1a4eb385161d (2.37)
+-Fix-Commit: c980549cc6a1c03c23cc2fe3e7b0fe626a0364b0 (2.38)
+-Fix-Commit: 07b9521fc6369d000216b96562ff7c0ed32a16c4 (2.37-4)
+diff --git a/advisories/GLIBC-SA-2023-0002 b/advisories/GLIBC-SA-2023-0002
+deleted file mode 100644
+index 5122669a64..0000000000
+--- a/advisories/GLIBC-SA-2023-0002
++++ /dev/null
+@@ -1,15 +0,0 @@
+-getaddrinfo: Stack read overflow in no-aaaa mode
+-
+-If the system is configured in no-aaaa mode via /etc/resolv.conf,
+-getaddrinfo is called for the AF_UNSPEC address family, and a DNS
+-response is received over TCP that is larger than 2048 bytes,
+-getaddrinfo may potentially disclose stack contents via the returned
+-address data, or crash.
+-
+-CVE-Id: CVE-2023-4527
+-Public-Date: 2023-09-12
+-Vulnerable-Commit: f282cdbe7f436c75864e5640a409a10485e9abb2 (2.36)
+-Fix-Commit: bd77dd7e73e3530203be1c52c8a29d08270cb25d (2.39)
+-Fix-Commit: 4ea972b7edd7e36610e8cde18bf7a8149d7bac4f (2.36-113)
+-Fix-Commit: b7529346025a130fee483d42178b5c118da971bb (2.37-38)
+-Fix-Commit: b25508dd774b617f99419bdc3cf2ace4560cd2d6 (2.38-19)
+diff --git a/advisories/GLIBC-SA-2023-0003 b/advisories/GLIBC-SA-2023-0003
+deleted file mode 100644
+index d3aef80348..0000000000
+--- a/advisories/GLIBC-SA-2023-0003
++++ /dev/null
+@@ -1,15 +0,0 @@
+-getaddrinfo: Potential use-after-free
+-
+-When an NSS plugin only implements the _gethostbyname2_r and
+-_getcanonname_r callbacks, getaddrinfo could use memory that was freed
+-during buffer resizing, potentially causing a crash or read or write to
+-arbitrary memory.
+-
+-CVE-Id: CVE-2023-4806
+-Public-Date: 2023-09-12
+-Fix-Commit: 973fe93a5675c42798b2161c6f29c01b0e243994 (2.39)
+-Fix-Commit: e09ee267c03e3150c2c9ba28625ab130705a485e (2.34-420)
+-Fix-Commit: e3ccb230a961b4797510e6a1f5f21fd9021853e7 (2.35-270)
+-Fix-Commit: a9728f798ec7f05454c95637ee6581afaa9b487d (2.36-115)
+-Fix-Commit: 6529a7466c935f36e9006b854d6f4e1d4876f942 (2.37-39)
+-Fix-Commit: 00ae4f10b504bc4564e9f22f00907093f1ab9338 (2.38-20)
+diff --git a/advisories/GLIBC-SA-2023-0004 b/advisories/GLIBC-SA-2023-0004
+deleted file mode 100644
+index 5286a7aa54..0000000000
+--- a/advisories/GLIBC-SA-2023-0004
++++ /dev/null
+@@ -1,16 +0,0 @@
+-tunables: local privilege escalation through buffer overflow
+-
+-If a tunable of the form NAME=NAME=VAL is passed in the environment of a
+-setuid program and NAME is valid, it may result in a buffer overflow,
+-which could be exploited to achieve escalated privileges.  This flaw was
+-introduced in glibc 2.34.
+-
+-CVE-Id: CVE-2023-4911
+-Public-Date: 2023-10-03
+-Vulnerable-Commit: 2ed18c5b534d9e92fc006202a5af0df6b72e7aca (2.34)
+-Fix-Commit: 1056e5b4c3f2d90ed2b4a55f96add28da2f4c8fa (2.39)
+-Fix-Commit: dcc367f148bc92e7f3778a125f7a416b093964d9 (2.34-423)
+-Fix-Commit: c84018a05aec80f5ee6f682db0da1130b0196aef (2.35-274)
+-Fix-Commit: 22955ad85186ee05834e47e665056148ca07699c (2.36-118)
+-Fix-Commit: b4e23c75aea756b4bddc4abcf27a1c6dca8b6bd3 (2.37-45)
+-Fix-Commit: 750a45a783906a19591fb8ff6b7841470f1f5701 (2.38-27)
+diff --git a/advisories/GLIBC-SA-2023-0005 b/advisories/GLIBC-SA-2023-0005
+deleted file mode 100644
+index cc4eb90b82..0000000000
+--- a/advisories/GLIBC-SA-2023-0005
++++ /dev/null
+@@ -1,18 +0,0 @@
+-getaddrinfo: DoS due to memory leak
+-
+-The fix for CVE-2023-4806 introduced a memory leak when an application
+-calls getaddrinfo for AF_INET6 with AI_CANONNAME, AI_ALL and AI_V4MAPPED
+-flags set.
+-
+-CVE-Id: CVE-2023-5156
+-Public-Date: 2023-09-25
+-Vulnerable-Commit: e09ee267c03e3150c2c9ba28625ab130705a485e (2.34-420)
+-Vulnerable-Commit: e3ccb230a961b4797510e6a1f5f21fd9021853e7 (2.35-270)
+-Vulnerable-Commit: a9728f798ec7f05454c95637ee6581afaa9b487d (2.36-115)
+-Vulnerable-Commit: 6529a7466c935f36e9006b854d6f4e1d4876f942 (2.37-39)
+-Vulnerable-Commit: 00ae4f10b504bc4564e9f22f00907093f1ab9338 (2.38-20)
+-Fix-Commit: 8006457ab7e1cd556b919f477348a96fe88f2e49 (2.34-421)
+-Fix-Commit: 17092c0311f954e6f3c010f73ce3a78c24ac279a (2.35-272)
+-Fix-Commit: 856bac55f98dc840e7c27cfa82262b933385de90 (2.36-116)
+-Fix-Commit: 4473d1b87d04b25cdd0e0354814eeaa421328268 (2.37-42)
+-Fix-Commit: 5ee59ca371b99984232d7584fe2b1a758b4421d3 (2.38-24)
+diff --git a/advisories/GLIBC-SA-2024-0001 b/advisories/GLIBC-SA-2024-0001
+deleted file mode 100644
+index 28931c75ae..0000000000
+--- a/advisories/GLIBC-SA-2024-0001
++++ /dev/null
+@@ -1,15 +0,0 @@
+-syslog: Heap buffer overflow in __vsyslog_internal
+-
+-__vsyslog_internal did not handle a case where printing a SYSLOG_HEADER
+-containing a long program name failed to update the required buffer
+-size, leading to the allocation and overflow of a too-small buffer on
+-the heap.
+-
+-CVE-Id: CVE-2023-6246
+-Public-Date: 2024-01-30
+-Vulnerable-Commit: 52a5be0df411ef3ff45c10c7c308cb92993d15b1 (2.37)
+-Fix-Commit: 6bd0e4efcc78f3c0115e5ea9739a1642807450da (2.39)
+-Fix-Commit: 23514c72b780f3da097ecf33a793b7ba9c2070d2 (2.38-42)
+-Fix-Commit: 97a4292aa4a2642e251472b878d0ec4c46a0e59a (2.37-57)
+-Vulnerable-Commit: b0e7888d1fa2dbd2d9e1645ec8c796abf78880b9 (2.36-16)
+-Fix-Commit: d1a83b6767f68b3cb5b4b4ea2617254acd040c82 (2.36-126)
+diff --git a/advisories/GLIBC-SA-2024-0002 b/advisories/GLIBC-SA-2024-0002
+deleted file mode 100644
+index 940bfcf2fc..0000000000
+--- a/advisories/GLIBC-SA-2024-0002
++++ /dev/null
+@@ -1,15 +0,0 @@
+-syslog: Heap buffer overflow in __vsyslog_internal
+-
+-__vsyslog_internal used the return value of snprintf/vsnprintf to
+-calculate buffer sizes for memory allocation.  If these functions (for
+-any reason) failed and returned -1, the resulting buffer would be too
+-small to hold output.
+-
+-CVE-Id: CVE-2023-6779
+-Public-Date: 2024-01-30
+-Vulnerable-Commit: 52a5be0df411ef3ff45c10c7c308cb92993d15b1 (2.37)
+-Fix-Commit: 7e5a0c286da33159d47d0122007aac016f3e02cd (2.39)
+-Fix-Commit: d0338312aace5bbfef85e03055e1212dd0e49578 (2.38-43)
+-Fix-Commit: 67062eccd9a65d7fda9976a56aeaaf6c25a80214 (2.37-58)
+-Vulnerable-Commit: b0e7888d1fa2dbd2d9e1645ec8c796abf78880b9 (2.36-16)
+-Fix-Commit: 2bc9d7c002bdac38b5c2a3f11b78e309d7765b83 (2.36-127)
+diff --git a/advisories/GLIBC-SA-2024-0003 b/advisories/GLIBC-SA-2024-0003
+deleted file mode 100644
+index b43a5150ab..0000000000
+--- a/advisories/GLIBC-SA-2024-0003
++++ /dev/null
+@@ -1,13 +0,0 @@
+-syslog: Integer overflow in __vsyslog_internal
+-
+-__vsyslog_internal calculated a buffer size by adding two integers, but
+-did not first check if the addition would overflow.
+-
+-CVE-Id: CVE-2023-6780
+-Public-Date: 2024-01-30
+-Vulnerable-Commit: 52a5be0df411ef3ff45c10c7c308cb92993d15b1 (2.37)
+-Fix-Commit: ddf542da94caf97ff43cc2875c88749880b7259b (2.39)
+-Fix-Commit: d37c2b20a4787463d192b32041c3406c2bd91de0 (2.38-44)
+-Fix-Commit: 2b58cba076e912961ceaa5fa58588e4b10f791c0 (2.37-59)
+-Vulnerable-Commit: b0e7888d1fa2dbd2d9e1645ec8c796abf78880b9 (2.36-16)
+-Fix-Commit: b9b7d6a27aa0632f334352fa400771115b3c69b7 (2.36-128)
+diff --git a/advisories/README b/advisories/README
+deleted file mode 100644
+index 94e68b1350..0000000000
+--- a/advisories/README
++++ /dev/null
+@@ -1,73 +0,0 @@
+-GNU C Library Security Advisory Format
+-======================================
+-
+-Security advisories in this directory follow a simple git commit log
+-format, with a heading and free-format description augmented with tags
+-to allow parsing key information.  References to code changes are
+-specific to the glibc repository and follow a specific format:
+-
+-  Tag-name: <commit-ref> (release-version)
+-
+-The <commit-ref> indicates a specific commit in the repository.  The
+-release-version indicates the publicly consumable release in which this
+-commit is known to exist.  The release-version is derived from the
+-git-describe format, (i.e. stripped out from glibc-2.34.NNN-gxxxx) and
+-is of the form 2.34-NNN.  If the -NNN suffix is absent, it means that
+-the change is in that release tarball, otherwise the change is on the
+-release/2.YY/master branch and not in any released tarball.
+-
+-The following tags are currently being used:
+-
+-CVE-Id:
+-This is the CVE-Id assigned under the CVE Program
+-(https://www.cve.org/).
+-
+-Public-Date:
+-The date this issue became publicly known.
+-
+-Vulnerable-Commit:
+-The commit that introduced this vulnerability.  There could be multiple
+-entries, one for each release branch in the glibc repository; the
+-release-version portion of this tag should tell you which branch this is
+-on.
+-
+-Fix-Commit:
+-The commit that fixed this vulnerability.  There could be multiple
+-entries for each release branch in the glibc repository, indicating that
+-all of those commits contributed to fixing that issue in each of those
+-branches.
+-
+-Adding an Advisory
+-------------------
+-
+-An advisory for a CVE needs to be added on the master branch in two steps:
+-
+-1. Add the text of the advisory without any Fix-Commit tags along with
+-   the fix for the CVE.  Add the Vulnerable-Commit tag, if applicable.
+-   The advisories directory does not exist in release branches, so keep
+-   the advisory text commit distinct from the code changes, to ease
+-   backports.  Ask for the GLIBC-SA advisory number from the security
+-   team.
+-
+-2. Finish all backports on release branches and then back on the msater
+-   branch, add all commit refs to the advisory using the Fix-Commit
+-   tags.  Don't bother adding the release-version subscript since the
+-   next step will overwrite it.
+-
+-3. Run the process-advisories.sh script in the scripts directory on the
+-   advisory:
+-
+-     scripts/process-advisories.sh update GLIBC-SA-YYYY-NNNN
+-
+-   (replace YYYY-NNNN with the actual advisory number).
+-
+-4. Verify the updated advisory and push the result.
+-
+-Getting a NEWS snippet from advisories
+---------------------------------------
+-
+-Run:
+-
+-  scripts/process-advisories.sh news
+-
+-and copy the content into the NEWS file.
+diff --git a/elf/dl-diagnostics.c b/elf/dl-diagnostics.c
+index 7345ebc4e5..aaf67b87e8 100644
+--- a/elf/dl-diagnostics.c
++++ b/elf/dl-diagnostics.c
+@@ -235,6 +235,8 @@ _dl_print_diagnostics (char **environ)
+   _dl_diagnostics_print_labeled_value ("dl_hwcap", GLRO (dl_hwcap));
+   _dl_diagnostics_print_labeled_value ("dl_hwcap_important", HWCAP_IMPORTANT);
+   _dl_diagnostics_print_labeled_value ("dl_hwcap2", GLRO (dl_hwcap2));
++  _dl_diagnostics_print_labeled_value ("dl_hwcap3", GLRO (dl_hwcap3));
++  _dl_diagnostics_print_labeled_value ("dl_hwcap4", GLRO (dl_hwcap4));
+   _dl_diagnostics_print_labeled_string
+     ("dl_hwcaps_subdirs", _dl_hwcaps_subdirs);
+   _dl_diagnostics_print_labeled_value
+diff --git a/elf/dl-support.c b/elf/dl-support.c
+index 2f502c8b0d..451932dd03 100644
+--- a/elf/dl-support.c
++++ b/elf/dl-support.c
+@@ -158,6 +158,8 @@ const ElfW(Phdr) *_dl_phdr;
+ size_t _dl_phnum;
+ uint64_t _dl_hwcap;
+ uint64_t _dl_hwcap2;
++uint64_t _dl_hwcap3;
++uint64_t _dl_hwcap4;
+ 
+ enum dso_sort_algorithm _dl_dso_sort_algo;
+ 
+diff --git a/elf/elf.h b/elf/elf.h
+index 455731663c..1c394c64cd 100644
+--- a/elf/elf.h
++++ b/elf/elf.h
+@@ -1234,6 +1234,10 @@ typedef struct
+ #define AT_RSEQ_FEATURE_SIZE	27	/* rseq supported feature size.  */
+ #define AT_RSEQ_ALIGN	28		/* rseq allocation alignment.  */
+ 
++/* More machine-dependent hints about processor capabilities.  */
++#define AT_HWCAP3	29		/* extension of AT_HWCAP.  */
++#define AT_HWCAP4	30		/* extension of AT_HWCAP.  */
++
+ #define AT_EXECFN	31		/* Filename of executable.  */
+ 
+ /* Pointer to the global system page used for system calls and other
+diff --git a/manual/stdbit.texi b/manual/stdbit.texi
+index fe41c671d8..6c75ed9a20 100644
+--- a/manual/stdbit.texi
++++ b/manual/stdbit.texi
+@@ -32,7 +32,13 @@ and @code{unsigned long long int}.  In addition, there is a
+ corresponding type-generic macro (not listed below), named the same as
+ the functions but without any suffix such as @samp{_uc}.  The
+ type-generic macro can only be used with an argument of an unsigned
+-integer type with a width of 8, 16, 32 or 64 bits.
++integer type with a width of 8, 16, 32 or 64 bits, or when using
++a compiler with support for
++@uref{https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html,@code{__builtin_stdc_bit_ceil}},
++etc.@:, built-in functions such as GCC 14.1 or later
++any unsigned integer type those built-in functions support.
++In GCC 14.1 that includes support for @code{unsigned __int128} and
++@code{unsigned _BitInt(@var{n})} if supported by the target.
+ 
+ @deftypefun {unsigned int} stdc_leading_zeros_uc (unsigned char @var{x})
+ @deftypefunx {unsigned int} stdc_leading_zeros_us (unsigned short @var{x})
+diff --git a/stdlib/Makefile b/stdlib/Makefile
+index d587f054d1..9898cc5d8a 100644
+--- a/stdlib/Makefile
++++ b/stdlib/Makefile
+@@ -308,6 +308,7 @@ tests := \
+   tst-setcontext10 \
+   tst-setcontext11 \
+   tst-stdbit-Wconversion \
++  tst-stdbit-builtins \
+   tst-stdc_bit_ceil \
+   tst-stdc_bit_floor \
+   tst-stdc_bit_width \
+diff --git a/stdlib/stdbit.h b/stdlib/stdbit.h
+index f334eb174d..2801590c63 100644
+--- a/stdlib/stdbit.h
++++ b/stdlib/stdbit.h
+@@ -64,9 +64,13 @@ extern unsigned int stdc_leading_zeros_ul (unsigned long int __x)
+ __extension__
+ extern unsigned int stdc_leading_zeros_ull (unsigned long long int __x)
+      __THROW __attribute_const__;
+-#define stdc_leading_zeros(x)				\
++#if __glibc_has_builtin (__builtin_stdc_leading_zeros)
++# define stdc_leading_zeros(x) (__builtin_stdc_leading_zeros (x))
++#else
++# define stdc_leading_zeros(x)				\
+   (stdc_leading_zeros_ull (x)				\
+    - (unsigned int) (8 * (sizeof (0ULL) - sizeof (x))))
++#endif
+ 
+ #if __GNUC_PREREQ (3, 4) || __glibc_has_builtin (__builtin_clzll)
+ static __always_inline unsigned int
+@@ -116,9 +120,13 @@ extern unsigned int stdc_leading_ones_ul (unsigned long int __x)
+ __extension__
+ extern unsigned int stdc_leading_ones_ull (unsigned long long int __x)
+      __THROW __attribute_const__;
+-#define stdc_leading_ones(x)					\
++#if __glibc_has_builtin (__builtin_stdc_leading_ones)
++# define stdc_leading_ones(x) (__builtin_stdc_leading_ones (x))
++#else
++# define stdc_leading_ones(x)					\
+   (stdc_leading_ones_ull ((unsigned long long int) (x)		\
+ 			  << 8 * (sizeof (0ULL) - sizeof (x))))
++#endif
+ 
+ #if __GNUC_PREREQ (3, 4) || __glibc_has_builtin (__builtin_clzll)
+ static __always_inline unsigned int
+@@ -168,11 +176,15 @@ extern unsigned int stdc_trailing_zeros_ul (unsigned long int __x)
+ __extension__
+ extern unsigned int stdc_trailing_zeros_ull (unsigned long long int __x)
+      __THROW __attribute_const__;
+-#define stdc_trailing_zeros(x)				\
++#if __glibc_has_builtin (__builtin_stdc_trailing_zeros)
++# define stdc_trailing_zeros(x) (__builtin_stdc_trailing_zeros (x))
++#else
++# define stdc_trailing_zeros(x)				\
+   (sizeof (x) == 8 ? stdc_trailing_zeros_ull (x)	\
+    : sizeof (x) == 4 ? stdc_trailing_zeros_ui (x)	\
+    : sizeof (x) == 2 ? stdc_trailing_zeros_us (__pacify_uint16 (x))	\
+    : stdc_trailing_zeros_uc (__pacify_uint8 (x)))
++#endif
+ 
+ #if __GNUC_PREREQ (3, 4) || __glibc_has_builtin (__builtin_ctzll)
+ static __always_inline unsigned int
+@@ -222,7 +234,11 @@ extern unsigned int stdc_trailing_ones_ul (unsigned long int __x)
+ __extension__
+ extern unsigned int stdc_trailing_ones_ull (unsigned long long int __x)
+      __THROW __attribute_const__;
+-#define stdc_trailing_ones(x) (stdc_trailing_ones_ull (x))
++#if __glibc_has_builtin (__builtin_stdc_trailing_ones)
++# define stdc_trailing_ones(x) (__builtin_stdc_trailing_ones (x))
++#else
++# define stdc_trailing_ones(x) (stdc_trailing_ones_ull (x))
++#endif
+ 
+ #if __GNUC_PREREQ (3, 4) || __glibc_has_builtin (__builtin_ctzll)
+ static __always_inline unsigned int
+@@ -272,11 +288,15 @@ extern unsigned int stdc_first_leading_zero_ul (unsigned long int __x)
+ __extension__
+ extern unsigned int stdc_first_leading_zero_ull (unsigned long long int __x)
+      __THROW __attribute_const__;
+-#define stdc_first_leading_zero(x)			\
++#if __glibc_has_builtin (__builtin_stdc_first_leading_zero)
++# define stdc_first_leading_zero(x) (__builtin_stdc_first_leading_zero (x))
++#else
++# define stdc_first_leading_zero(x)			\
+   (sizeof (x) == 8 ? stdc_first_leading_zero_ull (x)	\
+    : sizeof (x) == 4 ? stdc_first_leading_zero_ui (x)	\
+    : sizeof (x) == 2 ? stdc_first_leading_zero_us (__pacify_uint16 (x))	\
+    : stdc_first_leading_zero_uc (__pacify_uint8 (x)))
++#endif
+ 
+ #if __GNUC_PREREQ (3, 4) || __glibc_has_builtin (__builtin_clzll)
+ static __always_inline unsigned int
+@@ -326,11 +346,15 @@ extern unsigned int stdc_first_leading_one_ul (unsigned long int __x)
+ __extension__
+ extern unsigned int stdc_first_leading_one_ull (unsigned long long int __x)
+      __THROW __attribute_const__;
+-#define stdc_first_leading_one(x)			\
++#if __glibc_has_builtin (__builtin_stdc_first_leading_one)
++# define stdc_first_leading_one(x) (__builtin_stdc_first_leading_one (x))
++#else
++# define stdc_first_leading_one(x)			\
+   (sizeof (x) == 8 ? stdc_first_leading_one_ull (x)	\
+    : sizeof (x) == 4 ? stdc_first_leading_one_ui (x)	\
+    : sizeof (x) == 2 ? stdc_first_leading_one_us (__pacify_uint16 (x))	\
+    : stdc_first_leading_one_uc (__pacify_uint8 (x)))
++#endif
+ 
+ #if __GNUC_PREREQ (3, 4) || __glibc_has_builtin (__builtin_clzll)
+ static __always_inline unsigned int
+@@ -380,11 +404,15 @@ extern unsigned int stdc_first_trailing_zero_ul (unsigned long int __x)
+ __extension__
+ extern unsigned int stdc_first_trailing_zero_ull (unsigned long long int __x)
+      __THROW __attribute_const__;
+-#define stdc_first_trailing_zero(x)			\
++#if __glibc_has_builtin (__builtin_stdc_first_trailing_zero)
++# define stdc_first_trailing_zero(x) (__builtin_stdc_first_trailing_zero (x))
++#else
++# define stdc_first_trailing_zero(x)			\
+   (sizeof (x) == 8 ? stdc_first_trailing_zero_ull (x)	\
+    : sizeof (x) == 4 ? stdc_first_trailing_zero_ui (x)	\
+    : sizeof (x) == 2 ? stdc_first_trailing_zero_us (__pacify_uint16 (x)) \
+    : stdc_first_trailing_zero_uc (__pacify_uint8 (x)))
++#endif
+ 
+ #if __GNUC_PREREQ (3, 4) || __glibc_has_builtin (__builtin_ctzll)
+ static __always_inline unsigned int
+@@ -434,11 +462,15 @@ extern unsigned int stdc_first_trailing_one_ul (unsigned long int __x)
+ __extension__
+ extern unsigned int stdc_first_trailing_one_ull (unsigned long long int __x)
+      __THROW __attribute_const__;
+-#define stdc_first_trailing_one(x)			\
++#if __glibc_has_builtin (__builtin_stdc_first_trailing_one)
++# define stdc_first_trailing_one(x) (__builtin_stdc_first_trailing_one (x))
++#else
++# define stdc_first_trailing_one(x)			\
+   (sizeof (x) == 8 ? stdc_first_trailing_one_ull (x)	\
+    : sizeof (x) == 4 ? stdc_first_trailing_one_ui (x)	\
+    : sizeof (x) == 2 ? stdc_first_trailing_one_us (__pacify_uint16 (x))	\
+    : stdc_first_trailing_one_uc (__pacify_uint8 (x)))
++#endif
+ 
+ #if __GNUC_PREREQ (3, 4) || __glibc_has_builtin (__builtin_ctzll)
+ static __always_inline unsigned int
+@@ -488,9 +520,13 @@ extern unsigned int stdc_count_zeros_ul (unsigned long int __x)
+ __extension__
+ extern unsigned int stdc_count_zeros_ull (unsigned long long int __x)
+      __THROW __attribute_const__;
+-#define stdc_count_zeros(x)				\
++#if __glibc_has_builtin (__builtin_stdc_count_zeros)
++# define stdc_count_zeros(x) (__builtin_stdc_count_zeros (x))
++#else
++# define stdc_count_zeros(x)				\
+   (stdc_count_zeros_ull (x)				\
+    - (unsigned int) (8 * (sizeof (0ULL) - sizeof (x))))
++#endif
+ 
+ #if __GNUC_PREREQ (3, 4) || __glibc_has_builtin (__builtin_popcountll)
+ static __always_inline unsigned int
+@@ -540,7 +576,11 @@ extern unsigned int stdc_count_ones_ul (unsigned long int __x)
+ __extension__
+ extern unsigned int stdc_count_ones_ull (unsigned long long int __x)
+      __THROW __attribute_const__;
+-#define stdc_count_ones(x) (stdc_count_ones_ull (x))
++#if __glibc_has_builtin (__builtin_stdc_count_ones)
++# define stdc_count_ones(x) (__builtin_stdc_count_ones (x))
++#else
++# define stdc_count_ones(x) (stdc_count_ones_ull (x))
++#endif
+ 
+ #if __GNUC_PREREQ (3, 4) || __glibc_has_builtin (__builtin_popcountll)
+ static __always_inline unsigned int
+@@ -590,10 +630,14 @@ extern bool stdc_has_single_bit_ul (unsigned long int __x)
+ __extension__
+ extern bool stdc_has_single_bit_ull (unsigned long long int __x)
+      __THROW __attribute_const__;
+-#define stdc_has_single_bit(x)				\
++#if __glibc_has_builtin (__builtin_stdc_has_single_bit)
++# define stdc_has_single_bit(x) (__builtin_stdc_has_single_bit (x))
++#else
++# define stdc_has_single_bit(x)				\
+   ((bool) (sizeof (x) <= sizeof (unsigned int)		\
+ 	   ? stdc_has_single_bit_ui (x)			\
+ 	   : stdc_has_single_bit_ull (x)))
++#endif
+ 
+ static __always_inline bool
+ __hsb64_inline (uint64_t __x)
+@@ -641,7 +685,11 @@ extern unsigned int stdc_bit_width_ul (unsigned long int __x)
+ __extension__
+ extern unsigned int stdc_bit_width_ull (unsigned long long int __x)
+      __THROW __attribute_const__;
+-#define stdc_bit_width(x) (stdc_bit_width_ull (x))
++#if __glibc_has_builtin (__builtin_stdc_bit_width)
++# define stdc_bit_width(x) (__builtin_stdc_bit_width (x))
++#else
++# define stdc_bit_width(x) (stdc_bit_width_ull (x))
++#endif
+ 
+ #if __GNUC_PREREQ (3, 4) || __glibc_has_builtin (__builtin_clzll)
+ static __always_inline unsigned int
+@@ -691,7 +739,11 @@ extern unsigned long int stdc_bit_floor_ul (unsigned long int __x)
+ __extension__
+ extern unsigned long long int stdc_bit_floor_ull (unsigned long long int __x)
+      __THROW __attribute_const__;
+-#define stdc_bit_floor(x) ((__typeof (x)) stdc_bit_floor_ull (x))
++#if __glibc_has_builtin (__builtin_stdc_bit_floor)
++# define stdc_bit_floor(x) (__builtin_stdc_bit_floor (x))
++#else
++# define stdc_bit_floor(x) ((__typeof (x)) stdc_bit_floor_ull (x))
++#endif
+ 
+ #if __GNUC_PREREQ (3, 4) || __glibc_has_builtin (__builtin_clzll)
+ static __always_inline uint64_t
+@@ -743,7 +795,11 @@ extern unsigned long int stdc_bit_ceil_ul (unsigned long int __x)
+ __extension__
+ extern unsigned long long int stdc_bit_ceil_ull (unsigned long long int __x)
+      __THROW __attribute_const__;
+-#define stdc_bit_ceil(x) ((__typeof (x)) stdc_bit_ceil_ull (x))
++#if __glibc_has_builtin (__builtin_stdc_bit_ceil)
++# define stdc_bit_ceil(x) (__builtin_stdc_bit_ceil (x))
++#else
++# define stdc_bit_ceil(x) ((__typeof (x)) stdc_bit_ceil_ull (x))
++#endif
+ 
+ #if __GNUC_PREREQ (3, 4) || __glibc_has_builtin (__builtin_clzll)
+ static __always_inline uint64_t
+diff --git a/stdlib/tst-stdbit-builtins.c b/stdlib/tst-stdbit-builtins.c
+new file mode 100644
+index 0000000000..536841ca8a
+--- /dev/null
++++ b/stdlib/tst-stdbit-builtins.c
+@@ -0,0 +1,778 @@
++/* Test <stdbit.h> type-generic macros with compiler __builtin_stdc_* support.
++   Copyright (C) 2024 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, see
++   <https://www.gnu.org/licenses/>.  */
++
++#include <stdbit.h>
++#include <limits.h>
++#include <support/check.h>
++
++#if __glibc_has_builtin (__builtin_stdc_leading_zeros) \
++    && __glibc_has_builtin (__builtin_stdc_leading_ones) \
++    && __glibc_has_builtin (__builtin_stdc_trailing_zeros) \
++    && __glibc_has_builtin (__builtin_stdc_trailing_ones) \
++    && __glibc_has_builtin (__builtin_stdc_first_leading_zero) \
++    && __glibc_has_builtin (__builtin_stdc_first_leading_one) \
++    && __glibc_has_builtin (__builtin_stdc_first_trailing_zero) \
++    && __glibc_has_builtin (__builtin_stdc_first_trailing_one) \
++    && __glibc_has_builtin (__builtin_stdc_count_zeros) \
++    && __glibc_has_builtin (__builtin_stdc_count_ones) \
++    && __glibc_has_builtin (__builtin_stdc_has_single_bit) \
++    && __glibc_has_builtin (__builtin_stdc_bit_width) \
++    && __glibc_has_builtin (__builtin_stdc_bit_floor) \
++    && __glibc_has_builtin (__builtin_stdc_bit_ceil)
++
++# if !defined (BITINT_MAXWIDTH) && defined (__BITINT_MAXWIDTH__)
++#  define BITINT_MAXWIDTH __BITINT_MAXWIDTH__
++# endif
++
++typedef unsigned char uc;
++typedef unsigned short us;
++typedef unsigned int ui;
++typedef unsigned long int ul;
++typedef unsigned long long int ull;
++
++# define expr_has_type(e, t) _Generic (e, default : 0, t : 1)
++
++static int
++do_test (void)
++{
++  TEST_COMPARE (stdc_leading_zeros ((uc) 0), CHAR_BIT);
++  TEST_COMPARE (expr_has_type (stdc_leading_zeros ((uc) 0), ui), 1);
++  TEST_COMPARE (stdc_leading_zeros ((us) 0), sizeof (short) * CHAR_BIT);
++  TEST_COMPARE (expr_has_type (stdc_leading_zeros ((us) 0), ui), 1);
++  TEST_COMPARE (stdc_leading_zeros (0U), sizeof (int) * CHAR_BIT);
++  TEST_COMPARE (expr_has_type (stdc_leading_zeros (0U), ui), 1);
++  TEST_COMPARE (stdc_leading_zeros (0UL), sizeof (long int) * CHAR_BIT);
++  TEST_COMPARE (expr_has_type (stdc_leading_zeros (0UL), ui), 1);
++  TEST_COMPARE (stdc_leading_zeros (0ULL), sizeof (long long int) * CHAR_BIT);
++  TEST_COMPARE (expr_has_type (stdc_leading_zeros (0ULL), ui), 1);
++  TEST_COMPARE (stdc_leading_zeros ((uc) ~0U), 0);
++  TEST_COMPARE (stdc_leading_zeros ((us) ~0U), 0);
++  TEST_COMPARE (stdc_leading_zeros (~0U), 0);
++  TEST_COMPARE (stdc_leading_zeros (~0UL), 0);
++  TEST_COMPARE (stdc_leading_zeros (~0ULL), 0);
++  TEST_COMPARE (stdc_leading_zeros ((uc) 3), CHAR_BIT - 2);
++  TEST_COMPARE (stdc_leading_zeros ((us) 9), sizeof (short) * CHAR_BIT - 4);
++  TEST_COMPARE (stdc_leading_zeros (34U), sizeof (int) * CHAR_BIT - 6);
++  TEST_COMPARE (stdc_leading_zeros (130UL), sizeof (long int) * CHAR_BIT - 8);
++  TEST_COMPARE (stdc_leading_zeros (512ULL),
++		sizeof (long long int) * CHAR_BIT - 10);
++  TEST_COMPARE (stdc_leading_ones ((uc) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_leading_ones ((uc) 0), ui), 1);
++  TEST_COMPARE (stdc_leading_ones ((us) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_leading_ones ((us) 0), ui), 1);
++  TEST_COMPARE (stdc_leading_ones (0U), 0);
++  TEST_COMPARE (expr_has_type (stdc_leading_ones (0U), ui), 1);
++  TEST_COMPARE (stdc_leading_ones (0UL), 0);
++  TEST_COMPARE (expr_has_type (stdc_leading_ones (0UL), ui), 1);
++  TEST_COMPARE (stdc_leading_ones (0ULL), 0);
++  TEST_COMPARE (expr_has_type (stdc_leading_ones (0ULL), ui), 1);
++  TEST_COMPARE (stdc_leading_ones ((uc) ~0U), CHAR_BIT);
++  TEST_COMPARE (stdc_leading_ones ((us) ~0U), sizeof (short) * CHAR_BIT);
++  TEST_COMPARE (stdc_leading_ones (~0U), sizeof (int) * CHAR_BIT);
++  TEST_COMPARE (stdc_leading_ones (~0UL), sizeof (long int) * CHAR_BIT);
++  TEST_COMPARE (stdc_leading_ones (~0ULL), sizeof (long long int) * CHAR_BIT);
++  TEST_COMPARE (stdc_leading_ones ((uc) ~3), CHAR_BIT - 2);
++  TEST_COMPARE (stdc_leading_ones ((us) ~9), sizeof (short) * CHAR_BIT - 4);
++  TEST_COMPARE (stdc_leading_ones (~34U), sizeof (int) * CHAR_BIT - 6);
++  TEST_COMPARE (stdc_leading_ones (~130UL), sizeof (long int) * CHAR_BIT - 8);
++  TEST_COMPARE (stdc_leading_ones (~512ULL),
++		sizeof (long long int) * CHAR_BIT - 10);
++  TEST_COMPARE (stdc_trailing_zeros ((uc) 0), CHAR_BIT);
++  TEST_COMPARE (expr_has_type (stdc_trailing_zeros ((uc) 0), ui), 1);
++  TEST_COMPARE (stdc_trailing_zeros ((us) 0), sizeof (short) * CHAR_BIT);
++  TEST_COMPARE (expr_has_type (stdc_trailing_zeros ((us) 0), ui), 1);
++  TEST_COMPARE (stdc_trailing_zeros (0U), sizeof (int) * CHAR_BIT);
++  TEST_COMPARE (expr_has_type (stdc_trailing_zeros (0U), ui), 1);
++  TEST_COMPARE (stdc_trailing_zeros (0UL), sizeof (long int) * CHAR_BIT);
++  TEST_COMPARE (expr_has_type (stdc_trailing_zeros (0UL), ui), 1);
++  TEST_COMPARE (stdc_trailing_zeros (0ULL), sizeof (long long int) * CHAR_BIT);
++  TEST_COMPARE (expr_has_type (stdc_trailing_zeros (0ULL), ui), 1);
++  TEST_COMPARE (stdc_trailing_zeros ((uc) ~0U), 0);
++  TEST_COMPARE (stdc_trailing_zeros ((us) ~0U), 0);
++  TEST_COMPARE (stdc_trailing_zeros (~0U), 0);
++  TEST_COMPARE (stdc_trailing_zeros (~0UL), 0);
++  TEST_COMPARE (stdc_trailing_zeros (~0ULL), 0);
++  TEST_COMPARE (stdc_trailing_zeros ((uc) 2), 1);
++  TEST_COMPARE (stdc_trailing_zeros ((us) 24), 3);
++  TEST_COMPARE (stdc_trailing_zeros (32U), 5);
++  TEST_COMPARE (stdc_trailing_zeros (128UL), 7);
++  TEST_COMPARE (stdc_trailing_zeros (512ULL), 9);
++  TEST_COMPARE (stdc_trailing_ones ((uc) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_trailing_ones ((uc) 0), ui), 1);
++  TEST_COMPARE (stdc_trailing_ones ((us) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_trailing_ones ((us) 0), ui), 1);
++  TEST_COMPARE (stdc_trailing_ones (0U), 0);
++  TEST_COMPARE (expr_has_type (stdc_trailing_ones (0U), ui), 1);
++  TEST_COMPARE (stdc_trailing_ones (0UL), 0);
++  TEST_COMPARE (expr_has_type (stdc_trailing_ones (0UL), ui), 1);
++  TEST_COMPARE (stdc_trailing_ones (0ULL), 0);
++  TEST_COMPARE (expr_has_type (stdc_trailing_ones (0ULL), ui), 1);
++  TEST_COMPARE (stdc_trailing_ones ((uc) ~0U), CHAR_BIT);
++  TEST_COMPARE (stdc_trailing_ones ((us) ~0U), sizeof (short) * CHAR_BIT);
++  TEST_COMPARE (stdc_trailing_ones (~0U), sizeof (int) * CHAR_BIT);
++  TEST_COMPARE (stdc_trailing_ones (~0UL), sizeof (long int) * CHAR_BIT);
++  TEST_COMPARE (stdc_trailing_ones (~0ULL), sizeof (long long int) * CHAR_BIT);
++  TEST_COMPARE (stdc_trailing_ones ((uc) 5), 1);
++  TEST_COMPARE (stdc_trailing_ones ((us) 15), 4);
++  TEST_COMPARE (stdc_trailing_ones (127U), 7);
++  TEST_COMPARE (stdc_trailing_ones (511UL), 9);
++  TEST_COMPARE (stdc_trailing_ones (~0ULL >> 2),
++		sizeof (long long int) * CHAR_BIT - 2);
++  TEST_COMPARE (stdc_first_leading_zero ((uc) 0), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_zero ((uc) 0), ui), 1);
++  TEST_COMPARE (stdc_first_leading_zero ((us) 0), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_zero ((us) 0), ui), 1);
++  TEST_COMPARE (stdc_first_leading_zero (0U), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_zero (0U), ui), 1);
++  TEST_COMPARE (stdc_first_leading_zero (0UL), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_zero (0UL), ui), 1);
++  TEST_COMPARE (stdc_first_leading_zero (0ULL), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_zero (0ULL), ui), 1);
++  TEST_COMPARE (stdc_first_leading_zero ((uc) ~0U), 0);
++  TEST_COMPARE (stdc_first_leading_zero ((us) ~0U), 0);
++  TEST_COMPARE (stdc_first_leading_zero (~0U), 0);
++  TEST_COMPARE (stdc_first_leading_zero (~0UL), 0);
++  TEST_COMPARE (stdc_first_leading_zero (~0ULL), 0);
++  TEST_COMPARE (stdc_first_leading_zero ((uc) ~3U), CHAR_BIT - 1);
++  TEST_COMPARE (stdc_first_leading_zero ((us) ~15U),
++		sizeof (short) * CHAR_BIT - 3);
++  TEST_COMPARE (stdc_first_leading_zero (~63U), sizeof (int) * CHAR_BIT - 5);
++  TEST_COMPARE (stdc_first_leading_zero (~255UL),
++		sizeof (long int) * CHAR_BIT - 7);
++  TEST_COMPARE (stdc_first_leading_zero (~1023ULL),
++		sizeof (long long int) * CHAR_BIT - 9);
++  TEST_COMPARE (stdc_first_leading_one ((uc) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_one ((uc) 0), ui), 1);
++  TEST_COMPARE (stdc_first_leading_one ((us) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_one ((us) 0), ui), 1);
++  TEST_COMPARE (stdc_first_leading_one (0U), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_one (0U), ui), 1);
++  TEST_COMPARE (stdc_first_leading_one (0UL), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_one (0UL), ui), 1);
++  TEST_COMPARE (stdc_first_leading_one (0ULL), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_one (0ULL), ui), 1);
++  TEST_COMPARE (stdc_first_leading_one ((uc) ~0U), 1);
++  TEST_COMPARE (stdc_first_leading_one ((us) ~0U), 1);
++  TEST_COMPARE (stdc_first_leading_one (~0U), 1);
++  TEST_COMPARE (stdc_first_leading_one (~0UL), 1);
++  TEST_COMPARE (stdc_first_leading_one (~0ULL), 1);
++  TEST_COMPARE (stdc_first_leading_one ((uc) 3), CHAR_BIT - 1);
++  TEST_COMPARE (stdc_first_leading_one ((us) 9),
++		sizeof (short) * CHAR_BIT - 3);
++  TEST_COMPARE (stdc_first_leading_one (34U), sizeof (int) * CHAR_BIT - 5);
++  TEST_COMPARE (stdc_first_leading_one (130UL),
++		sizeof (long int) * CHAR_BIT - 7);
++  TEST_COMPARE (stdc_first_leading_one (512ULL),
++		sizeof (long long int) * CHAR_BIT - 9);
++  TEST_COMPARE (stdc_first_trailing_zero ((uc) 0), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_zero ((uc) 0), ui), 1);
++  TEST_COMPARE (stdc_first_trailing_zero ((us) 0), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_zero ((us) 0), ui), 1);
++  TEST_COMPARE (stdc_first_trailing_zero (0U), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_zero (0U), ui), 1);
++  TEST_COMPARE (stdc_first_trailing_zero (0UL), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_zero (0UL), ui), 1);
++  TEST_COMPARE (stdc_first_trailing_zero (0ULL), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_zero (0ULL), ui), 1);
++  TEST_COMPARE (stdc_first_trailing_zero ((uc) ~0U), 0);
++  TEST_COMPARE (stdc_first_trailing_zero ((us) ~0U), 0);
++  TEST_COMPARE (stdc_first_trailing_zero (~0U), 0);
++  TEST_COMPARE (stdc_first_trailing_zero (~0UL), 0);
++  TEST_COMPARE (stdc_first_trailing_zero (~0ULL), 0);
++  TEST_COMPARE (stdc_first_trailing_zero ((uc) 2), 1);
++  TEST_COMPARE (stdc_first_trailing_zero ((us) 15), 5);
++  TEST_COMPARE (stdc_first_trailing_zero (63U), 7);
++  TEST_COMPARE (stdc_first_trailing_zero (128UL), 1);
++  TEST_COMPARE (stdc_first_trailing_zero (511ULL), 10);
++  TEST_COMPARE (stdc_first_trailing_one ((uc) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_one ((uc) 0), ui), 1);
++  TEST_COMPARE (stdc_first_trailing_one ((us) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_one ((us) 0), ui), 1);
++  TEST_COMPARE (stdc_first_trailing_one (0U), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_one (0U), ui), 1);
++  TEST_COMPARE (stdc_first_trailing_one (0UL), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_one (0UL), ui), 1);
++  TEST_COMPARE (stdc_first_trailing_one (0ULL), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_one (0ULL), ui), 1);
++  TEST_COMPARE (stdc_first_trailing_one ((uc) ~0U), 1);
++  TEST_COMPARE (stdc_first_trailing_one ((us) ~0U), 1);
++  TEST_COMPARE (stdc_first_trailing_one (~0U), 1);
++  TEST_COMPARE (stdc_first_trailing_one (~0UL), 1);
++  TEST_COMPARE (stdc_first_trailing_one (~0ULL), 1);
++  TEST_COMPARE (stdc_first_trailing_one ((uc) 4), 3);
++  TEST_COMPARE (stdc_first_trailing_one ((us) 96), 6);
++  TEST_COMPARE (stdc_first_trailing_one (127U), 1);
++  TEST_COMPARE (stdc_first_trailing_one (511UL), 1);
++  TEST_COMPARE (stdc_first_trailing_one (~0ULL << 12), 13);
++  TEST_COMPARE (stdc_count_zeros ((uc) 0), CHAR_BIT);
++  TEST_COMPARE (expr_has_type (stdc_count_zeros ((uc) 0), ui), 1);
++  TEST_COMPARE (stdc_count_zeros ((us) 0), sizeof (short) * CHAR_BIT);
++  TEST_COMPARE (expr_has_type (stdc_count_zeros ((us) 0), ui), 1);
++  TEST_COMPARE (stdc_count_zeros (0U), sizeof (int) * CHAR_BIT);
++  TEST_COMPARE (expr_has_type (stdc_count_zeros (0U), ui), 1);
++  TEST_COMPARE (stdc_count_zeros (0UL), sizeof (long int) * CHAR_BIT);
++  TEST_COMPARE (expr_has_type (stdc_count_zeros (0UL), ui), 1);
++  TEST_COMPARE (stdc_count_zeros (0ULL), sizeof (long long int) * CHAR_BIT);
++  TEST_COMPARE (expr_has_type (stdc_count_zeros (0ULL), ui), 1);
++  TEST_COMPARE (stdc_count_zeros ((uc) ~0U), 0);
++  TEST_COMPARE (stdc_count_zeros ((us) ~0U), 0);
++  TEST_COMPARE (stdc_count_zeros (~0U), 0);
++  TEST_COMPARE (stdc_count_zeros (~0UL), 0);
++  TEST_COMPARE (stdc_count_zeros (~0ULL), 0);
++  TEST_COMPARE (stdc_count_zeros ((uc) 1U), CHAR_BIT - 1);
++  TEST_COMPARE (stdc_count_zeros ((us) 42), sizeof (short) * CHAR_BIT - 3);
++  TEST_COMPARE (stdc_count_zeros (291U), sizeof (int) * CHAR_BIT - 4);
++  TEST_COMPARE (stdc_count_zeros (~1315UL), 5);
++  TEST_COMPARE (stdc_count_zeros (3363ULL),
++		sizeof (long long int) * CHAR_BIT - 6);
++  TEST_COMPARE (stdc_count_ones ((uc) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_count_ones ((uc) 0), ui), 1);
++  TEST_COMPARE (stdc_count_ones ((us) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_count_ones ((us) 0), ui), 1);
++  TEST_COMPARE (stdc_count_ones (0U), 0);
++  TEST_COMPARE (expr_has_type (stdc_count_ones (0U), ui), 1);
++  TEST_COMPARE (stdc_count_ones (0UL), 0);
++  TEST_COMPARE (expr_has_type (stdc_count_ones (0UL), ui), 1);
++  TEST_COMPARE (stdc_count_ones (0ULL), 0);
++  TEST_COMPARE (expr_has_type (stdc_count_ones (0ULL), ui), 1);
++  TEST_COMPARE (stdc_count_ones ((uc) ~0U), CHAR_BIT);
++  TEST_COMPARE (stdc_count_ones ((us) ~0U), sizeof (short) * CHAR_BIT);
++  TEST_COMPARE (stdc_count_ones (~0U), sizeof (int) * CHAR_BIT);
++  TEST_COMPARE (stdc_count_ones (~0UL), sizeof (long int) * CHAR_BIT);
++  TEST_COMPARE (stdc_count_ones (~0ULL), sizeof (long long int) * CHAR_BIT);
++  TEST_COMPARE (stdc_count_ones ((uc) ~1U), CHAR_BIT - 1);
++  TEST_COMPARE (stdc_count_ones ((us) ~42), sizeof (short) * CHAR_BIT - 3);
++  TEST_COMPARE (stdc_count_ones (~291U), sizeof (int) * CHAR_BIT - 4);
++  TEST_COMPARE (stdc_count_ones (1315UL), 5);
++  TEST_COMPARE (stdc_count_ones (~3363ULL),
++		sizeof (long long int) * CHAR_BIT - 6);
++  TEST_COMPARE (stdc_has_single_bit ((uc) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_has_single_bit ((uc) 0), _Bool), 1);
++  TEST_COMPARE (stdc_has_single_bit ((us) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_has_single_bit ((us) 0), _Bool), 1);
++  TEST_COMPARE (stdc_has_single_bit (0U), 0);
++  TEST_COMPARE (expr_has_type (stdc_has_single_bit (0U), _Bool), 1);
++  TEST_COMPARE (stdc_has_single_bit (0UL), 0);
++  TEST_COMPARE (expr_has_type (stdc_has_single_bit (0UL), _Bool), 1);
++  TEST_COMPARE (stdc_has_single_bit (0ULL), 0);
++  TEST_COMPARE (expr_has_type (stdc_has_single_bit (0ULL), _Bool), 1);
++  TEST_COMPARE (stdc_has_single_bit ((uc) 2), 1);
++  TEST_COMPARE (stdc_has_single_bit ((us) 8), 1);
++  TEST_COMPARE (stdc_has_single_bit (32U), 1);
++  TEST_COMPARE (stdc_has_single_bit (128UL), 1);
++  TEST_COMPARE (stdc_has_single_bit (512ULL), 1);
++  TEST_COMPARE (stdc_has_single_bit ((uc) 7), 0);
++  TEST_COMPARE (stdc_has_single_bit ((us) 96), 0);
++  TEST_COMPARE (stdc_has_single_bit (513U), 0);
++  TEST_COMPARE (stdc_has_single_bit (1022UL), 0);
++  TEST_COMPARE (stdc_has_single_bit (12ULL), 0);
++  TEST_COMPARE (stdc_bit_width ((uc) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_bit_width ((uc) 0), ui), 1);
++  TEST_COMPARE (stdc_bit_width ((us) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_bit_width ((us) 0), ui), 1);
++  TEST_COMPARE (stdc_bit_width (0U), 0);
++  TEST_COMPARE (expr_has_type (stdc_bit_width (0U), ui), 1);
++  TEST_COMPARE (stdc_bit_width (0UL), 0);
++  TEST_COMPARE (expr_has_type (stdc_bit_width (0UL), ui), 1);
++  TEST_COMPARE (stdc_bit_width (0ULL), 0);
++  TEST_COMPARE (expr_has_type (stdc_bit_width (0ULL), ui), 1);
++  TEST_COMPARE (stdc_bit_width ((uc) ~0U), CHAR_BIT);
++  TEST_COMPARE (stdc_bit_width ((us) ~0U), sizeof (short) * CHAR_BIT);
++  TEST_COMPARE (stdc_bit_width (~0U), sizeof (int) * CHAR_BIT);
++  TEST_COMPARE (stdc_bit_width (~0UL), sizeof (long int) * CHAR_BIT);
++  TEST_COMPARE (stdc_bit_width (~0ULL), sizeof (long long int) * CHAR_BIT);
++  TEST_COMPARE (stdc_bit_width ((uc) ((uc) ~0U >> 1)), CHAR_BIT - 1);
++  TEST_COMPARE (stdc_bit_width ((uc) 6), 3);
++  TEST_COMPARE (stdc_bit_width ((us) 12U), 4);
++  TEST_COMPARE (stdc_bit_width ((us) ((us) ~0U >> 5)),
++		sizeof (short) * CHAR_BIT - 5);
++  TEST_COMPARE (stdc_bit_width (137U), 8);
++  TEST_COMPARE (stdc_bit_width (269U), 9);
++  TEST_COMPARE (stdc_bit_width (39UL), 6);
++  TEST_COMPARE (stdc_bit_width (~0UL >> 2), sizeof (long int) * CHAR_BIT - 2);
++  TEST_COMPARE (stdc_bit_width (1023ULL), 10);
++  TEST_COMPARE (stdc_bit_width (1024ULL), 11);
++  TEST_COMPARE (stdc_bit_floor ((uc) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_bit_floor ((uc) 0), uc), 1);
++  TEST_COMPARE (stdc_bit_floor ((us) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_bit_floor ((us) 0), us), 1);
++  TEST_COMPARE (stdc_bit_floor (0U), 0U);
++  TEST_COMPARE (expr_has_type (stdc_bit_floor (0U), ui), 1);
++  TEST_COMPARE (stdc_bit_floor (0UL), 0UL);
++  TEST_COMPARE (expr_has_type (stdc_bit_floor (0UL), ul), 1);
++  TEST_COMPARE (stdc_bit_floor (0ULL), 0ULL);
++  TEST_COMPARE (expr_has_type (stdc_bit_floor (0ULL), ull), 1);
++  TEST_COMPARE (stdc_bit_floor ((uc) ~0U), (1U << (CHAR_BIT - 1)));
++  TEST_COMPARE (stdc_bit_floor ((us) ~0U),
++		(1U << (sizeof (short) * CHAR_BIT - 1)));
++  TEST_COMPARE (stdc_bit_floor (~0U), (1U << (sizeof (int) * CHAR_BIT - 1)));
++  TEST_COMPARE (stdc_bit_floor (~0UL),
++		(1UL << (sizeof (long int) * CHAR_BIT - 1)));
++  TEST_COMPARE (stdc_bit_floor (~0ULL),
++		(1ULL << (sizeof (long long int) * CHAR_BIT - 1)));
++  TEST_COMPARE (stdc_bit_floor ((uc) 4), 4);
++  TEST_COMPARE (stdc_bit_floor ((uc) 7), 4);
++  TEST_COMPARE (stdc_bit_floor ((us) 8U), 8);
++  TEST_COMPARE (stdc_bit_floor ((us) 31U), 16);
++  TEST_COMPARE (stdc_bit_floor (137U), 128U);
++  TEST_COMPARE (stdc_bit_floor (269U), 256U);
++  TEST_COMPARE (stdc_bit_floor (511UL), 256UL);
++  TEST_COMPARE (stdc_bit_floor (512UL), 512UL);
++  TEST_COMPARE (stdc_bit_floor (513UL), 512ULL);
++  TEST_COMPARE (stdc_bit_floor (1024ULL), 1024ULL);
++  TEST_COMPARE (stdc_bit_ceil ((uc) 0), 1);
++  TEST_COMPARE (expr_has_type (stdc_bit_ceil ((uc) 0), uc), 1);
++  TEST_COMPARE (stdc_bit_ceil ((us) 0), 1);
++  TEST_COMPARE (expr_has_type (stdc_bit_ceil ((us) 0), us), 1);
++  TEST_COMPARE (stdc_bit_ceil (0U), 1U);
++  TEST_COMPARE (expr_has_type (stdc_bit_ceil (0U), ui), 1);
++  TEST_COMPARE (stdc_bit_ceil (0UL), 1UL);
++  TEST_COMPARE (expr_has_type (stdc_bit_ceil (0UL), ul), 1);
++  TEST_COMPARE (stdc_bit_ceil (0ULL), 1ULL);
++  TEST_COMPARE (expr_has_type (stdc_bit_ceil (0ULL), ull), 1);
++  TEST_COMPARE (stdc_bit_ceil ((uc) ~0U), 0);
++  TEST_COMPARE (stdc_bit_ceil ((us) ~0U), 0);
++  TEST_COMPARE (stdc_bit_ceil (~0U), 0U);
++  TEST_COMPARE (stdc_bit_ceil (~0UL), 0UL);
++  TEST_COMPARE (stdc_bit_ceil (~0ULL), 0ULL);
++  TEST_COMPARE (stdc_bit_ceil ((uc) ((uc) ~0U >> 1)), (1U << (CHAR_BIT - 1)));
++  TEST_COMPARE (stdc_bit_ceil ((uc) ((uc) ~0U >> 1)), (1U << (CHAR_BIT - 1)));
++  TEST_COMPARE (stdc_bit_ceil ((us) ((us) ~0U >> 1)),
++		(1U << (sizeof (short) * CHAR_BIT - 1)));
++  TEST_COMPARE (stdc_bit_ceil ((us) ((us) ~0U >> 1)),
++		(1U << (sizeof (short) * CHAR_BIT - 1)));
++  TEST_COMPARE (stdc_bit_ceil (~0U >> 1),
++		(1U << (sizeof (int) * CHAR_BIT - 1)));
++  TEST_COMPARE (stdc_bit_ceil (1U << (sizeof (int) * CHAR_BIT - 1)),
++		(1U << (sizeof (int) * CHAR_BIT - 1)));
++  TEST_COMPARE (stdc_bit_ceil (~0UL >> 1),
++		(1UL << (sizeof (long int) * CHAR_BIT - 1)));
++  TEST_COMPARE (stdc_bit_ceil (~0UL >> 1),
++		(1UL << (sizeof (long int) * CHAR_BIT - 1)));
++  TEST_COMPARE (stdc_bit_ceil (1ULL
++			       << (sizeof (long long int) * CHAR_BIT - 1)),
++		(1ULL << (sizeof (long long int) * CHAR_BIT - 1)));
++  TEST_COMPARE (stdc_bit_ceil (~0ULL >> 1),
++		(1ULL << (sizeof (long long int) * CHAR_BIT - 1)));
++  TEST_COMPARE (stdc_bit_ceil ((uc) 1), 1);
++  TEST_COMPARE (stdc_bit_ceil ((uc) 2), 2);
++  TEST_COMPARE (stdc_bit_ceil ((us) 3U), 4);
++  TEST_COMPARE (stdc_bit_ceil ((us) 4U), 4);
++  TEST_COMPARE (stdc_bit_ceil (5U), 8U);
++  TEST_COMPARE (stdc_bit_ceil (269U), 512U);
++  TEST_COMPARE (stdc_bit_ceil (511UL), 512UL);
++  TEST_COMPARE (stdc_bit_ceil (512UL), 512UL);
++  TEST_COMPARE (stdc_bit_ceil (513ULL), 1024ULL);
++  TEST_COMPARE (stdc_bit_ceil (1025ULL), 2048ULL);
++# ifdef __SIZEOF_INT128__
++  TEST_COMPARE (stdc_leading_zeros ((unsigned __int128) 0),
++		sizeof (__int128) * CHAR_BIT);
++  TEST_COMPARE (expr_has_type (stdc_leading_zeros ((unsigned __int128) 0), ui),
++		1);
++  TEST_COMPARE (stdc_leading_zeros (~(unsigned __int128) 0), 0);
++  TEST_COMPARE (stdc_leading_ones ((unsigned __int128) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_leading_ones ((unsigned __int128) 0), ui),
++		1);
++  TEST_COMPARE (stdc_leading_ones (~(unsigned __int128) 0),
++		sizeof (__int128) * CHAR_BIT);
++  TEST_COMPARE (stdc_trailing_zeros ((unsigned __int128) 0),
++		sizeof (__int128) * CHAR_BIT);
++  TEST_COMPARE (expr_has_type (stdc_trailing_zeros ((unsigned __int128) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_trailing_zeros (~(unsigned __int128) 0), 0);
++  TEST_COMPARE (stdc_trailing_ones ((unsigned __int128) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_trailing_ones ((unsigned __int128) 0), ui),
++		1);
++  TEST_COMPARE (stdc_trailing_ones (~(unsigned __int128) 0),
++		sizeof (__int128) * CHAR_BIT);
++  TEST_COMPARE (stdc_first_leading_zero ((unsigned __int128) 0), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_zero ((unsigned __int128) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_first_leading_zero (~(unsigned __int128) 0), 0);
++  TEST_COMPARE (stdc_first_leading_one ((unsigned __int128) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_one ((unsigned __int128) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_first_leading_one (~(unsigned __int128) 0), 1);
++  TEST_COMPARE (stdc_first_trailing_zero ((unsigned __int128) 0), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_zero ((unsigned __int128)
++							 0), ui), 1);
++  TEST_COMPARE (stdc_first_trailing_zero (~(unsigned __int128) 0), 0);
++  TEST_COMPARE (stdc_first_trailing_one ((unsigned __int128) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_one ((unsigned __int128) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_first_trailing_one (~(unsigned __int128) 0), 1);
++  TEST_COMPARE (stdc_count_zeros ((unsigned __int128) 0),
++		sizeof (__int128) * CHAR_BIT);
++  TEST_COMPARE (expr_has_type (stdc_count_zeros ((unsigned __int128) 0), ui),
++		1);
++  TEST_COMPARE (stdc_count_zeros (~(unsigned __int128) 0), 0);
++  TEST_COMPARE (stdc_count_ones ((unsigned __int128) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_count_ones ((unsigned __int128) 0), ui),
++		1);
++  TEST_COMPARE (stdc_count_ones (~(unsigned __int128) 0),
++		sizeof (__int128) * CHAR_BIT);
++  TEST_COMPARE (stdc_has_single_bit ((unsigned __int128) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_has_single_bit ((unsigned __int128) 0),
++		_Bool), 1);
++  TEST_COMPARE (stdc_has_single_bit (~(unsigned __int128) 0), 0);
++  TEST_COMPARE (stdc_bit_width ((unsigned __int128) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_bit_width ((unsigned __int128) 0), ui), 1);
++  TEST_COMPARE (stdc_bit_width (~(unsigned __int128) 0),
++		sizeof (__int128) * CHAR_BIT);
++  TEST_COMPARE (stdc_bit_floor ((unsigned __int128) 0) != 0, 0);
++  TEST_COMPARE (expr_has_type (stdc_bit_floor ((unsigned __int128) 0),
++			       unsigned __int128), 1);
++  TEST_COMPARE (stdc_bit_floor (~(unsigned __int128) 0)
++		!= ((unsigned __int128) 1) << (sizeof (__int128)
++					       * CHAR_BIT - 1), 0);
++  TEST_COMPARE (stdc_bit_ceil ((unsigned __int128) 0) != 1, 0);
++  TEST_COMPARE (expr_has_type (stdc_bit_ceil ((unsigned __int128) 0),
++			       unsigned __int128), 1);
++  TEST_COMPARE (stdc_bit_ceil ((unsigned __int128) 1) != 1, 0);
++  TEST_COMPARE (stdc_bit_ceil ((~(unsigned __int128) 0) >> 1)
++		!= ((unsigned __int128) 1) << (sizeof (__int128)
++					       * CHAR_BIT - 1), 0);
++  TEST_COMPARE (stdc_bit_ceil (~(unsigned __int128) 0) != 0, 0);
++# endif
++  uc a = 0;
++  TEST_COMPARE (stdc_bit_width (a++), 0);
++  TEST_COMPARE (a, 1);
++  ull b = 0;
++  TEST_COMPARE (stdc_bit_width (b++), 0);
++  TEST_COMPARE (b, 1);
++  TEST_COMPARE (stdc_bit_floor (a++), 1);
++  TEST_COMPARE (a, 2);
++  TEST_COMPARE (stdc_bit_floor (b++), 1);
++  TEST_COMPARE (b, 2);
++  TEST_COMPARE (stdc_bit_ceil (a++), 2);
++  TEST_COMPARE (a, 3);
++  TEST_COMPARE (stdc_bit_ceil (b++), 2);
++  TEST_COMPARE (b, 3);
++  TEST_COMPARE (stdc_leading_zeros (a++), CHAR_BIT - 2);
++  TEST_COMPARE (a, 4);
++  TEST_COMPARE (stdc_leading_zeros (b++),
++		sizeof (long long int) * CHAR_BIT - 2);
++  TEST_COMPARE (b, 4);
++  TEST_COMPARE (stdc_leading_ones (a++), 0);
++  TEST_COMPARE (a, 5);
++  TEST_COMPARE (stdc_leading_ones (b++), 0);
++  TEST_COMPARE (b, 5);
++  TEST_COMPARE (stdc_trailing_zeros (a++), 0);
++  TEST_COMPARE (a, 6);
++  TEST_COMPARE (stdc_trailing_zeros (b++), 0);
++  TEST_COMPARE (b, 6);
++  TEST_COMPARE (stdc_trailing_ones (a++), 0);
++  TEST_COMPARE (a, 7);
++  TEST_COMPARE (stdc_trailing_ones (b++), 0);
++  TEST_COMPARE (b, 7);
++  TEST_COMPARE (stdc_first_leading_zero (a++), 1);
++  TEST_COMPARE (a, 8);
++  TEST_COMPARE (stdc_first_leading_zero (b++), 1);
++  TEST_COMPARE (b, 8);
++  TEST_COMPARE (stdc_first_leading_one (a++), CHAR_BIT - 3);
++  TEST_COMPARE (a, 9);
++  TEST_COMPARE (stdc_first_leading_one (b++),
++		sizeof (long long int) * CHAR_BIT - 3);
++  TEST_COMPARE (b, 9);
++  TEST_COMPARE (stdc_first_trailing_zero (a++), 2);
++  TEST_COMPARE (a, 10);
++  TEST_COMPARE (stdc_first_trailing_zero (b++), 2);
++  TEST_COMPARE (b, 10);
++  TEST_COMPARE (stdc_first_trailing_one (a++), 2);
++  TEST_COMPARE (a, 11);
++  TEST_COMPARE (stdc_first_trailing_one (b++), 2);
++  TEST_COMPARE (b, 11);
++  TEST_COMPARE (stdc_count_zeros (a++), CHAR_BIT - 3);
++  TEST_COMPARE (a, 12);
++  TEST_COMPARE (stdc_count_zeros (b++),
++		sizeof (long long int) * CHAR_BIT - 3);
++  TEST_COMPARE (b, 12);
++  TEST_COMPARE (stdc_count_ones (a++), 2);
++  TEST_COMPARE (a, 13);
++  TEST_COMPARE (stdc_count_ones (b++), 2);
++  TEST_COMPARE (b, 13);
++  TEST_COMPARE (stdc_has_single_bit (a++), 0);
++  TEST_COMPARE (a, 14);
++  TEST_COMPARE (stdc_has_single_bit (b++), 0);
++  TEST_COMPARE (b, 14);
++# ifdef BITINT_MAXWIDTH
++#  if BITINT_MAXWIDTH >= 64
++  TEST_COMPARE (stdc_leading_zeros (0uwb), 1);
++  TEST_COMPARE (expr_has_type (stdc_leading_zeros (0uwb), ui), 1);
++  TEST_COMPARE (stdc_leading_zeros (1uwb), 0);
++  TEST_COMPARE (expr_has_type (stdc_leading_zeros (1uwb), ui), 1);
++  TEST_COMPARE (stdc_leading_ones (0uwb), 0);
++  TEST_COMPARE (expr_has_type (stdc_leading_ones (0uwb), ui), 1);
++  TEST_COMPARE (stdc_leading_ones (1uwb), 1);
++  TEST_COMPARE (expr_has_type (stdc_leading_ones (1uwb), ui), 1);
++  TEST_COMPARE (stdc_trailing_zeros (0uwb), 1);
++  TEST_COMPARE (expr_has_type (stdc_trailing_zeros (0uwb), ui), 1);
++  TEST_COMPARE (stdc_trailing_zeros (1uwb), 0);
++  TEST_COMPARE (expr_has_type (stdc_trailing_zeros (1uwb), ui), 1);
++  TEST_COMPARE (stdc_trailing_ones (0uwb), 0);
++  TEST_COMPARE (expr_has_type (stdc_trailing_ones (0uwb), ui), 1);
++  TEST_COMPARE (stdc_trailing_ones (1uwb), 1);
++  TEST_COMPARE (expr_has_type (stdc_trailing_ones (1uwb), ui), 1);
++  TEST_COMPARE (stdc_first_leading_zero (0uwb), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_zero (0uwb), ui), 1);
++  TEST_COMPARE (stdc_first_leading_zero (1uwb), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_zero (1uwb), ui), 1);
++  TEST_COMPARE (stdc_first_leading_one (0uwb), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_one (0uwb), ui), 1);
++  TEST_COMPARE (stdc_first_leading_one (1uwb), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_one (1uwb), ui), 1);
++  TEST_COMPARE (stdc_first_trailing_zero (0uwb), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_zero (0uwb), ui), 1);
++  TEST_COMPARE (stdc_first_trailing_zero (1uwb), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_zero (1uwb), ui), 1);
++  TEST_COMPARE (stdc_first_trailing_one (0uwb), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_one (0uwb), ui), 1);
++  TEST_COMPARE (stdc_first_trailing_one (1uwb), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_one (1uwb), ui), 1);
++  TEST_COMPARE (stdc_count_zeros (0uwb), 1);
++  TEST_COMPARE (expr_has_type (stdc_count_zeros (0uwb), ui), 1);
++  TEST_COMPARE (stdc_count_zeros (1uwb), 0);
++  TEST_COMPARE (expr_has_type (stdc_count_zeros (1uwb), ui), 1);
++  TEST_COMPARE (stdc_count_ones (0uwb), 0);
++  TEST_COMPARE (expr_has_type (stdc_count_ones (0uwb), ui), 1);
++  TEST_COMPARE (stdc_count_ones (1uwb), 1);
++  TEST_COMPARE (expr_has_type (stdc_count_ones (1uwb), ui), 1);
++  TEST_COMPARE (stdc_has_single_bit (0uwb), 0);
++  TEST_COMPARE (expr_has_type (stdc_has_single_bit (0uwb), _Bool), 1);
++  TEST_COMPARE (stdc_has_single_bit (1uwb), 1);
++  TEST_COMPARE (expr_has_type (stdc_has_single_bit (1uwb), _Bool), 1);
++  TEST_COMPARE (stdc_bit_width (0uwb), 0);
++  TEST_COMPARE (expr_has_type (stdc_bit_width (0uwb), ui), 1);
++  TEST_COMPARE (stdc_bit_width (1uwb), 1);
++  TEST_COMPARE (expr_has_type (stdc_bit_width (1uwb), ui), 1);
++  TEST_COMPARE (stdc_bit_floor (0uwb), 0);
++  TEST_COMPARE (expr_has_type (stdc_bit_floor (0uwb), unsigned _BitInt(1)), 1);
++  TEST_COMPARE (stdc_bit_floor (1uwb), 1);
++  TEST_COMPARE (expr_has_type (stdc_bit_floor (1uwb), unsigned _BitInt(1)), 1);
++  TEST_COMPARE (stdc_bit_ceil (0uwb), 1);
++  TEST_COMPARE (expr_has_type (stdc_bit_ceil (0uwb), unsigned _BitInt(1)), 1);
++  TEST_COMPARE (stdc_bit_ceil (1uwb), 1);
++  TEST_COMPARE (expr_has_type (stdc_bit_ceil (1uwb), unsigned _BitInt(1)), 1);
++  unsigned _BitInt(1) c = 0;
++  TEST_COMPARE (stdc_bit_floor (c++), 0);
++  TEST_COMPARE (c, 1);
++  TEST_COMPARE (stdc_bit_floor (c++), 1);
++  TEST_COMPARE (c, 0);
++  TEST_COMPARE (stdc_bit_ceil (c++), 1);
++  TEST_COMPARE (c, 1);
++  TEST_COMPARE (stdc_bit_ceil (c++), 1);
++  TEST_COMPARE (c, 0);
++#  endif
++#  if BITINT_MAXWIDTH >= 512
++  TEST_COMPARE (stdc_leading_zeros ((unsigned _BitInt(512)) 0), 512);
++  TEST_COMPARE (expr_has_type (stdc_leading_zeros ((unsigned _BitInt(512)) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_leading_zeros ((unsigned _BitInt(373)) 0), 373);
++  TEST_COMPARE (expr_has_type (stdc_leading_zeros ((unsigned _BitInt(373)) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_leading_zeros (~(unsigned _BitInt(512)) 0), 0);
++  TEST_COMPARE (stdc_leading_zeros (~(unsigned _BitInt(373)) 0), 0);
++  TEST_COMPARE (stdc_leading_zeros ((unsigned _BitInt(512)) 275), 512 - 9);
++  TEST_COMPARE (stdc_leading_zeros ((unsigned _BitInt(373)) 512), 373 - 10);
++  TEST_COMPARE (stdc_leading_ones ((unsigned _BitInt(512)) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_leading_ones ((unsigned _BitInt(512)) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_leading_ones ((unsigned _BitInt(373)) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_leading_ones ((unsigned _BitInt(373)) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_leading_ones (~(unsigned _BitInt(512)) 0), 512);
++  TEST_COMPARE (stdc_leading_ones (~(unsigned _BitInt(373)) 0), 373);
++  TEST_COMPARE (stdc_leading_ones (~(unsigned _BitInt(512)) 275), 512 - 9);
++  TEST_COMPARE (stdc_leading_ones (~(unsigned _BitInt(373)) 512), 373 - 10);
++  TEST_COMPARE (stdc_trailing_zeros ((unsigned _BitInt(512)) 0), 512);
++  TEST_COMPARE (expr_has_type (stdc_trailing_zeros ((unsigned _BitInt(512)) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_trailing_zeros ((unsigned _BitInt(373)) 0), 373);
++  TEST_COMPARE (expr_has_type (stdc_trailing_zeros ((unsigned _BitInt(373)) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_trailing_zeros (~(unsigned _BitInt(512)) 0), 0);
++  TEST_COMPARE (stdc_trailing_zeros (~(unsigned _BitInt(373)) 0), 0);
++  TEST_COMPARE (stdc_trailing_zeros ((unsigned _BitInt(512)) 256), 8);
++  TEST_COMPARE (stdc_trailing_zeros ((unsigned _BitInt(373)) 512), 9);
++  TEST_COMPARE (stdc_trailing_ones ((unsigned _BitInt(512)) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_trailing_ones ((unsigned _BitInt(512)) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_trailing_ones ((unsigned _BitInt(373)) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_trailing_ones ((unsigned _BitInt(373)) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_trailing_ones (~(unsigned _BitInt(512)) 0), 512);
++  TEST_COMPARE (stdc_trailing_ones (~(unsigned _BitInt(373)) 0), 373);
++  TEST_COMPARE (stdc_trailing_ones ((unsigned _BitInt(512)) 255), 8);
++  TEST_COMPARE (stdc_trailing_ones ((~(unsigned _BitInt(373)) 0) >> 2),
++		373 - 2);
++  TEST_COMPARE (stdc_first_leading_zero ((unsigned _BitInt(512)) 0), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_zero ((unsigned _BitInt(512))
++							0), ui), 1);
++  TEST_COMPARE (stdc_first_leading_zero ((unsigned _BitInt(373)) 0), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_zero ((unsigned _BitInt(373))
++							0), ui), 1);
++  TEST_COMPARE (stdc_first_leading_zero (~(unsigned _BitInt(512)) 0), 0);
++  TEST_COMPARE (stdc_first_leading_zero (~(unsigned _BitInt(373)) 0), 0);
++  TEST_COMPARE (stdc_first_leading_zero (~(unsigned _BitInt(512)) 511),
++		512 - 8);
++  TEST_COMPARE (stdc_first_leading_zero (~(unsigned _BitInt(373)) 1023),
++		373 - 9);
++  TEST_COMPARE (stdc_first_leading_one ((unsigned _BitInt(512)) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_one ((unsigned _BitInt(512))
++						       0), ui), 1);
++  TEST_COMPARE (stdc_first_leading_one ((unsigned _BitInt(373)) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_leading_one ((unsigned _BitInt(373))
++						       0), ui), 1);
++  TEST_COMPARE (stdc_first_leading_one (~(unsigned _BitInt(512)) 0), 1);
++  TEST_COMPARE (stdc_first_leading_one (~(unsigned _BitInt(373)) 0), 1);
++  TEST_COMPARE (stdc_first_leading_one ((unsigned _BitInt(512)) 275), 512 - 8);
++  TEST_COMPARE (stdc_first_leading_one ((unsigned _BitInt(373)) 512), 373 - 9);
++  TEST_COMPARE (stdc_first_trailing_zero ((unsigned _BitInt(512)) 0), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_zero ((unsigned
++							  _BitInt(512)) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_first_trailing_zero ((unsigned _BitInt(373)) 0), 1);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_zero ((unsigned
++							  _BitInt(373)) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_first_trailing_zero (~(unsigned _BitInt(512)) 0), 0);
++  TEST_COMPARE (stdc_first_trailing_zero (~(unsigned _BitInt(373)) 0), 0);
++  TEST_COMPARE (stdc_first_trailing_zero ((unsigned _BitInt(512)) 255), 9);
++  TEST_COMPARE (stdc_first_trailing_zero ((unsigned _BitInt(373)) 511), 10);
++  TEST_COMPARE (stdc_first_trailing_one ((unsigned _BitInt(512)) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_one ((unsigned _BitInt(512))
++							0), ui), 1);
++  TEST_COMPARE (stdc_first_trailing_one ((unsigned _BitInt(373)) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_first_trailing_one ((unsigned _BitInt(373))
++							0), ui), 1);
++  TEST_COMPARE (stdc_first_trailing_one (~(unsigned _BitInt(512)) 0), 1);
++  TEST_COMPARE (stdc_first_trailing_one (~(unsigned _BitInt(373)) 0), 1);
++  TEST_COMPARE (stdc_first_trailing_one (((unsigned _BitInt(512)) 255) << 175),
++		176);
++  TEST_COMPARE (stdc_first_trailing_one ((~(unsigned _BitInt(373)) 0) << 311),
++		312);
++  TEST_COMPARE (stdc_count_zeros ((unsigned _BitInt(512)) 0), 512);
++  TEST_COMPARE (expr_has_type (stdc_count_zeros ((unsigned _BitInt(512)) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_count_zeros ((unsigned _BitInt(373)) 0), 373);
++  TEST_COMPARE (expr_has_type (stdc_count_zeros ((unsigned _BitInt(373)) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_count_zeros (~(unsigned _BitInt(512)) 0), 0);
++  TEST_COMPARE (stdc_count_zeros (~(unsigned _BitInt(373)) 0), 0);
++  TEST_COMPARE (stdc_count_zeros ((unsigned _BitInt(512)) 1315), 512 - 5);
++  TEST_COMPARE (stdc_count_zeros ((unsigned _BitInt(373)) 3363), 373 - 6);
++  TEST_COMPARE (stdc_count_ones ((unsigned _BitInt(512)) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_count_ones ((unsigned _BitInt(512)) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_count_ones ((unsigned _BitInt(373)) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_count_ones ((unsigned _BitInt(373)) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_count_ones (~(unsigned _BitInt(512)) 0), 512);
++  TEST_COMPARE (stdc_count_ones (~(unsigned _BitInt(373)) 0), 373);
++  TEST_COMPARE (stdc_count_ones (~(unsigned _BitInt(512)) 1315), 512 - 5);
++  TEST_COMPARE (stdc_count_ones (~(unsigned _BitInt(373)) 3363), 373 - 6);
++  TEST_COMPARE (stdc_has_single_bit ((unsigned _BitInt(512)) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_has_single_bit ((unsigned _BitInt(512)) 0),
++			       _Bool), 1);
++  TEST_COMPARE (stdc_has_single_bit ((unsigned _BitInt(373)) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_has_single_bit ((unsigned _BitInt(373)) 0),
++			       _Bool), 1);
++  TEST_COMPARE (stdc_has_single_bit (~(unsigned _BitInt(512)) 0), 0);
++  TEST_COMPARE (stdc_has_single_bit (~(unsigned _BitInt(373)) 0), 0);
++  TEST_COMPARE (stdc_has_single_bit (((unsigned _BitInt(512)) 1022) << 279),
++		0);
++  TEST_COMPARE (stdc_has_single_bit (((unsigned _BitInt(373)) 12) << 305), 0);
++  TEST_COMPARE (stdc_bit_width ((unsigned _BitInt(512)) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_bit_width ((unsigned _BitInt(512)) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_bit_width ((unsigned _BitInt(373)) 0), 0);
++  TEST_COMPARE (expr_has_type (stdc_bit_width ((unsigned _BitInt(373)) 0),
++			       ui), 1);
++  TEST_COMPARE (stdc_bit_width (~(unsigned _BitInt(512)) 0), 512);
++  TEST_COMPARE (stdc_bit_width (~(unsigned _BitInt(373)) 0), 373);
++  TEST_COMPARE (stdc_bit_width (((unsigned _BitInt(512)) 1023) << 405),
++		405 + 10);
++  TEST_COMPARE (stdc_bit_width (((unsigned _BitInt(373)) 1024) << 242),
++		242 + 11);
++  TEST_COMPARE (stdc_bit_floor ((unsigned _BitInt(512)) 0) != 0, 0);
++  TEST_COMPARE (expr_has_type (stdc_bit_floor ((unsigned _BitInt(512)) 0),
++			       unsigned _BitInt(512)), 1);
++  TEST_COMPARE (stdc_bit_floor ((unsigned _BitInt(373)) 0) != 0, 0);
++  TEST_COMPARE (expr_has_type (stdc_bit_floor ((unsigned _BitInt(373)) 0),
++			       unsigned _BitInt(373)), 1);
++  TEST_COMPARE (stdc_bit_floor (~(unsigned _BitInt(512)) 0)
++		!= ((unsigned _BitInt(512)) 1) << (512 - 1), 0);
++  TEST_COMPARE (stdc_bit_floor (~(unsigned _BitInt(373)) 0)
++		!= ((unsigned _BitInt(373)) 1) << (373 - 1), 0);
++  TEST_COMPARE (stdc_bit_floor (((unsigned _BitInt(512)) 511) << 405)
++		!= (((unsigned _BitInt(512)) 256) << 405), 0);
++  TEST_COMPARE (stdc_bit_floor (((unsigned _BitInt(373)) 512) << 242)
++		!= (((unsigned _BitInt(512)) 512) << 242), 0);
++  TEST_COMPARE (stdc_bit_ceil ((unsigned _BitInt(512)) 0) != 1, 0);
++  TEST_COMPARE (expr_has_type (stdc_bit_ceil ((unsigned _BitInt(512)) 0),
++			       unsigned _BitInt(512)), 1);
++  TEST_COMPARE (stdc_bit_ceil ((unsigned _BitInt(373)) 0) != 1, 0);
++  TEST_COMPARE (expr_has_type (stdc_bit_ceil ((unsigned _BitInt(373)) 0),
++			       unsigned _BitInt(373)), 1);
++  TEST_COMPARE (stdc_bit_ceil (~(unsigned _BitInt(512)) 0) != 0, 0);
++  TEST_COMPARE (stdc_bit_ceil (~(unsigned _BitInt(373)) 0) != 0, 0);
++  TEST_COMPARE (stdc_bit_ceil (((unsigned _BitInt(512)) 1) << (512 - 1))
++		!= ((unsigned _BitInt(512)) 1) << (512 - 1), 0);
++  TEST_COMPARE (stdc_bit_ceil ((~(unsigned _BitInt(373)) 0) >> 1)
++		!= ((unsigned _BitInt(373)) 1) << (373 - 1), 0);
++  TEST_COMPARE (stdc_bit_ceil (((unsigned _BitInt(512)) 512) << 405)
++		!= (((unsigned _BitInt(512)) 512) << 405), 0);
++  TEST_COMPARE (stdc_bit_ceil (((unsigned _BitInt(373)) 513) << 242)
++		!= (((unsigned _BitInt(512)) 1024) << 242), 0);
++  TEST_COMPARE (stdc_bit_floor ((unsigned _BitInt(BITINT_MAXWIDTH)) 0) != 0,
++		0);
++  TEST_COMPARE (stdc_bit_floor (~(unsigned _BitInt(BITINT_MAXWIDTH)) 0)
++		!= ((unsigned _BitInt(BITINT_MAXWIDTH)) 1) << (BITINT_MAXWIDTH
++							       - 1), 0);
++  TEST_COMPARE (stdc_bit_floor (((unsigned _BitInt(BITINT_MAXWIDTH)) 511)
++				<< 405)
++		!= (((unsigned _BitInt(BITINT_MAXWIDTH)) 256) << 405), 0);
++  TEST_COMPARE (stdc_bit_floor (((unsigned _BitInt(BITINT_MAXWIDTH)) 512)
++				<< 405)
++		!= (((unsigned _BitInt(BITINT_MAXWIDTH)) 512) << 405), 0);
++  TEST_COMPARE (stdc_bit_ceil ((unsigned _BitInt(BITINT_MAXWIDTH)) 0) != 1, 0);
++  TEST_COMPARE (stdc_bit_ceil (~(unsigned _BitInt(BITINT_MAXWIDTH)) 0) != 0,
++		0);
++  TEST_COMPARE (stdc_bit_ceil (((unsigned _BitInt(BITINT_MAXWIDTH)) 1)
++			       << (BITINT_MAXWIDTH - 1))
++		!= ((unsigned _BitInt(BITINT_MAXWIDTH)) 1) << (BITINT_MAXWIDTH
++							       - 1), 0);
++  TEST_COMPARE (stdc_bit_ceil (((unsigned _BitInt(BITINT_MAXWIDTH)) 512)
++			       << 405)
++		!= (((unsigned _BitInt(BITINT_MAXWIDTH)) 512) << 405), 0);
++  TEST_COMPARE (stdc_bit_ceil (((unsigned _BitInt(BITINT_MAXWIDTH)) 513)
++			       << 405)
++		!= (((unsigned _BitInt(BITINT_MAXWIDTH)) 1024) << 405), 0);
++#  endif
++# endif
++  return 0;
++}
++#else
++static int
++do_test (void)
++{
++  return 0;
++}
++#endif
++
++#include <support/test-driver.c>
+diff --git a/sysdeps/arm/dl-machine.h b/sysdeps/arm/dl-machine.h
+index b857bbc868..dd1a0f6b6e 100644
+--- a/sysdeps/arm/dl-machine.h
++++ b/sysdeps/arm/dl-machine.h
+@@ -139,7 +139,6 @@ _start:\n\
+ _dl_start_user:\n\
+ 	adr	r6, .L_GET_GOT\n\
+ 	add	sl, sl, r6\n\
+-	ldr	r4, [sl, r4]\n\
+ 	@ save the entry point in another register\n\
+ 	mov	r6, r0\n\
+ 	@ get the original arg count\n\
+diff --git a/sysdeps/generic/ldsodefs.h b/sysdeps/generic/ldsodefs.h
+index 117c901ccc..50f58a60e3 100644
+--- a/sysdeps/generic/ldsodefs.h
++++ b/sysdeps/generic/ldsodefs.h
+@@ -646,6 +646,8 @@ struct rtld_global_ro
+   /* Mask for more hardware capabilities that are available on some
+      platforms.  */
+   EXTERN uint64_t _dl_hwcap2;
++  EXTERN uint64_t _dl_hwcap3;
++  EXTERN uint64_t _dl_hwcap4;
+ 
+   EXTERN enum dso_sort_algorithm _dl_dso_sort_algo;
+ 
+diff --git a/sysdeps/loongarch/fpu/e_scalbf.c b/sysdeps/loongarch/fpu/e_scalbf.c
+index 9f05485236..7c0395fbb5 100644
+--- a/sysdeps/loongarch/fpu/e_scalbf.c
++++ b/sysdeps/loongarch/fpu/e_scalbf.c
+@@ -57,4 +57,4 @@ __ieee754_scalbf (float x, float fn)
+ 
+   return x;
+ }
+-libm_alias_finite (__ieee754_scalb, __scalb)
++libm_alias_finite (__ieee754_scalbf, __scalbf)
+diff --git a/sysdeps/mips/mips64/libm-test-ulps b/sysdeps/mips/mips64/libm-test-ulps
+index 78969745b2..933aba4735 100644
+--- a/sysdeps/mips/mips64/libm-test-ulps
++++ b/sysdeps/mips/mips64/libm-test-ulps
+@@ -1066,17 +1066,17 @@ double: 1
+ ldouble: 1
+ 
+ Function: "j0":
+-double: 2
++double: 3
+ float: 9
+ ldouble: 2
+ 
+ Function: "j0_downward":
+-double: 5
++double: 6
+ float: 9
+ ldouble: 9
+ 
+ Function: "j0_towardzero":
+-double: 6
++double: 7
+ float: 9
+ ldouble: 9
+ 
+@@ -1146,6 +1146,7 @@ float: 6
+ ldouble: 8
+ 
+ Function: "log":
++double: 1
+ float: 1
+ ldouble: 1
+ 
+diff --git a/sysdeps/powerpc/dl-procinfo.c b/sysdeps/powerpc/dl-procinfo.c
+index a76bb6e5b0..8cf00aa7e3 100644
+--- a/sysdeps/powerpc/dl-procinfo.c
++++ b/sysdeps/powerpc/dl-procinfo.c
+@@ -38,6 +38,10 @@
+        needed.
+   */
+ 
++/* The total number of available bits (including those prior to
++   _DL_HWCAP_FIRST).  Some of these bits might not be used.  */
++#define _DL_HWCAP_COUNT         128
++
+ #ifndef PROCINFO_CLASS
+ # define PROCINFO_CLASS
+ #endif
+@@ -61,7 +65,7 @@ PROCINFO_CLASS struct cpu_features _dl_powerpc_cpu_features
+ #if !defined PROCINFO_DECL && defined SHARED
+   ._dl_powerpc_cap_flags
+ #else
+-PROCINFO_CLASS const char _dl_powerpc_cap_flags[64][15]
++PROCINFO_CLASS const char _dl_powerpc_cap_flags[_DL_HWCAP_COUNT][15]
+ #endif
+ #ifndef PROCINFO_DECL
+ = {
+diff --git a/sysdeps/powerpc/dl-procinfo.h b/sysdeps/powerpc/dl-procinfo.h
+index 68f4241095..b36697ba44 100644
+--- a/sysdeps/powerpc/dl-procinfo.h
++++ b/sysdeps/powerpc/dl-procinfo.h
+@@ -22,22 +22,23 @@
+ #include <ldsodefs.h>
+ #include <sysdep.h>	/* This defines the PPC_FEATURE[2]_* macros.  */
+ 
+-/* The total number of available bits (including those prior to
+-   _DL_HWCAP_FIRST).  Some of these bits might not be used.  */
+-#define _DL_HWCAP_COUNT		64
++/* Feature masks are all 32-bits in size.  */
++#define _DL_HWCAP_SIZE		32
+ 
+-/* Features started at bit 31 and decremented as new features were added.  */
+-#define _DL_HWCAP_LAST		31
++/* AT_HWCAP2 feature strings follow the AT_HWCAP feature strings.  */
++#define _DL_HWCAP2_OFFSET	_DL_HWCAP_SIZE
+ 
+-/* AT_HWCAP2 features started at bit 31 and decremented as new features were
+-   added.  HWCAP2 feature bits start at bit 0.  */
+-#define _DL_HWCAP2_LAST		31
++/* AT_HWCAP3 feature strings follow the AT_HWCAP2 feature strings.  */
++#define _DL_HWCAP3_OFFSET	(_DL_HWCAP2_OFFSET + _DL_HWCAP_SIZE)
++
++/* AT_HWCAP4 feature strings follow the AT_HWCAP3 feature strings.  */
++#define _DL_HWCAP4_OFFSET	(_DL_HWCAP3_OFFSET + _DL_HWCAP_SIZE)
+ 
+ /* These bits influence library search.  */
+ #define HWCAP_IMPORTANT		(PPC_FEATURE_HAS_ALTIVEC \
+ 				+ PPC_FEATURE_HAS_DFP)
+ 
+-#define _DL_PLATFORMS_COUNT	16
++#define _DL_PLATFORMS_COUNT	17
+ 
+ #define _DL_FIRST_PLATFORM	32
+ /* Mask to filter out platforms.  */
+@@ -61,6 +62,7 @@
+ #define PPC_PLATFORM_POWER8		13
+ #define PPC_PLATFORM_POWER9		14
+ #define PPC_PLATFORM_POWER10		15
++#define PPC_PLATFORM_POWER11		16
+ 
+ static inline const char *
+ __attribute__ ((unused))
+@@ -88,6 +90,11 @@ _dl_string_platform (const char *str)
+ 	      ret = _DL_FIRST_PLATFORM + PPC_PLATFORM_POWER10;
+ 	      str++;
+ 	    }
++	  else if (str[1] == '1')
++	    {
++	      ret = _DL_FIRST_PLATFORM + PPC_PLATFORM_POWER11;
++	      str++;
++	    }
+ 	  else
+ 	    return -1;
+ 	  break;
+@@ -187,21 +194,42 @@ _dl_procinfo (unsigned int type, unsigned long int word)
+     case AT_HWCAP:
+       _dl_printf ("AT_HWCAP:            ");
+ 
+-      for (int i = 0; i <= _DL_HWCAP_LAST; ++i)
++      for (int i = 0; i < _DL_HWCAP_SIZE; ++i)
+        if (word & (1 << i))
+          _dl_printf (" %s", _dl_hwcap_string (i));
+       break;
+     case AT_HWCAP2:
+       {
+-       unsigned int offset = _DL_HWCAP_LAST + 1;
+ 
+        _dl_printf ("AT_HWCAP2:           ");
+ 
+-        /* We have to go through them all because the kernel added the
+-          AT_HWCAP2 features starting with the high bits.  */
+-       for (int i = 0; i <= _DL_HWCAP2_LAST; ++i)
+-         if (word & (1 << i))
+-           _dl_printf (" %s", _dl_hwcap_string (offset + i));
++       /* We have to go through them all because the kernel added the
++	  AT_HWCAP2 features starting with the high bits.  */
++       for (int i = 0; i < _DL_HWCAP_SIZE; ++i)
++	 if (word & (1 << i))
++	   _dl_printf (" %s", _dl_hwcap_string (_DL_HWCAP2_OFFSET + i));
++       break;
++      }
++    case AT_HWCAP3:
++      {
++       _dl_printf ("AT_HWCAP3:           ");
++
++       /* We have to go through them all because the kernel added the
++	  AT_HWCAP3 features starting with the high bits.  */
++       for (int i = 0; i < _DL_HWCAP_SIZE; ++i)
++	 if (word & (1 << i))
++	   _dl_printf (" %s", _dl_hwcap_string (_DL_HWCAP3_OFFSET + i));
++       break;
++      }
++    case AT_HWCAP4:
++      {
++       _dl_printf ("AT_HWCAP4:           ");
++
++       /* We have to go through them all because the kernel added the
++	  AT_HWCAP4 features starting with the high bits.  */
++       for (int i = 0; i <= _DL_HWCAP_SIZE; ++i)
++	 if (word & (1 << i))
++	   _dl_printf (" %s", _dl_hwcap_string (_DL_HWCAP4_OFFSET + i));
+        break;
+       }
+     case AT_L1I_CACHEGEOMETRY:
+diff --git a/sysdeps/powerpc/hwcapinfo.c b/sysdeps/powerpc/hwcapinfo.c
+index 76344f285a..f6fede15a7 100644
+--- a/sysdeps/powerpc/hwcapinfo.c
++++ b/sysdeps/powerpc/hwcapinfo.c
+@@ -31,7 +31,7 @@ void
+ __tcb_parse_hwcap_and_convert_at_platform (void)
+ {
+ 
+-  uint64_t h1, h2;
++  uint64_t h1, h2, h3, h4;
+ 
+   /* Read AT_PLATFORM string from auxv and convert it to a number.  */
+   __tcb.at_platform = _dl_string_platform (GLRO (dl_platform));
+@@ -39,6 +39,8 @@ __tcb_parse_hwcap_and_convert_at_platform (void)
+   /* Read HWCAP and HWCAP2 from auxv.  */
+   h1 = GLRO (dl_hwcap);
+   h2 = GLRO (dl_hwcap2);
++  h3 = GLRO (dl_hwcap3);
++  h4 = GLRO (dl_hwcap4);
+ 
+   /* hwcap contains only the latest supported ISA, the code checks which is
+      and fills the previous supported ones.  */
+@@ -64,13 +66,16 @@ __tcb_parse_hwcap_and_convert_at_platform (void)
+   else if (h1 & PPC_FEATURE_POWER5)
+     h1 |= PPC_FEATURE_POWER4;
+ 
+-  uint64_t array_hwcaps[] = { h1, h2 };
++  uint64_t array_hwcaps[] = { h1, h2, h3, h4 };
+   init_cpu_features (&GLRO(dl_powerpc_cpu_features), array_hwcaps);
+ 
+   /* Consolidate both HWCAP and HWCAP2 into a single doubleword so that
+      we can read both in a single load later.  */
+   __tcb.hwcap = (h1 << 32) | (h2 & 0xffffffff);
+-  __tcb.hwcap_extn = 0x0;
++
++  /* Consolidate both HWCAP3 and HWCAP4 into a single doubleword so that
++     we can read both in a single load later.  */
++  __tcb.hwcap_extn = (h3 << 32) | (h4 & 0xffffffff);
+ 
+ }
+ #if IS_IN (rtld)
+diff --git a/sysdeps/powerpc/powerpc32/power11/Implies b/sysdeps/powerpc/powerpc32/power11/Implies
+new file mode 100644
+index 0000000000..051cbe0f79
+--- /dev/null
++++ b/sysdeps/powerpc/powerpc32/power11/Implies
+@@ -0,0 +1,2 @@
++powerpc/powerpc32/power10/fpu
++powerpc/powerpc32/power10
+diff --git a/sysdeps/powerpc/powerpc32/power11/fpu/multiarch/Implies b/sysdeps/powerpc/powerpc32/power11/fpu/multiarch/Implies
+new file mode 100644
+index 0000000000..58edb2861d
+--- /dev/null
++++ b/sysdeps/powerpc/powerpc32/power11/fpu/multiarch/Implies
+@@ -0,0 +1 @@
++powerpc/powerpc32/power10/fpu/multiarch
+diff --git a/sysdeps/powerpc/powerpc32/power11/multiarch/Implies b/sysdeps/powerpc/powerpc32/power11/multiarch/Implies
+new file mode 100644
+index 0000000000..c70f0428ba
+--- /dev/null
++++ b/sysdeps/powerpc/powerpc32/power11/multiarch/Implies
+@@ -0,0 +1 @@
++powerpc/powerpc32/power10/multiarch
+diff --git a/sysdeps/powerpc/powerpc64/be/power11/Implies b/sysdeps/powerpc/powerpc64/be/power11/Implies
+new file mode 100644
+index 0000000000..de481d1c13
+--- /dev/null
++++ b/sysdeps/powerpc/powerpc64/be/power11/Implies
+@@ -0,0 +1,2 @@
++powerpc/powerpc64/be/power10/fpu
++powerpc/powerpc64/be/power10
+diff --git a/sysdeps/powerpc/powerpc64/be/power11/fpu/Implies b/sysdeps/powerpc/powerpc64/be/power11/fpu/Implies
+new file mode 100644
+index 0000000000..dff0e13064
+--- /dev/null
++++ b/sysdeps/powerpc/powerpc64/be/power11/fpu/Implies
+@@ -0,0 +1 @@
++powerpc/powerpc64/be/power10/fpu
+diff --git a/sysdeps/powerpc/powerpc64/be/power11/fpu/multiarch/Implies b/sysdeps/powerpc/powerpc64/be/power11/fpu/multiarch/Implies
+new file mode 100644
+index 0000000000..c3f259e009
+--- /dev/null
++++ b/sysdeps/powerpc/powerpc64/be/power11/fpu/multiarch/Implies
+@@ -0,0 +1 @@
++powerpc/powerpc64/be/power10/fpu/multiarch
+diff --git a/sysdeps/powerpc/powerpc64/be/power11/multiarch/Implies b/sysdeps/powerpc/powerpc64/be/power11/multiarch/Implies
+new file mode 100644
+index 0000000000..9491a394c9
+--- /dev/null
++++ b/sysdeps/powerpc/powerpc64/be/power11/multiarch/Implies
+@@ -0,0 +1 @@
++powerpc/powerpc64/be/power10/multiarch
+diff --git a/sysdeps/powerpc/powerpc64/le/power11/Implies b/sysdeps/powerpc/powerpc64/le/power11/Implies
+new file mode 100644
+index 0000000000..e18182dcc1
+--- /dev/null
++++ b/sysdeps/powerpc/powerpc64/le/power11/Implies
+@@ -0,0 +1,2 @@
++powerpc/powerpc64/le/power10/fpu
++powerpc/powerpc64/le/power10
+diff --git a/sysdeps/powerpc/powerpc64/le/power11/fpu/Implies b/sysdeps/powerpc/powerpc64/le/power11/fpu/Implies
+new file mode 100644
+index 0000000000..e41bd55684
+--- /dev/null
++++ b/sysdeps/powerpc/powerpc64/le/power11/fpu/Implies
+@@ -0,0 +1 @@
++powerpc/powerpc64/le/power10/fpu
+diff --git a/sysdeps/powerpc/powerpc64/le/power11/fpu/multiarch/Implies b/sysdeps/powerpc/powerpc64/le/power11/fpu/multiarch/Implies
+new file mode 100644
+index 0000000000..c838d50931
+--- /dev/null
++++ b/sysdeps/powerpc/powerpc64/le/power11/fpu/multiarch/Implies
+@@ -0,0 +1 @@
++powerpc/powerpc64/le/power10/fpu/multiarch
+diff --git a/sysdeps/powerpc/powerpc64/le/power11/multiarch/Implies b/sysdeps/powerpc/powerpc64/le/power11/multiarch/Implies
+new file mode 100644
+index 0000000000..687248c3c2
+--- /dev/null
++++ b/sysdeps/powerpc/powerpc64/le/power11/multiarch/Implies
+@@ -0,0 +1 @@
++powerpc/powerpc64/le/power10/multiarch
+diff --git a/sysdeps/powerpc/powerpc64/le/tst-glibc-hwcaps.c b/sysdeps/powerpc/powerpc64/le/tst-glibc-hwcaps.c
+index 77465d9133..65d3e69303 100644
+--- a/sysdeps/powerpc/powerpc64/le/tst-glibc-hwcaps.c
++++ b/sysdeps/powerpc/powerpc64/le/tst-glibc-hwcaps.c
+@@ -36,9 +36,11 @@ compute_level (void)
+     return 9;
+   if (strcmp (platform, "power10") == 0)
+     return 10;
++  if (strcmp (platform, "power11") == 0)
++    return 11;
+   printf ("warning: unrecognized AT_PLATFORM value: %s\n", platform);
+-  /* Assume that the new platform supports POWER10.  */
+-  return 10;
++  /* Assume that the new platform supports POWER11.  */
++  return 11;
+ }
+ 
+ static int
+diff --git a/sysdeps/powerpc/preconfigure b/sysdeps/powerpc/preconfigure
+index 4de94089a3..9e5a07ab6d 100644
+--- a/sysdeps/powerpc/preconfigure
++++ b/sysdeps/powerpc/preconfigure
+@@ -58,7 +58,7 @@ fi
+ 
+     ;;
+ 
+-  a2|970|power[4-9]|power5x|power6+|power10)
++  a2|970|power[4-9]|power5x|power6+|power10|power11)
+     submachine=${archcpu}
+     if test ${libc_cv_cc_submachine+y}
+ then :
+diff --git a/sysdeps/powerpc/preconfigure.ac b/sysdeps/powerpc/preconfigure.ac
+index 6c63bd8257..14b6dafd4a 100644
+--- a/sysdeps/powerpc/preconfigure.ac
++++ b/sysdeps/powerpc/preconfigure.ac
+@@ -46,7 +46,7 @@ case "${machine}:${submachine}" in
+     AC_CACHE_VAL(libc_cv_cc_submachine,libc_cv_cc_submachine="")
+     ;;
+ 
+-  a2|970|power[[4-9]]|power5x|power6+|power10)
++  a2|970|power[[4-9]]|power5x|power6+|power10|power11)
+     submachine=${archcpu}
+     AC_CACHE_VAL(libc_cv_cc_submachine,libc_cv_cc_submachine="")
+     ;;
+diff --git a/sysdeps/unix/sysv/linux/dl-parse_auxv.h b/sysdeps/unix/sysv/linux/dl-parse_auxv.h
+index e3d758b163..ea2a58ecb1 100644
+--- a/sysdeps/unix/sysv/linux/dl-parse_auxv.h
++++ b/sysdeps/unix/sysv/linux/dl-parse_auxv.h
+@@ -47,6 +47,8 @@ void _dl_parse_auxv (ElfW(auxv_t) *av, dl_parse_auxv_t auxv_values)
+   GLRO(dl_platform) = (void *) auxv_values[AT_PLATFORM];
+   GLRO(dl_hwcap) = auxv_values[AT_HWCAP];
+   GLRO(dl_hwcap2) = auxv_values[AT_HWCAP2];
++  GLRO(dl_hwcap3) = auxv_values[AT_HWCAP3];
++  GLRO(dl_hwcap4) = auxv_values[AT_HWCAP4];
+   GLRO(dl_clktck) = auxv_values[AT_CLKTCK];
+   GLRO(dl_fpu_control) = auxv_values[AT_FPUCW];
+   _dl_random = (void *) auxv_values[AT_RANDOM];
+diff --git a/sysdeps/unix/sysv/linux/dl-sysdep.c b/sysdeps/unix/sysv/linux/dl-sysdep.c
+index ad3692d738..e1b14e9eb3 100644
+--- a/sysdeps/unix/sysv/linux/dl-sysdep.c
++++ b/sysdeps/unix/sysv/linux/dl-sysdep.c
+@@ -197,6 +197,8 @@ _dl_show_auxv (void)
+ 	  [AT_SYSINFO_EHDR - 2] =	{ "SYSINFO_EHDR:      0x", hex },
+ 	  [AT_RANDOM - 2] =		{ "RANDOM:            0x", hex },
+ 	  [AT_HWCAP2 - 2] =		{ "HWCAP2:            0x", hex },
++	  [AT_HWCAP3 - 2] =		{ "HWCAP3:            0x", hex },
++	  [AT_HWCAP4 - 2] =		{ "HWCAP4:            0x", hex },
+ 	  [AT_MINSIGSTKSZ - 2] =	{ "MINSIGSTKSZ:       ", dec },
+ 	  [AT_L1I_CACHESIZE - 2] =	{ "L1I_CACHESIZE:     ", dec },
+ 	  [AT_L1I_CACHEGEOMETRY - 2] =	{ "L1I_CACHEGEOMETRY: 0x", hex },
+diff --git a/sysdeps/unix/sysv/linux/mips/clone3.S b/sysdeps/unix/sysv/linux/mips/clone3.S
+index e9fec2fa47..481b8ae963 100644
+--- a/sysdeps/unix/sysv/linux/mips/clone3.S
++++ b/sysdeps/unix/sysv/linux/mips/clone3.S
+@@ -37,11 +37,6 @@
+ 
+ 	.text
+ 	.set		nomips16
+-#if _MIPS_SIM == _ABIO32
+-# define EXTRA_LOCALS 1
+-#else
+-# define EXTRA_LOCALS 0
+-#endif
+ #define FRAMESZ ((NARGSAVE*SZREG)+ALSZ)&ALMASK
+ GPOFF= FRAMESZ-(1*SZREG)
+ NESTED(__clone3, SZREG, sp)
+@@ -68,8 +63,31 @@ NESTED(__clone3, SZREG, sp)
+ 	beqz	a0, L(error)	/* No NULL cl_args pointer.  */
+ 	beqz	a2, L(error)	/* No NULL function pointer.  */
+ 
++#if _MIPS_SIM == _ABIO32
++	/* Both stack and stack_size on clone_args are defined as uint64_t, and
++	   there is no need to handle values larger than to 32 bits for o32.  */
++# if __BYTE_ORDER == __BIG_ENDIAN
++#  define CL_STACKPOINTER_OFFSET  44
++#  define CL_STACKSIZE_OFFSET     52
++# else
++#  define CL_STACKPOINTER_OFFSET  40
++#  define CL_STACKSIZE_OFFSET     48
++# endif
++
++	/* For o32 we need to setup a minimal stack frame to allow cprestore
++	   on __thread_start_clone3.  Also there is no guarantee by kABI that
++	   $8 will be preserved after syscall execution (so we need to save it
++	   on the provided stack).  */
++	lw	t0, CL_STACKPOINTER_OFFSET(a0)	/* Load the stack pointer.  */
++	lw	t1, CL_STACKSIZE_OFFSET(a0)	/* Load the stack_size.  */
++	addiu	t1, -32				/* Update the stack size.  */
++	addu	t2, t1, t0			/* Calculate the thread stack.  */
++	sw	a3, 0(t2)			/* Save argument pointer.  */
++	sw	t1, CL_STACKSIZE_OFFSET(a0)	/* Save the new stack size.  */
++#else
+ 	move	$8, a3		/* a3 is set to 0/1 for syscall success/error
+ 				   while a4/$8 is returned unmodified.  */
++#endif
+ 
+ 	/* Do the system call, the kernel expects:
+ 	   v0: system call number
+@@ -125,7 +143,11 @@ L(thread_start_clone3):
+ 
+ 	/* Restore the arg for user's function.  */
+ 	move		t9, a2		/* Function pointer.  */
++#if _MIPS_SIM == _ABIO32
++	PTR_L		a0, 0(sp)
++#else
+ 	move		a0, $8		/* Argument pointer.  */
++#endif
+ 
+ 	/* Call the user's function.  */
+ 	jal		t9
+diff --git a/sysdeps/unix/sysv/linux/powerpc/cpu-features.c b/sysdeps/unix/sysv/linux/powerpc/cpu-features.c
+index 8e8a5ec2ea..a947d62db6 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/cpu-features.c
++++ b/sysdeps/unix/sysv/linux/powerpc/cpu-features.c
+@@ -94,6 +94,8 @@ init_cpu_features (struct cpu_features *cpu_features, uint64_t hwcaps[])
+      which are set by __tcb_parse_hwcap_and_convert_at_platform.  */
+   cpu_features->hwcap = hwcaps[0];
+   cpu_features->hwcap2 = hwcaps[1];
++  cpu_features->hwcap3 = hwcaps[2];
++  cpu_features->hwcap4 = hwcaps[3];
+   /* Default is to use aligned memory access on optimized function unless
+      tunables is enable, since for this case user can explicit disable
+      unaligned optimizations.  */
+diff --git a/sysdeps/unix/sysv/linux/powerpc/cpu-features.h b/sysdeps/unix/sysv/linux/powerpc/cpu-features.h
+index 1294f0b601..e9eb6a13c8 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/cpu-features.h
++++ b/sysdeps/unix/sysv/linux/powerpc/cpu-features.h
+@@ -26,6 +26,8 @@ struct cpu_features
+   bool use_cached_memopt;
+   unsigned long int hwcap;
+   unsigned long int hwcap2;
++  unsigned long int hwcap3;
++  unsigned long int hwcap4;
+ };
+ 
+ static const char hwcap_names[] = {
+diff --git a/sysdeps/unix/sysv/linux/powerpc/libc-start.c b/sysdeps/unix/sysv/linux/powerpc/libc-start.c
+index a4705daf1c..6a00cd88cd 100644
+--- a/sysdeps/unix/sysv/linux/powerpc/libc-start.c
++++ b/sysdeps/unix/sysv/linux/powerpc/libc-start.c
+@@ -87,6 +87,12 @@ __libc_start_main_impl (int argc, char **argv,
+       case AT_HWCAP2:
+ 	_dl_hwcap2 = (unsigned long int) av->a_un.a_val;
+ 	break;
++      case AT_HWCAP3:
++	_dl_hwcap3 = (unsigned long int) av->a_un.a_val;
++	break;
++      case AT_HWCAP4:
++	_dl_hwcap4 = (unsigned long int) av->a_un.a_val;
++	break;
+       case AT_PLATFORM:
+ 	_dl_platform = (void *) av->a_un.a_val;
+ 	break;
+diff --git a/sysdeps/unix/sysv/linux/s390/s390-32/clone.S b/sysdeps/unix/sysv/linux/s390/s390-32/clone.S
+index 4c882ef2ee..a7a863242c 100644
+--- a/sysdeps/unix/sysv/linux/s390/s390-32/clone.S
++++ b/sysdeps/unix/sysv/linux/s390/s390-32/clone.S
+@@ -53,6 +53,7 @@ ENTRY(__clone)
+ 	br	%r14
+ error:
+ 	lhi	%r2,-EINVAL
++	lm	%r6,%r7,24(%r15)	/* Load registers.  */
+ 	j	SYSCALL_ERROR_LABEL
+ PSEUDO_END (__clone)
+ 
+diff --git a/sysdeps/unix/sysv/linux/s390/s390-64/clone.S b/sysdeps/unix/sysv/linux/s390/s390-64/clone.S
+index 4eb104be71..c552a6b8de 100644
+--- a/sysdeps/unix/sysv/linux/s390/s390-64/clone.S
++++ b/sysdeps/unix/sysv/linux/s390/s390-64/clone.S
+@@ -54,6 +54,7 @@ ENTRY(__clone)
+ 	br	%r14
+ error:
+ 	lghi	%r2,-EINVAL
++	lmg	%r6,%r7,48(%r15)	/* Restore registers.  */
+ 	jg	SYSCALL_ERROR_LABEL
+ PSEUDO_END (__clone)
+ 
+diff --git a/sysdeps/unix/sysv/linux/sched_getcpu.c b/sysdeps/unix/sysv/linux/sched_getcpu.c
+index dfb884568d..72a3360550 100644
+--- a/sysdeps/unix/sysv/linux/sched_getcpu.c
++++ b/sysdeps/unix/sysv/linux/sched_getcpu.c
+@@ -33,17 +33,9 @@ vsyscall_sched_getcpu (void)
+   return r == -1 ? r : cpu;
+ }
+ 
+-#ifdef RSEQ_SIG
+ int
+ sched_getcpu (void)
+ {
+   int cpu_id = THREAD_GETMEM_VOLATILE (THREAD_SELF, rseq_area.cpu_id);
+   return __glibc_likely (cpu_id >= 0) ? cpu_id : vsyscall_sched_getcpu ();
+ }
+-#else /* RSEQ_SIG */
+-int
+-sched_getcpu (void)
+-{
+-  return vsyscall_sched_getcpu ();
+-}
+-#endif /* RSEQ_SIG */
+diff --git a/sysdeps/unix/sysv/linux/tst-clone.c b/sysdeps/unix/sysv/linux/tst-clone.c
+index 470676ab2b..2bc7124983 100644
+--- a/sysdeps/unix/sysv/linux/tst-clone.c
++++ b/sysdeps/unix/sysv/linux/tst-clone.c
+@@ -16,12 +16,16 @@
+    License along with the GNU C Library; if not, see
+    <https://www.gnu.org/licenses/>.  */
+ 
+-/* BZ #2386 */
++/* BZ #2386, BZ #31402 */
+ #include <errno.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <unistd.h>
+ #include <sched.h>
++#include <stackinfo.h>  /* For _STACK_GROWS_{UP,DOWN}.  */
++#include <support/check.h>
++
++volatile unsigned v = 0xdeadbeef;
+ 
+ int child_fn(void *arg)
+ {
+@@ -30,22 +34,67 @@ int child_fn(void *arg)
+ }
+ 
+ static int
+-do_test (void)
++__attribute__((noinline))
++do_clone (int (*fn)(void *), void *stack)
+ {
+   int result;
++  unsigned int a = v;
++  unsigned int b = v;
++  unsigned int c = v;
++  unsigned int d = v;
++  unsigned int e = v;
++  unsigned int f = v;
++  unsigned int g = v;
++  unsigned int h = v;
++  unsigned int i = v;
++  unsigned int j = v;
++  unsigned int k = v;
++  unsigned int l = v;
++  unsigned int m = v;
++  unsigned int n = v;
++  unsigned int o = v;
++
++  result = clone (fn, stack, 0, NULL);
++
++  /* Check that clone does not clobber call-saved registers.  */
++  TEST_VERIFY (a == v && b == v && c == v && d == v && e == v && f == v
++	       && g == v && h == v && i == v && j == v && k == v && l == v
++	       && m == v && n == v && o == v);
++
++  return result;
++}
++
++static void
++__attribute__((noinline))
++do_test_single (int (*fn)(void *), void *stack)
++{
++  printf ("%s (fn=%p, stack=%p)\n", __FUNCTION__, fn, stack);
++  errno = 0;
++
++  int result = do_clone (fn, stack);
++
++  TEST_COMPARE (errno, EINVAL);
++  TEST_COMPARE (result, -1);
++}
+ 
+-  result = clone (child_fn, NULL, 0, NULL);
++static int
++do_test (void)
++{
++  char st[128 * 1024] __attribute__ ((aligned));
++  void *stack = NULL;
++#if _STACK_GROWS_DOWN
++  stack = st + sizeof (st);
++#elif _STACK_GROWS_UP
++  stack = st;
++#else
++# error "Define either _STACK_GROWS_DOWN or _STACK_GROWS_UP"
++#endif
+ 
+-  if (errno != EINVAL || result != -1)
+-    {
+-      printf ("FAIL: clone()=%d (wanted -1) errno=%d (wanted %d)\n",
+-              result, errno, EINVAL);
+-      return 1;
+-    }
++  do_test_single (child_fn, NULL);
++  do_test_single (NULL, stack);
++  do_test_single (NULL, NULL);
+ 
+-  puts ("All OK");
+   return 0;
+ }
+ 
+-#define TEST_FUNCTION do_test ()
+-#include "../test-skeleton.c"
++#include <support/test-driver.c>

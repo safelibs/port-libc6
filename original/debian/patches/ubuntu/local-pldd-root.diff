@@ -1,0 +1,10 @@
+Description: Run tst-pldd as root so we have CAP_SYS_PTRACE
+Author: Adam Conrad <adconrad@ubuntu.com>
+Forwarded: no
+Last-Update: 2019-09-16
+
+--- /dev/null
++++ glibc-2.30/elf/tst-pldd.script
+@@ -0,0 +1,2 @@
++# We need to run this as root on Ubuntu to get ptrace permissions:
++su

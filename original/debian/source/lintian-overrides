@@ -1,0 +1,5 @@
+glibc source: debhelper-but-no-misc-depends libc6
+glibc source: debhelper-but-no-misc-depends libc6.1
+glibc source: debhelper-but-no-misc-depends libc0.3
+# Ubuntu ships glibc-doc-reference in main, too, with the same license
+glibc source: license-problem-gfdl-invariants *

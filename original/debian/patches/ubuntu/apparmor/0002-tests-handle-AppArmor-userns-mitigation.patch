@@ -1,0 +1,172 @@
+From 93894b23ad86373259521ee5bde382923c019d89 Mon Sep 17 00:00:00 2001
+From: Simon Chopin <simon.chopin@canonical.com>
+Date: Thu, 14 Mar 2024 18:51:30 +0100
+Subject: [PATCH] tests: handle AppArmor userns mitigation
+
+Support for flat denial of user namespace creation from AppArmor was
+added in commit 59e0441d4a ("tests: gracefully handle AppArmor userns
+containment"). However, AppArmor supports another mode where it allows
+the namespace creation but denies privileged actions within that
+namespace.
+
+The mitigation mode will be enabled by default in Ubuntu 24.04.
+
+This patch adds support for properly skipping the tests when that
+happens (usually when calling mount() or writing to /proc/self/uid_map)
+
+Further info:
+* AppArmor user namespace restriction modes:
+  https://gitlab.com/apparmor/apparmor/-/wikis/unprivileged_userns_restriction#two-types-of-restrictions
+* Error codes for AppArmor-denied syscals:
+  https://gitlab.com/apparmor/apparmor/-/wikis/manpage_apparmor.d.5#profile-mode
+
+Signed-off-by: Simon Chopin <simon.chopin@canonical.com>
+---
+ support/support_become_root.c                 | 41 ++++++++++++++-----
+ support/test-container.c                      | 12 +++++-
+ .../unix/sysv/linux/tst-getcwd-smallbuff.c    | 17 +++++---
+ sysdeps/unix/sysv/linux/tst-pidfd_getpid.c    |  2 +-
+ 4 files changed, 54 insertions(+), 18 deletions(-)
+
+diff --git a/support/support_become_root.c b/support/support_become_root.c
+index 5920fc8236..f744886037 100644
+--- a/support/support_become_root.c
++++ b/support/support_become_root.c
+@@ -28,6 +28,34 @@
+ #include <unistd.h>
+ 
+ #ifdef CLONE_NEWUSER
++static void
++write_id_map (int map_fd, unsigned long long src,
++                      unsigned long long dst, unsigned long long range)
++{
++  char map_buf[100];
++  int size = snprintf (map_buf, sizeof (map_buf), "%llu %llu %llu\n", src, dst,
++                       range);
++  TEST_VERIFY_EXIT (size < sizeof (map_buf));
++  int ret = write (map_fd, map_buf, size);
++  if (ret < 0)
++    {
++      if (errno == EPERM || errno == EACCES)
++        {
++          /* Likely a LSM deny.  */
++          FAIL_UNSUPPORTED (
++              "Could not write ID map file, check security settings: %m\n");
++        }
++      else
++        FAIL_EXIT1 ("Could not write ID map file: %m\n");
++    }
++  else if (ret < size)
++    {
++      /* Retrying would just fail with EPERM, see user_namespaces(7).  */
++      FAIL_EXIT1 (
++          "couldn't write the entire buffer at once to the ID file: %m\n");
++    }
++}
++
+ /* The necessary steps to allow file creation in user namespaces.  */
+ static void
+ setup_uid_gid_mapping (uid_t original_uid, gid_t original_gid)
+@@ -43,12 +71,7 @@ setup_uid_gid_mapping (uid_t original_uid, gid_t original_gid)
+   /* We map our original UID to the same UID in the container so we
+      own our own files normally.  Without that, file creation could
+      fail with EOVERFLOW (sic!).  */
+-  char buf[100];
+-  int ret = snprintf (buf, sizeof (buf), "%llu %llu 1\n",
+-                      (unsigned long long) original_uid,
+-                      (unsigned long long) original_uid);
+-  TEST_VERIFY_EXIT (ret < sizeof (buf));
+-  xwrite (fd, buf, ret);
++  write_id_map (fd, original_uid, original_uid, 1);
+   xclose (fd);
+ 
+   /* Linux 3.19 introduced the setgroups file.  We need write "deny" to this
+@@ -69,11 +92,7 @@ setup_uid_gid_mapping (uid_t original_uid, gid_t original_gid)
+ 
+   /* Now map our own GID, like we did for the user ID.  */
+   fd = xopen ("/proc/self/gid_map", O_WRONLY, 0);
+-  ret = snprintf (buf, sizeof (buf), "%llu %llu 1\n",
+-                  (unsigned long long) original_gid,
+-                  (unsigned long long) original_gid);
+-  TEST_VERIFY_EXIT (ret < sizeof (buf));
+-  xwrite (fd, buf, ret);
++  write_id_map (fd, original_gid, original_gid, 1);
+   xclose (fd);
+ }
+ #endif /* CLONE_NEWUSER */
+diff --git a/support/test-container.c b/support/test-container.c
+index ebcc722da5..fd45cbfa57 100644
+--- a/support/test-container.c
++++ b/support/test-container.c
+@@ -1133,7 +1133,17 @@ main (int argc, char **argv)
+ 
+   /* Some systems, by default, all mounts leak out of the namespace.  */
+   if (mount ("none", "/", NULL, MS_REC | MS_PRIVATE, NULL) != 0)
+-    FAIL_EXIT1 ("could not create a private mount namespace\n");
++    {
++      int saved_errno = errno;
++      if (errno == EPERM || errno == EACCES)
++        {
++          check_for_unshare_hints (require_pidns);
++          FAIL_UNSUPPORTED ("could not create a private mount namespace "
++                            "(security policy?: %s)",
++                            strerror (saved_errno));
++        }
++      FAIL_EXIT1 ("could not create a private mount namespace\n");
++    }
+ 
+   trymount (support_srcdir_root, new_srcdir_path);
+   trymount (support_objdir_root, new_objdir_path);
+diff --git a/sysdeps/unix/sysv/linux/tst-getcwd-smallbuff.c b/sysdeps/unix/sysv/linux/tst-getcwd-smallbuff.c
+index 55362f6060..f564be6a63 100644
+--- a/sysdeps/unix/sysv/linux/tst-getcwd-smallbuff.c
++++ b/sysdeps/unix/sysv/linux/tst-getcwd-smallbuff.c
+@@ -133,7 +133,13 @@ child_func (void * const arg)
+   TEST_VERIFY_EXIT (ch == '1');
+ 
+   if (mount ("/", MOUNT_NAME, NULL, MS_BIND | MS_REC, NULL))
+-    FAIL_EXIT1 ("mount failed: %m\n");
++    {
++      /* Probably rejected by local security policy.  */
++      if (errno == EPERM || errno == EACCES)
++        FAIL_UNSUPPORTED ("mount failed (security policy?): %m\n");
++      else
++        FAIL_EXIT1 ("mount failed: %m\n");
++    }
+   const int fd = xopen ("mpoint",
+ 			O_RDONLY | O_PATH | O_DIRECTORY | O_NOFOLLOW, 0);
+ 
+@@ -194,10 +200,11 @@ do_test (void)
+     pid_t pid = xfork ();
+     if (pid == 0)
+       {
+-	if (unshare (CLONE_NEWUSER | CLONE_NEWNS) != 0)
+-	  _exit (EXIT_UNSUPPORTED);
+-	else
+-	  _exit (0);
++        if (unshare (CLONE_NEWUSER | CLONE_NEWNS) != 0
++            || mount ("none", "/", NULL, MS_REC | MS_PRIVATE, NULL) != 0)
++          _exit (EXIT_UNSUPPORTED);
++        else
++          _exit (0);
+       }
+     int status;
+     xwaitpid (pid, &status, 0);
+diff --git a/sysdeps/unix/sysv/linux/tst-pidfd_getpid.c b/sysdeps/unix/sysv/linux/tst-pidfd_getpid.c
+index ef62fbe941..89233ac4a1 100644
+--- a/sysdeps/unix/sysv/linux/tst-pidfd_getpid.c
++++ b/sysdeps/unix/sysv/linux/tst-pidfd_getpid.c
+@@ -72,7 +72,7 @@ do_test (void)
+ 	    /* This happens if we're trying to create a nested container,
+ 	       like if the build is running under podman, and we lack
+ 	       priviledges.  */
+-	    if (errno  == EPERM)
++	    if (errno  == EPERM || errno == EACCES)
+ 	      _exit (EXIT_UNSUPPORTED);
+ 	    else
+ 	      _exit (EXIT_FAILURE);
+
+base-commit: 2173173d57971d042c0ad4b281431ae127e9b5b8
+-- 
+2.43.0
+
