@@ -1,0 +1,545 @@
+{
+  "metadata": {
+    "generated_at_utc": "2026-04-08T00:54:57.302890Z",
+    "generated_from": "/home/yans/code/safelibs/ported/libc6/all_cves.json",
+    "source_package": "glibc",
+    "binary_package": "libc6",
+    "reviewed_cve_count": 164,
+    "included_cve_count": 40,
+    "included_confidence_counts": {
+      "high": 31,
+      "medium": 9
+    },
+    "selection_goal": "Identify non-memory-corruption CVEs from the libc6/glibc corpus whose root causes could survive a Rust rewrite.",
+    "selection_scope": [
+      "Core libc APIs and runtime behavior.",
+      "Dynamic loader and secure-exec behavior.",
+      "NSS, resolver, regex, glob, wordexp, iconv, crypt, and related library-side helpers.",
+      "Library-side nscd client behavior when it is part of libc call paths."
+    ],
+    "selection_rules": [
+      "Included semantic, parser, state-machine, privilege-boundary, entropy, concurrency, hardening, ABI, and resource-management bugs.",
+      "Excluded primary memory-corruption and memory-safety CVEs such as buffer overflows, out-of-bounds access, use-after-free, double free, heap corruption, and similar bugs that Rust safe code directly targets.",
+      "Excluded CVEs limited to helper tools or daemons outside the likely libc6 Rust port, such as the nscd daemon, pt_chown, locale/ldd/catchsegv, and the standalone iconv utility, unless the issue touched library-side runtime code.",
+      "Retained a small number of disputed or release-not-affected CVEs when they still describe a bug class that a Rust reimplementation could plausibly reproduce; such caveats are recorded per entry."
+    ],
+    "excluded_examples": [
+      "nscd daemon-only crashes and memory-corruption bugs",
+      "buffer-overflow / out-of-bounds / use-after-free issues in iconv, malloc, syslog, resolver, printf, glob, and loader code",
+      "tool-only issues in catchsegv, locale, ldd, pt_chown, and the standalone iconv command"
+    ],
+    "included_ids": [
+      "CVE-2026-4046",
+      "CVE-2026-4438",
+      "CVE-2026-4437",
+      "CVE-2026-3904",
+      "CVE-2025-0577",
+      "CVE-2025-4802",
+      "CVE-2024-12455",
+      "CVE-2015-20109",
+      "CVE-2016-20013",
+      "CVE-2021-3998",
+      "CVE-2020-27618",
+      "CVE-2021-3326",
+      "CVE-2020-29562",
+      "CVE-2019-19126",
+      "CVE-2018-20796",
+      "CVE-2009-5155",
+      "CVE-2019-7309",
+      "CVE-2016-10739",
+      "CVE-2018-19591",
+      "CVE-2017-16997",
+      "CVE-2017-12132",
+      "CVE-2015-8985",
+      "CVE-2016-6323",
+      "CVE-2015-8776",
+      "CVE-2015-8777",
+      "CVE-2014-8121",
+      "CVE-2014-9402",
+      "CVE-2014-7817",
+      "CVE-2014-0475",
+      "CVE-2013-4788",
+      "CVE-2011-4609",
+      "CVE-2011-1089",
+      "CVE-2011-1658",
+      "CVE-2010-4756",
+      "CVE-2010-4052",
+      "CVE-2010-4051",
+      "CVE-2010-3856",
+      "CVE-2010-3847",
+      "CVE-2010-0296",
+      "CVE-2010-0015"
+    ],
+    "ordering_rule": "Entries are sorted by published date descending from all_cves.json; CVE ID year is not used because some older bugs received CVE publication dates later."
+  },
+  "relevant_cves": [
+    {
+      "id": "CVE-2026-4046",
+      "component": "iconv state machine",
+      "non_memory_type": "assertion-triggered denial of service",
+      "description": "iconv() aborts on IBM1390/IBM1399 conversion because malformed input reaches an internal assertion.",
+      "why_relevant_to_rust": "A Rust port still needs total state-machine handling for malformed multibyte input and should not rely on assertions for externally reachable cases.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2026-4046.json",
+      "ubuntu_tracker_path": "active/CVE-2026-4046"
+    },
+    {
+      "id": "CVE-2026-4438",
+      "component": "nss_dns / gethostbyaddr",
+      "non_memory_type": "DNS response validation",
+      "description": "gethostbyaddr[_r] can return an invalid DNS hostname that violates the DNS specification.",
+      "why_relevant_to_rust": "Rust will not fix semantic DNS validation mistakes; reverse lookup code still has to validate labels and returned names.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2026-4438.json",
+      "ubuntu_tracker_path": "active/CVE-2026-4438"
+    },
+    {
+      "id": "CVE-2026-4437",
+      "component": "nss_dns / gethostbyaddr",
+      "non_memory_type": "DNS response parsing",
+      "description": "A crafted reverse-DNS response can make gethostbyaddr[_r] treat a non-answer section as a valid answer.",
+      "why_relevant_to_rust": "Resolver section parsing and answer selection are language-agnostic correctness and security rules.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2026-4437.json",
+      "ubuntu_tracker_path": "active/CVE-2026-4437"
+    },
+    {
+      "id": "CVE-2026-3904",
+      "component": "nscd client / NSS shared cache",
+      "non_memory_type": "concurrency / shared-memory race",
+      "description": "The libc-side nscd client can compare concurrently modified shared data and crash under load.",
+      "why_relevant_to_rust": "Rust porting does not remove cross-process shared-memory races; cache-client synchronization and snapshotting still need explicit design.",
+      "confidence": "medium",
+      "caveats": [
+        "Touches library-side nscd client code, not the nscd daemon.",
+        "Current Ubuntu releases listed in the corpus mark shipped versions as not affected."
+      ],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2026-3904.json",
+      "ubuntu_tracker_path": "retired/CVE-2026-3904"
+    },
+    {
+      "id": "CVE-2025-0577",
+      "component": "getrandom / arc4random",
+      "non_memory_type": "entropy / fork-safety",
+      "description": "Fork-concurrent calls can return predictable randomness because post-fork RNG state is not refreshed correctly.",
+      "why_relevant_to_rust": "Fork safety and RNG reseeding semantics remain relevant in Rust, especially around libc-compatible RNG APIs.",
+      "confidence": "medium",
+      "caveats": [
+        "Ubuntu tracker notes released upstream and Ubuntu versions were not affected; retained as a design pitfall."
+      ],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2025-0577.json",
+      "ubuntu_tracker_path": "retired/CVE-2025-0577"
+    },
+    {
+      "id": "CVE-2025-4802",
+      "component": "ld.so / static setuid dlopen path handling",
+      "non_memory_type": "privilege-boundary / environment sanitization",
+      "description": "Statically linked setuid binaries that use dlopen can honor attacker-controlled LD_LIBRARY_PATH.",
+      "why_relevant_to_rust": "Secure-exec environment scrubbing is a policy issue, not a memory-safety issue; a Rust loader/runtime can repeat it exactly.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2025-4802.json",
+      "ubuntu_tracker_path": "retired/CVE-2025-4802"
+    },
+    {
+      "id": "CVE-2024-12455",
+      "component": "getrandom on powerpc",
+      "non_memory_type": "API contract / errno handling",
+      "description": "A powerpc getrandom implementation returns EINVAL as the function result instead of setting errno.",
+      "why_relevant_to_rust": "ABI and errno contract bugs survive language changes; a Rust port still has to match libc calling conventions exactly.",
+      "confidence": "medium",
+      "caveats": [
+        "Powerpc-specific.",
+        "Ubuntu tracker marks shipped versions as not affected."
+      ],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2024-12455.json",
+      "ubuntu_tracker_path": "retired/CVE-2024-12455"
+    },
+    {
+      "id": "CVE-2015-20109",
+      "component": "fnmatch",
+      "non_memory_type": "crafted-pattern crash",
+      "description": "A crafted **(!() pattern can crash fnmatch().",
+      "why_relevant_to_rust": "Pattern-parser termination and error recovery are parser-logic problems, not pointer-safety problems.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2015-20109.json",
+      "ubuntu_tracker_path": "retired/CVE-2015-20109"
+    },
+    {
+      "id": "CVE-2016-20013",
+      "component": "crypt / sha256crypt / sha512crypt",
+      "non_memory_type": "algorithmic complexity",
+      "description": "SHA-crypt password hashing has quadratic runtime in password length, enabling CPU-exhaustion attacks.",
+      "why_relevant_to_rust": "If a Rust port preserves SHA-crypt compatibility, it inherits the same algorithmic denial-of-service characteristic.",
+      "confidence": "medium",
+      "caveats": [
+        "Inherent to the legacy algorithm more than to a specific C implementation."
+      ],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2016-20013.json",
+      "ubuntu_tracker_path": "retired/CVE-2016-20013"
+    },
+    {
+      "id": "CVE-2021-3998",
+      "component": "realpath",
+      "non_memory_type": "path resolution semantics / information disclosure",
+      "description": "realpath() can return an unexpected value and disclose path information.",
+      "why_relevant_to_rust": "Path canonicalization semantics are easy to get subtly wrong even in safe code.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2021-3998.json",
+      "ubuntu_tracker_path": "retired/CVE-2021-3998"
+    },
+    {
+      "id": "CVE-2020-27618",
+      "component": "iconv state machine",
+      "non_memory_type": "infinite loop / denial of service",
+      "description": "Invalid multibyte sequences in several IBM encodings can leave iconv() without forward progress.",
+      "why_relevant_to_rust": "Termination guarantees in decoder state machines are independent of Rust memory safety.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2020-27618.json",
+      "ubuntu_tracker_path": "active/CVE-2020-27618"
+    },
+    {
+      "id": "CVE-2021-3326",
+      "component": "iconv state machine",
+      "non_memory_type": "assertion-triggered denial of service",
+      "description": "Invalid ISO-2022-JP-3 input can trip an assertion and abort iconv().",
+      "why_relevant_to_rust": "A Rust port must handle malformed encoding transitions as recoverable errors, not as internal invariants.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2021-3326.json",
+      "ubuntu_tracker_path": "active/CVE-2021-3326"
+    },
+    {
+      "id": "CVE-2020-29562",
+      "component": "iconv state machine",
+      "non_memory_type": "assertion-triggered denial of service",
+      "description": "Converting UCS4 text with an irreversible character can trip an assertion and abort iconv().",
+      "why_relevant_to_rust": "Decoder invariants around irreversible conversions still need explicit error handling in Rust.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2020-29562.json",
+      "ubuntu_tracker_path": "retired/CVE-2020-29562"
+    },
+    {
+      "id": "CVE-2019-19126",
+      "component": "ld.so",
+      "non_memory_type": "privilege-boundary / ASLR policy",
+      "description": "Secure execution on x86-64 failed to ignore LD_PREFER_MAP_32BIT_EXEC after a security transition.",
+      "why_relevant_to_rust": "Secure-mode environment handling and address-space policy are loader logic bugs, not C-only bugs.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2019-19126.json",
+      "ubuntu_tracker_path": "retired/CVE-2019-19126"
+    },
+    {
+      "id": "CVE-2018-20796",
+      "component": "regex engine",
+      "non_memory_type": "uncontrolled recursion",
+      "description": "A crafted regex can trigger uncontrolled recursion in regexec().",
+      "why_relevant_to_rust": "Recursive matcher logic can still overflow stack or hang in Rust if structurally similar.",
+      "confidence": "medium",
+      "caveats": [
+        "Upstream and Ubuntu did not consider exposure to untrusted regex patterns a default security boundary."
+      ],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2018-20796.json",
+      "ubuntu_tracker_path": "retired/CVE-2018-20796"
+    },
+    {
+      "id": "CVE-2009-5155",
+      "component": "regex compiler",
+      "non_memory_type": "parser correctness / assertion denial of service",
+      "description": "regcomp() misparses alternatives, causing incorrect results or an assertion failure.",
+      "why_relevant_to_rust": "Formal parser correctness and total handling of malformed regexes remain necessary in Rust.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2009-5155.json",
+      "ubuntu_tracker_path": "active/CVE-2009-5155"
+    },
+    {
+      "id": "CVE-2019-7309",
+      "component": "memcmp x32",
+      "non_memory_type": "low-level semantic miscompare",
+      "description": "x32 memcmp can incorrectly report equality because register handling is wrong.",
+      "why_relevant_to_rust": "Even in Rust, architecture-specific intrinsics or asm paths must preserve exact comparison semantics.",
+      "confidence": "high",
+      "caveats": [
+        "x32-specific."
+      ],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2019-7309.json",
+      "ubuntu_tracker_path": "retired/CVE-2019-7309"
+    },
+    {
+      "id": "CVE-2016-10739",
+      "component": "getaddrinfo numeric host parsing",
+      "non_memory_type": "parser validation",
+      "description": "getaddrinfo() can accept an IPv4 string followed by whitespace and arbitrary trailing data.",
+      "why_relevant_to_rust": "Rust will not prevent permissive or ambiguous parsers from being used in security-sensitive contexts.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2016-10739.json",
+      "ubuntu_tracker_path": "active/CVE-2016-10739"
+    },
+    {
+      "id": "CVE-2018-19591",
+      "component": "getaddrinfo / if_nametoindex",
+      "non_memory_type": "resource leak",
+      "description": "Resolving a crafted hostname can allocate a socket descriptor that is never closed.",
+      "why_relevant_to_rust": "Resource-lifetime bugs remain relevant in Rust at FFI and OS boundary layers.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2018-19591.json",
+      "ubuntu_tracker_path": "retired/CVE-2018-19591"
+    },
+    {
+      "id": "CVE-2017-16997",
+      "component": "ld.so RPATH/RUNPATH",
+      "non_memory_type": "privilege-boundary / search path interpretation",
+      "description": "An empty RPATH/RUNPATH token inside privileged loading can be misread as the current directory.",
+      "why_relevant_to_rust": "Search-path normalization rules are pure logic; a Rust loader can reproduce the same privilege bug.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2017-16997.json",
+      "ubuntu_tracker_path": "retired/CVE-2017-16997"
+    },
+    {
+      "id": "CVE-2017-12132",
+      "component": "stub resolver",
+      "non_memory_type": "protocol hardening / spoofing resistance",
+      "description": "EDNS support solicits large UDP responses, making off-path DNS spoofing easier via fragmentation.",
+      "why_relevant_to_rust": "Resolver hardening choices persist across languages; compatibility code must still respect anti-spoofing design constraints.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2017-12132.json",
+      "ubuntu_tracker_path": "active/CVE-2017-12132"
+    },
+    {
+      "id": "CVE-2015-8985",
+      "component": "regex engine",
+      "non_memory_type": "assertion-triggered denial of service",
+      "description": "Extended regular-expression processing can hit an assertion in pop_fail_stack and crash.",
+      "why_relevant_to_rust": "Rust regex-compatible code can still encode invalid internal states or rely on assertions for hostile input.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2015-8985.json",
+      "ubuntu_tracker_path": "active/CVE-2015-8985"
+    },
+    {
+      "id": "CVE-2016-6323",
+      "component": "makecontext / unwinder interop",
+      "non_memory_type": "ABI/context compatibility",
+      "description": "ARM EABI makecontext creates contexts that are incompatible with unwinding, leading to hangs.",
+      "why_relevant_to_rust": "Coroutine and context-switch ABI rules are independent of memory safety; Rust code still has to obey unwinder and calling-convention contracts.",
+      "confidence": "high",
+      "caveats": [
+        "ARM EABI 32-bit specific."
+      ],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2016-6323.json",
+      "ubuntu_tracker_path": "retired/CVE-2016-6323"
+    },
+    {
+      "id": "CVE-2015-8776",
+      "component": "strftime",
+      "non_memory_type": "input validation / unexpected-value handling",
+      "description": "Out-of-range time values can crash strftime() or leak information.",
+      "why_relevant_to_rust": "Boundary handling and normalization of time structures remain correctness bugs in Rust.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2015-8776.json",
+      "ubuntu_tracker_path": "retired/CVE-2015-8776"
+    },
+    {
+      "id": "CVE-2015-8777",
+      "component": "ld.so",
+      "non_memory_type": "hardening policy bypass",
+      "description": "LD_POINTER_GUARD can disable pointer-guarding across privilege boundaries.",
+      "why_relevant_to_rust": "Security-hardening policy enforcement in secure-exec mode is language-agnostic.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2015-8777.json",
+      "ubuntu_tracker_path": "retired/CVE-2015-8777"
+    },
+    {
+      "id": "CVE-2014-8121",
+      "component": "NSS files backend",
+      "non_memory_type": "file-descriptor/state-machine logic",
+      "description": "Looking up a database while iterating it can reset the file pointer and loop forever.",
+      "why_relevant_to_rust": "Shared iterator and state management in NSS backends is still a logic problem in Rust.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2014-8121.json",
+      "ubuntu_tracker_path": "retired/CVE-2014-8121"
+    },
+    {
+      "id": "CVE-2014-9402",
+      "component": "nss_dns / getnetbyname",
+      "non_memory_type": "infinite loop / denial of service",
+      "description": "A positive DNS answer during network-name processing can send getnetbyname into an infinite loop.",
+      "why_relevant_to_rust": "Forward-progress guarantees in parsers and resolvers do not come from Rust automatically.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2014-9402.json",
+      "ubuntu_tracker_path": "retired/CVE-2014-9402"
+    },
+    {
+      "id": "CVE-2014-7817",
+      "component": "wordexp",
+      "non_memory_type": "policy / flag enforcement",
+      "description": "wordexp() fails to enforce WRDE_NOCMD and can execute commands anyway.",
+      "why_relevant_to_rust": "API flag semantics and shell-expansion policy must be preserved explicitly in any reimplementation.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2014-7817.json",
+      "ubuntu_tracker_path": "retired/CVE-2014-7817"
+    },
+    {
+      "id": "CVE-2014-0475",
+      "component": "locale path handling",
+      "non_memory_type": "path traversal / environment sanitization",
+      "description": "Locale-related environment variables can use .. to traverse directories and bypass restrictions.",
+      "why_relevant_to_rust": "Environment-variable sanitization and path canonicalization remain key loader and runtime pitfalls in Rust.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2014-0475.json",
+      "ubuntu_tracker_path": "retired/CVE-2014-0475"
+    },
+    {
+      "id": "CVE-2013-4788",
+      "component": "PTR_MANGLE / pointer guard",
+      "non_memory_type": "hardening initialization",
+      "description": "Statically linked executables could use an all-zero pointer guard because the random guard was never initialized.",
+      "why_relevant_to_rust": "Hardening-state initialization is independent of memory safety; secure-startup logic must still be correct.",
+      "confidence": "high",
+      "caveats": [
+        "Static executables only."
+      ],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2013-4788.json",
+      "ubuntu_tracker_path": "retired/CVE-2013-4788"
+    },
+    {
+      "id": "CVE-2011-4609",
+      "component": "sunrpc svc_run",
+      "non_memory_type": "algorithmic / CPU exhaustion",
+      "description": "Large numbers of RPC connections can drive svc_run() into excessive CPU use.",
+      "why_relevant_to_rust": "Event-loop fairness and denial-of-service resistance are still relevant if legacy SunRPC APIs are reimplemented.",
+      "confidence": "medium",
+      "caveats": [
+        "Legacy SunRPC surface."
+      ],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2011-4609.json",
+      "ubuntu_tracker_path": "retired/CVE-2011-4609"
+    },
+    {
+      "id": "CVE-2011-1089",
+      "component": "addmntent",
+      "non_memory_type": "API error propagation",
+      "description": "addmntent() can silently ignore write failures, making /etc/mtab corruption easier.",
+      "why_relevant_to_rust": "Correct errno and status propagation is a compatibility and security requirement for libc wrappers in any language.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2011-1089.json",
+      "ubuntu_tracker_path": "retired/CVE-2011-1089"
+    },
+    {
+      "id": "CVE-2011-1658",
+      "component": "ld.so RPATH",
+      "non_memory_type": "privilege-boundary / token expansion",
+      "description": "$ORIGIN-only RPATH values can be expanded in privileged programs in unsafe ways.",
+      "why_relevant_to_rust": "Privileged token-expansion rules are loader policy, not memory-safety.",
+      "confidence": "high",
+      "caveats": [
+        "Requires uncommon privileged-binary configuration."
+      ],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2011-1658.json",
+      "ubuntu_tracker_path": "retired/CVE-2011-1658"
+    },
+    {
+      "id": "CVE-2010-4756",
+      "component": "glob",
+      "non_memory_type": "algorithmic complexity / resource exhaustion",
+      "description": "Crafted unmatched glob expressions can consume excessive CPU and memory.",
+      "why_relevant_to_rust": "Rust ports still need resource limits or linear-time behavior for hostile glob patterns.",
+      "confidence": "medium",
+      "caveats": [
+        "Upstream and Ubuntu treated this more as an application-input hardening issue."
+      ],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2010-4756.json",
+      "ubuntu_tracker_path": "retired/CVE-2010-4756"
+    },
+    {
+      "id": "CVE-2010-4052",
+      "component": "regex compiler",
+      "non_memory_type": "stack exhaustion",
+      "description": "Adjacent repetition operators can cause unbounded stack consumption in regcomp().",
+      "why_relevant_to_rust": "Recursive parser or automaton construction can still exhaust stack in Rust if translated directly.",
+      "confidence": "medium",
+      "caveats": [
+        "Upstream and Ubuntu treated this as debatable security significance."
+      ],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2010-4052.json",
+      "ubuntu_tracker_path": "retired/CVE-2010-4052"
+    },
+    {
+      "id": "CVE-2010-4051",
+      "component": "regex compiler",
+      "non_memory_type": "numeric-limit bypass / crash",
+      "description": "Adjacent bounded repetitions can bypass RE_DUP_MAX handling and crash regcomp().",
+      "why_relevant_to_rust": "Enforcing numeric parser and engine limits is language-agnostic.",
+      "confidence": "medium",
+      "caveats": [
+        "Upstream and Ubuntu treated this as debatable security significance."
+      ],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2010-4051.json",
+      "ubuntu_tracker_path": "retired/CVE-2010-4051"
+    },
+    {
+      "id": "CVE-2010-3856",
+      "component": "ld.so / LD_AUDIT",
+      "non_memory_type": "privilege-boundary / DSO policy",
+      "description": "LD_AUDIT was not sufficiently restricted to true audit DSOs, enabling privilege escalation via unsafe libraries in trusted directories.",
+      "why_relevant_to_rust": "Secure loader policy around audit objects remains relevant in any reimplementation.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2010-3856.json",
+      "ubuntu_tracker_path": "retired/CVE-2010-3856"
+    },
+    {
+      "id": "CVE-2010-3847",
+      "component": "ld.so / LD_AUDIT",
+      "non_memory_type": "privilege-boundary / token expansion",
+      "description": "$ORIGIN in LD_AUDIT can load attacker-controlled DSOs from arbitrary directories.",
+      "why_relevant_to_rust": "Secure-mode expansion of loader tokens is a logic bug a Rust loader can still reproduce.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2010-3847.json",
+      "ubuntu_tracker_path": "retired/CVE-2010-3847"
+    },
+    {
+      "id": "CVE-2010-0296",
+      "component": "mntent encoding",
+      "non_memory_type": "input sanitization / file-format integrity",
+      "description": "Newlines in mountpoint names are encoded incorrectly, allowing mtab corruption or mount-option injection.",
+      "why_relevant_to_rust": "Serialization and escaping rules for privileged text formats remain error-prone in Rust.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2010-0296.json",
+      "ubuntu_tracker_path": "retired/CVE-2010-0296"
+    },
+    {
+      "id": "CVE-2010-0015",
+      "component": "nss_nis / getpwnam",
+      "non_memory_type": "data exposure / backend composition",
+      "description": "passwd.adjunct.byname data can be merged into passwd results, exposing encrypted NIS passwords.",
+      "why_relevant_to_rust": "Backend composition and data-redaction policy are semantic issues, not memory-safety issues.",
+      "confidence": "high",
+      "caveats": [],
+      "ubuntu_security_url": "https://ubuntu.com/security/cves/CVE-2010-0015.json",
+      "ubuntu_tracker_path": "retired/CVE-2010-0015"
+    }
+  ]
+}
