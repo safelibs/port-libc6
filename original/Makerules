@@ -616,8 +616,10 @@ generated += libc_pic.opts libc_pic.os.clean
 libc_pic_clean := .clean
 
 # Build a possibly-modified version of libc_pic.a for use in building
-# linkobj/libc.so.
-ifeq (,$(filter sunrpc,$(subdirs)))
+# linkobj/libc.so.  Use the configured subdir set here so a partial
+# "make subdirs=..." invocation still preserves the SunRPC compatibility
+# object rewrite instead of hard-linking linkobj/libc_pic.a to libc_pic.a.
+ifeq (,$(filter sunrpc,$(sorted-subdirs)))
 $(common-objpfx)linkobj/libc_pic.a: $(common-objpfx)libc_pic.a
 	$(make-target-directory)
 	ln -f $< $@
@@ -631,7 +633,7 @@ $(common-objpfx)linkobj/libc_pic.a: $(common-objpfx)libc_pic.a \
 	 $(AR) x ../sunrpc/librpc_compat_pic.a; \
 	 $(AR) cr libc_pic.a *.os; \
 	 rm *.os)
-endif # $(subdirs) contains sunrpc
+endif # $(sorted-subdirs) contains sunrpc
 
 # Clear link-libc-deps for the libc.so libraries so build-shlibs does not
 # filter ld.so out of the list of linked objects.
