@@ -427,7 +427,8 @@ $(objpfx)tst-shstk-legacy-1e-static.out: \
   $(objpfx)tst-shstk-legacy-1e-static
 	$(SHELL) $< $(common-objpfx) 2> $@; \
 	$(evaluate-test)
-tst-shstk-legacy-1f-ENV = GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK
+tst-shstk-legacy-1f-ENV = GLIBC_TUNABLES=glibc.cpu.hwcaps=SHSTK \
+			  LD_PRELOAD=$(objpfx)tst-shstk-legacy-mod-1.so
 $(objpfx)tst-shstk-legacy-1f: $(objpfx)tst-shstk-legacy-mod-1.so
 $(objpfx)tst-shstk-legacy-mod-1.so: \
   $(objpfx)tst-shstk-legacy-mod-1.os \

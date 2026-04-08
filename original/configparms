@@ -1,3 +1,0 @@
-# Apply the Debian packaging testsuite XFAIL annotations when building from
-# this source package directly, not only through debian/rules.
-include $(dir $(lastword $(MAKEFILE_LIST)))debian/testsuite-xfail-debian.mk
