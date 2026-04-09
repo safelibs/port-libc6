@@ -37,6 +37,8 @@ tests += \
 tests-static += \
   tst-ifunc-isa-1-static \
 # tests-static
+test-xfail-tst-ifunc-isa-1 = $(with-lld)
+test-xfail-tst-ifunc-isa-1-static = $(with-lld)
 tests += \
   tst-ifunc-isa-2 \
   tst-ifunc-isa-2-static \
@@ -44,17 +46,8 @@ tests += \
 tests-static += \
   tst-ifunc-isa-2-static \
 # tests-static
-ifeq (yes,$(with-lld))
-test-xfail-tst-ifunc-isa-1 = yes
-test-xfail-tst-ifunc-isa-1-static = yes
-test-xfail-tst-ifunc-isa-2 = yes
-test-xfail-tst-ifunc-isa-2-static = yes
-endif
-
-$(objpfx)tst-ifunc-isa-1.out \
-$(objpfx)tst-ifunc-isa-1-static.out \
-$(objpfx)tst-ifunc-isa-2.out \
-$(objpfx)tst-ifunc-isa-2-static.out: $(..)sysdeps/x86/Makefile
+test-xfail-tst-ifunc-isa-2 = $(with-lld)
+test-xfail-tst-ifunc-isa-2-static = $(with-lld)
 endif
 endif
 ifeq (yes,$(enable-x86-isa-level))
