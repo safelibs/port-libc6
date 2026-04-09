@@ -1,6 +1,14 @@
 # The i387 `long double' is a distinct type we support.
 long-double-fcts = yes
 
+ifeq ($(subdir),string)
+ifneq ($(multi-arch),no)
+# Keep the x86_64 string multiarch sources enabled even if the generated
+# config.h in this tree missed the configure-time USE_MULTIARCH define.
+sysdep-CPPFLAGS += -DUSE_MULTIARCH
+endif
+endif
+
 ifeq (yes,$(have-z-mark-plt))
 # Always generate DT_X86_64_PLT* tags.
 sysdep-LDFLAGS += -Wl,-z,mark-plt

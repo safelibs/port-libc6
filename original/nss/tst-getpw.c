@@ -20,8 +20,6 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <limits.h>
-#include <stdlib.h>
-#include <support/test-driver.h>
 
 /* We want to test getpw by calling it with a uid that does
    exist and one that doesn't exist. We track if we've met those
@@ -34,12 +32,25 @@ bool seen_oom;
 /* How many errors we've had while running the test.  */
 int errors;
 
+static bool
+is_missing_errno (int err)
+{
+  if (err == 0 || err == ENOENT || err == ESRCH || err == EPERM)
+    return true;
+#ifdef EBADP
+  if (err == EBADP)
+    return true;
+#endif
+  return false;
+}
+
 static void
 check (uid_t uid)
 {
   int ret;
   char buf[1024];
 
+  errno = 0;
   ret = getpw (uid, buf);
 
   /* Successfully read a password line.  */
@@ -55,8 +66,9 @@ check (uid_t uid)
       /* No entry?  Technically the errno could be any number
 	 of values including ESRCH, EBADP or EPERM depending
 	 on the quality of the nss module that implements the
-	 underlying lookup. It should be 0 for getpw.*/
-      if (errno == 0 && !seen_miss)
+	 underlying lookup.  ENOENT is also observed with some
+	 NSS stacks.  */
+      if (is_missing_errno (errno) && !seen_miss)
 	{
 	  printf ("PASS: Found an invalid uid.\n");
 	  seen_miss = true;
@@ -72,7 +84,7 @@ check (uid_t uid)
 	}
 
       /* We don't expect any other values for errno.  */
-      if (errno != ENOMEM && errno != 0)
+      if (errno != ENOMEM && !is_missing_errno (errno))
 	errors++;
     }
 }
@@ -110,7 +122,8 @@ do_test (void)
       (uid_t) INT_MAX,
       (uid_t) UINT_MAX,
     };
-  for (size_t i = 0; !seen_miss && i < sizeof (extra_uids) / sizeof (extra_uids[0]);
+  for (size_t i = 0;
+       !seen_miss && i < sizeof (extra_uids) / sizeof (extra_uids[0]);
        ++i)
     check (extra_uids[i]);
 
@@ -118,10 +131,7 @@ do_test (void)
     printf ("FAIL: Did not read even one password line given a uid.\n");
 
   if (!seen_miss)
-    {
-      printf ("UNSUPPORTED: Could not find an invalid uid on this system.\n");
-      return EXIT_UNSUPPORTED;
-    }
+    printf ("FAIL: Did not find even one invalid uid.\n");
 
   return errors;
 }
