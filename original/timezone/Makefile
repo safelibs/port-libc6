@@ -51,9 +51,15 @@ include ../Rules
 
 $(objpfx)zic.o $(objpfx)zdump.o: $(objpfx)version.h
 
-$(objpfx)version.h: $(common-objpfx)config.make
+$(objpfx)version.h: $(common-objpfx)config.make Makefile
 	echo 'static char const TZVERSION[]="$(version)";' \
 	    > $@.new
+	echo '#ifndef PKGVERSION' >> $@.new
+	echo '# define PKGVERSION "$(PKGVERSION)"' >> $@.new
+	echo '#endif' >> $@.new
+	echo '#ifndef REPORT_BUGS_TO' >> $@.new
+	echo '# define REPORT_BUGS_TO "$(REPORT_BUGS_TO)"' >> $@.new
+	echo '#endif' >> $@.new
 	mv -f $@.new $@
 
 tz-cflags = -DTZDIR='"$(zonedir)"' \
