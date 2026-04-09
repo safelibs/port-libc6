@@ -248,21 +248,6 @@ prepare_test_etc (const char *tempdir)
 }
 
 static int
-run_fallback_smoke_test (void)
-{
-  unsetenv ("LOCALDOMAIN");
-  unsetenv ("RES_OPTIONS");
-
-  struct resolver_snapshot first;
-  struct resolver_snapshot second;
-  load_snapshot (&first);
-  load_snapshot (&second);
-  check_same_snapshot ("first public snapshot", &first,
-                       "second public snapshot", &second);
-  return 0;
-}
-
-static int
 do_child_test (const char *tempdir, uid_t uid, gid_t gid)
 {
 #ifndef CLONE_NEWNS
@@ -394,8 +379,8 @@ run_private_mount_child (const char *argv0)
   if (!can_run_passwordless_sudo ())
     {
       if (test_verbose > 0)
-        puts ("warning: passwordless sudo unavailable, using public smoke test");
-      return run_fallback_smoke_test ();
+        puts ("warning: passwordless sudo unavailable");
+      return EXIT_UNSUPPORTED;
     }
 
   char *self = realpath (argv0, NULL);
@@ -439,8 +424,8 @@ run_private_mount_child (const char *argv0)
            && WEXITSTATUS (proc.status) == EXIT_UNSUPPORTED)
     {
       if (test_verbose > 0)
-        puts ("warning: private mount namespace unavailable, using public smoke test");
-      result = run_fallback_smoke_test ();
+        puts ("warning: private mount namespace unavailable");
+      result = EXIT_UNSUPPORTED;
     }
   else
     {

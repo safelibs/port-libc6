@@ -84,6 +84,16 @@
 
 #include <config.h>
 
+/* Some configured trees leave these package metadata defines unset in
+   config.h, but many rebuilt helper programs still reference them.  */
+#ifndef PKGVERSION
+# define PKGVERSION "(GNU libc) "
+#endif
+
+#ifndef REPORT_BUGS_TO
+# define REPORT_BUGS_TO "<https://www.gnu.org/software/libc/bugs.html>"
+#endif
+
 /* Obtain the definition of symbol_version_reference.  */
 #include <libc-symver.h>
 

@@ -20,6 +20,14 @@
 #include <libc-abis.h>
 #include <gnu/libc-version.h>
 
+#ifndef PKGVERSION
+# define PKGVERSION "(GNU libc) "
+#endif
+
+#ifndef REPORT_BUGS_TO
+# define REPORT_BUGS_TO "<https://www.gnu.org/software/libc/bugs.html>"
+#endif
+
 static const char __libc_release[] = RELEASE;
 static const char __libc_version[] = VERSION;
 
