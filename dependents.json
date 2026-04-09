@@ -266,7 +266,7 @@
       "runtime_dependency_control_field": "Depends",
       "runtime_dependency_evidence": "libc6 (>= 2.38)",
       "source_package": "libvirt",
-      "source_version": "10.0.0-2ubuntu8.12",
+      "source_version": "10.0.0-2ubuntu8",
       "compile_time_dependency_evidence": "Build-Depends includes libc6-dev (>= 2.31-14~).",
       "runtime_functionality_depending_on_libc6": "Managing virtual machines, storage, and virtual networks through the libvirt daemon and APIs."
     }
