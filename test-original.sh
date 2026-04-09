@@ -307,23 +307,66 @@ SRC
 }
 
 test_libvirt() {
-  local virsh_bin=${1:-virsh}
-  local lib_path=${2:-}
-  local list_log="$scratch_root/libvirt-list.log"
-  local dominfo_log="$scratch_root/libvirt-dominfo.log"
+  local libvirtd_bin=${1:-libvirtd}
+  local virt_admin_bin=${2:-virt-admin}
+  local lib_path=${3:-}
+  local libvirt_root="$scratch_root/libvirt-daemon-check"
+  local config_file="$libvirt_root/libvirtd.conf"
+  local pid_file="$libvirt_root/libvirtd.pid"
+  local daemon_log="$libvirt_root/libvirtd.log"
+  local admin_log="$libvirt_root/virt-admin.log"
+  local daemon_pid=""
+
+  cleanup_libvirt() {
+    if [[ -n "$daemon_pid" ]]; then
+      kill "$daemon_pid" >/dev/null 2>&1 || true
+      wait "$daemon_pid" 2>/dev/null || true
+    fi
+  }
+
+  trap cleanup_libvirt RETURN
+
+  getent group libvirt-qemu >/dev/null || groupadd --system libvirt-qemu
+  id -u libvirt-qemu >/dev/null 2>&1 || \
+    useradd --system --gid libvirt-qemu --home-dir /var/lib/libvirt/qemu --create-home libvirt-qemu
+
+  rm -rf /run/libvirt /var/log/libvirt /var/cache/libvirt "$libvirt_root"
+  mkdir -p /run/libvirt /var/log/libvirt /var/cache/libvirt "$libvirt_root"
+
+  cat >"$config_file" <<'LIBVIRT_CONF'
+listen_tls = 0
+listen_tcp = 0
+unix_sock_group = "root"
+unix_sock_ro_perms = "0777"
+unix_sock_rw_perms = "0770"
+auth_unix_ro = "none"
+auth_unix_rw = "none"
+LIBVIRT_CONF
 
   if [[ -n "$lib_path" ]]; then
-    LD_LIBRARY_PATH="$lib_path" LIBVIRT_DEFAULT_URI=test:///default \
-      "$virsh_bin" list --all >"$list_log" 2>&1
-    LD_LIBRARY_PATH="$lib_path" LIBVIRT_DEFAULT_URI=test:///default \
-      "$virsh_bin" dominfo test >"$dominfo_log" 2>&1
+    LD_LIBRARY_PATH="$lib_path" "$libvirtd_bin" \
+      -d -t 30 -f "$config_file" -p "$pid_file" >"$daemon_log" 2>&1
   else
-    LIBVIRT_DEFAULT_URI=test:///default "$virsh_bin" list --all >"$list_log" 2>&1
-    LIBVIRT_DEFAULT_URI=test:///default "$virsh_bin" dominfo test >"$dominfo_log" 2>&1
+    "$libvirtd_bin" -d -t 30 -f "$config_file" -p "$pid_file" >"$daemon_log" 2>&1
   fi
 
-  grep -Eq '^ 1 +test +running$' "$list_log"
-  grep -Fq 'State:          running' "$dominfo_log"
+  sleep 3
+  daemon_pid=$(cat "$pid_file")
+
+  if [[ -n "$lib_path" ]]; then
+    LD_LIBRARY_PATH="$lib_path" "$virt_admin_bin" \
+      -c 'virtadm+unix:///system?socket=/run/libvirt/libvirt-admin-sock' \
+      srv-list >"$admin_log" 2>&1
+  else
+    "$virt_admin_bin" \
+      -c 'virtadm+unix:///system?socket=/run/libvirt/libvirt-admin-sock' \
+      srv-list >"$admin_log" 2>&1
+  fi
+
+  grep -Eq '^ 1 +libvirtd$' "$admin_log"
+
+  cleanup_libvirt
+  trap - RETURN
 }
 
 test_dependent() {
@@ -414,7 +457,9 @@ build_source_package() {
         return 1
       fi
       log "Smoke-testing locally built $dependent_name"
-      test_libvirt "$install_root/usr/bin/virsh" "$libvirt_libdir"
+      test_libvirt "$install_root/usr/sbin/libvirtd" \
+        "$install_root/usr/bin/virt-admin" \
+        "$libvirt_libdir"
       ;;
     *)
       printf 'No source build rule is defined for source package %s.\n' \
