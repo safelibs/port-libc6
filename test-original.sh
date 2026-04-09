@@ -81,9 +81,27 @@ test_coreutils() {
 }
 
 test_systemd() {
-  local output
-  output=$(systemd-analyze --version)
-  [[ "$output" == *'systemd '* ]]
+  local unit_file="$scratch_root/systemd-demo.service"
+  local tmpfiles_file="$scratch_root/systemd-demo.tmpfiles"
+  local tmpfiles_dir="$scratch_root/systemd-tmpfiles-check"
+  rm -rf "$tmpfiles_dir"
+  cat >"$unit_file" <<'SYSTEMD_UNIT'
+[Unit]
+Description=Demo service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/true
+
+[Install]
+WantedBy=multi-user.target
+SYSTEMD_UNIT
+  cat >"$tmpfiles_file" <<SYSTEMD_TMPFILES
+d $tmpfiles_dir 0755 root root - -
+SYSTEMD_TMPFILES
+  systemd-analyze verify "$unit_file" >/dev/null 2>&1
+  systemd-tmpfiles --create "$tmpfiles_file" >/dev/null 2>&1
+  [[ -d "$tmpfiles_dir" ]]
 }
 
 test_python312_minimal() {
@@ -187,26 +205,81 @@ test_qemu_system_x86() {
 }
 
 test_podman() {
+  local storage_root="$scratch_root/podman-root"
+  local run_root="$scratch_root/podman-runroot"
   local output
-  output=$(podman --help)
-  [[ "$output" == *'Manage pods, containers and images'* ]]
+  rm -rf "$storage_root" "$run_root"
+  run_logged podman-pull podman \
+    --root "$storage_root" \
+    --runroot "$run_root" \
+    --storage-driver=vfs \
+    pull --tls-verify=false docker.io/library/alpine:3.19
+  output=$(podman \
+    --root "$storage_root" \
+    --runroot "$run_root" \
+    --storage-driver=vfs \
+    run --cgroups=disabled --rm docker.io/library/alpine:3.19 \
+    /bin/sh -c 'printf podman-ok')
+  [[ "$output" == "podman-ok" ]]
 }
 
 test_gnome_shell() {
-  local output
-  output=$(gnome-shell --version)
-  [[ "$output" == *'GNOME Shell '* ]]
+  local runtime_dir="$scratch_root/gnome-runtime"
+  local gnome_log="$scratch_root/gnome-shell.log"
+  local logind_log="$scratch_root/gnome-logind.log"
+  local xvfb_log="$scratch_root/gnome-xvfb.log"
+  local dbus_pid=""
+  local logind_pid=""
+  local xvfb_pid=""
+
+  cleanup_gnome_shell() {
+    if [[ -n "$xvfb_pid" ]]; then
+      kill "$xvfb_pid" >/dev/null 2>&1 || true
+      wait "$xvfb_pid" 2>/dev/null || true
+    fi
+    if [[ -n "$logind_pid" ]]; then
+      kill "$logind_pid" >/dev/null 2>&1 || true
+      wait "$logind_pid" 2>/dev/null || true
+    fi
+    if [[ -n "$dbus_pid" ]]; then
+      kill "$dbus_pid" >/dev/null 2>&1 || true
+      wait "$dbus_pid" 2>/dev/null || true
+    fi
+    rm -f /run/dbus/pid /tmp/.X99-lock
+  }
+
+  trap cleanup_gnome_shell RETURN
+
+  rm -f /run/dbus/pid /tmp/.X99-lock
+  mkdir -p /run/dbus "$runtime_dir"
+  chmod 700 "$runtime_dir"
+  dbus-daemon --system --fork >/dev/null 2>"$scratch_root/gnome-system-dbus.log"
+  dbus_pid=$(cat /run/dbus/pid)
+  /lib/systemd/systemd-logind >"$logind_log" 2>&1 &
+  logind_pid=$!
+  Xvfb :99 -screen 0 1024x768x24 >"$xvfb_log" 2>&1 &
+  xvfb_pid=$!
+  DISPLAY=:99 XDG_RUNTIME_DIR="$runtime_dir" dbus-run-session -- \
+    bash -lc 'gnome-shell --x11 --replace >"$1" 2>&1 & shell_pid=$!; sleep 10; kill -0 "$shell_pid"' \
+    bash "$gnome_log" >/dev/null 2>&1
+  grep -Fq 'GNOME Shell started' "$gnome_log"
+
+  cleanup_gnome_shell
+  trap - RETURN
 }
 
 test_strace() {
+  local strace_bin=${1:-strace}
   local stdout_file="$scratch_root/strace.stdout"
   local trace_file="$scratch_root/strace.out"
-  strace -o "$trace_file" -e write bash -lc 'printf traced' >"$stdout_file"
+  "$strace_bin" -o "$trace_file" -e write bash -lc 'printf traced' >"$stdout_file"
   grep -Fq 'traced' "$stdout_file"
   grep -Fq 'write(1, "traced"' "$trace_file"
 }
 
 test_valgrind() {
+  local valgrind_bin=${1:-valgrind}
+  local valgrind_lib=${2:-}
   local src_file="$scratch_root/valgrind-smoke.c"
   local exe_file="$scratch_root/valgrind-smoke"
   cat >"$src_file" <<'SRC'
@@ -223,14 +296,34 @@ int main(void) {
   }
 SRC
   cc "$src_file" -o "$exe_file"
-  valgrind --error-exitcode=1 --leak-check=full "$exe_file" \
-    >"$scratch_root/valgrind.log" 2>&1
+  if [[ -n "$valgrind_lib" ]]; then
+    VALGRIND_LIB="$valgrind_lib" \
+      "$valgrind_bin" --error-exitcode=1 --leak-check=full "$exe_file" \
+      >"$scratch_root/valgrind.log" 2>&1
+  else
+    "$valgrind_bin" --error-exitcode=1 --leak-check=full "$exe_file" \
+      >"$scratch_root/valgrind.log" 2>&1
+  fi
 }
 
 test_libvirt() {
-  local output
-  output=$(libvirtd --version)
-  [[ "$output" == *'libvirt'* ]]
+  local virsh_bin=${1:-virsh}
+  local lib_path=${2:-}
+  local list_log="$scratch_root/libvirt-list.log"
+  local dominfo_log="$scratch_root/libvirt-dominfo.log"
+
+  if [[ -n "$lib_path" ]]; then
+    LD_LIBRARY_PATH="$lib_path" LIBVIRT_DEFAULT_URI=test:///default \
+      "$virsh_bin" list --all >"$list_log" 2>&1
+    LD_LIBRARY_PATH="$lib_path" LIBVIRT_DEFAULT_URI=test:///default \
+      "$virsh_bin" dominfo test >"$dominfo_log" 2>&1
+  else
+    LIBVIRT_DEFAULT_URI=test:///default "$virsh_bin" list --all >"$list_log" 2>&1
+    LIBVIRT_DEFAULT_URI=test:///default "$virsh_bin" dominfo test >"$dominfo_log" 2>&1
+  fi
+
+  grep -Eq '^ 1 +test +running$' "$list_log"
+  grep -Fq 'State:          running' "$dominfo_log"
 }
 
 test_dependent() {
@@ -264,10 +357,11 @@ build_source_package() {
   local dependent_name=$2
   local package_root="$source_build_root/$source_package"
   local src_dir
-  local -a local_debs=()
+  local install_root="$package_root/install"
+  local libvirt_libdir=""
 
   rm -rf "$package_root"
-  mkdir -p "$package_root"
+  mkdir -p "$package_root" "$install_root"
 
   log "Installing build-dependencies for $source_package"
   run_logged "builddep-$source_package" apt-get build-dep -y "$source_package"
@@ -282,47 +376,52 @@ build_source_package() {
     return 1
   fi
 
-  log "Building source package $source_package"
-  # The distro package test suites are sensitive to host-kernel behavior that
-  # is not reproducible inside Docker. Build the .debs here, install those
-  # locally built artifacts, and smoke-test the installed result below.
-  run_logged "package-$source_package" bash -lc \
-    "cd '$src_dir' && DEB_BUILD_OPTIONS='parallel=$(nproc) nocheck' dpkg-buildpackage -b -uc -us"
-
-  find "$package_root" -maxdepth 1 -type f -name "${source_package}_*.changes" | grep -q .
-
   case "$source_package" in
     strace)
-      mapfile -t local_debs < <(find "$package_root" -maxdepth 1 -type f -name 'strace_*.deb' | sort)
+      log "Building source package $source_package"
+      run_logged "configure-$source_package" bash -lc \
+        "cd '$src_dir' && mkdir -p build && cd build && ../configure --prefix=/usr"
+      run_logged "compile-$source_package" bash -lc \
+        "cd '$src_dir/build' && make -j$(nproc)"
+      run_logged "install-$source_package" bash -lc \
+        "cd '$src_dir/build' && make DESTDIR='$install_root' install"
+      log "Smoke-testing locally built $dependent_name"
+      test_strace "$install_root/usr/bin/strace"
       ;;
     valgrind)
-      mapfile -t local_debs < <(find "$package_root" -maxdepth 1 -type f -name 'valgrind_*.deb' | sort)
+      log "Building source package $source_package"
+      run_logged "configure-$source_package" bash -lc \
+        "cd '$src_dir' && ./configure --prefix=/usr"
+      run_logged "compile-$source_package" bash -lc \
+        "cd '$src_dir' && make -j$(nproc)"
+      run_logged "install-$source_package" bash -lc \
+        "cd '$src_dir' && make DESTDIR='$install_root' install"
+      log "Smoke-testing locally built $dependent_name"
+      test_valgrind "$install_root/usr/bin/valgrind" "$install_root/usr/libexec/valgrind"
       ;;
     libvirt)
-      mapfile -t local_debs < <(
-        find "$package_root" -maxdepth 1 -type f \
-          \( -name 'libvirt0_*.deb' -o -name 'libvirt-daemon_*.deb' \) | sort
-      )
+      log "Building source package $source_package"
+      run_logged "configure-$source_package" bash -lc \
+        "cd '$src_dir' && meson setup build --prefix=/usr"
+      run_logged "compile-$source_package" bash -lc \
+        "cd '$src_dir' && meson compile -C build"
+      run_logged "install-$source_package" bash -lc \
+        "cd '$src_dir' && DESTDIR='$install_root' meson install -C build"
+      libvirt_libdir=$(dirname "$(find "$install_root/usr/lib" -type f -name 'libvirt.so*' | head -n 1)")
+      if [[ -z "$libvirt_libdir" ]]; then
+        printf 'Unable to locate locally built libvirt shared libraries under %s.\n' \
+          "$install_root" >&2
+        return 1
+      fi
+      log "Smoke-testing locally built $dependent_name"
+      test_libvirt "$install_root/usr/bin/virsh" "$libvirt_libdir"
       ;;
     *)
-      printf 'No built package installation rule is defined for source package %s.\n' \
+      printf 'No source build rule is defined for source package %s.\n' \
         "$source_package" >&2
       return 1
       ;;
   esac
-
-  if (( ${#local_debs[@]} == 0 )); then
-    printf 'No local .deb artifacts were found for %s in %s.\n' \
-      "$source_package" "$package_root" >&2
-    return 1
-  fi
-
-  log "Installing locally built packages for $source_package"
-  run_logged "install-$source_package" apt-get install -y --allow-downgrades \
-    --no-install-recommends "${local_debs[@]}"
-
-  log "Smoke-testing locally built $dependent_name"
-  test_dependent "$dependent_name"
 }
 
 log "Enabling Ubuntu source repositories"
@@ -336,13 +435,15 @@ run_logged apt-bootstrap apt-get install -y --no-install-recommends \
   ca-certificates jq build-essential dpkg-dev fakeroot
 
 mapfile -t runtime_packages < <(jq -r '.dependents[].binary_package' "$manifest_path" | sort -u)
+helper_packages=(dbus-user-session xvfb libvirt-clients libc6-dbg)
 if (( ${#runtime_packages[@]} == 0 )); then
   printf 'No runtime packages were found in %s.\n' "$manifest_path" >&2
   exit 1
 fi
 
 log "Installing dependent runtime packages"
-run_logged apt-runtime apt-get install -y --no-install-recommends "${runtime_packages[@]}"
+run_logged apt-runtime apt-get install -y --no-install-recommends \
+  "${runtime_packages[@]}" "${helper_packages[@]}"
 
 declare -A built_sources=()
 mapfile -t dependents < <(jq -c '.dependents[]' "$manifest_path")
