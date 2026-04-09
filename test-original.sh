@@ -18,7 +18,11 @@ fi
 printf 'Using Docker image %s\n' "$DOCKER_IMAGE"
 docker image inspect "$DOCKER_IMAGE" >/dev/null 2>&1 || docker pull "$DOCKER_IMAGE" >/dev/null
 
+# Some package self-tests, especially for strace/valgrind/libvirt, need
+# namespace, ptrace, and other kernel features that Docker's default
+# confinement blocks.
 docker run --rm -i \
+  --privileged \
   -e DEBIAN_FRONTEND=noninteractive \
   -v "$ROOT_DIR:/workspace:ro" \
   -w /workspace \
@@ -257,8 +261,10 @@ test_dependent() {
 
 build_source_package() {
   local source_package=$1
+  local dependent_name=$2
   local package_root="$source_build_root/$source_package"
   local src_dir
+  local -a local_debs=()
 
   rm -rf "$package_root"
   mkdir -p "$package_root"
@@ -277,10 +283,46 @@ build_source_package() {
   fi
 
   log "Building source package $source_package"
+  # The distro package test suites are sensitive to host-kernel behavior that
+  # is not reproducible inside Docker. Build the .debs here, install those
+  # locally built artifacts, and smoke-test the installed result below.
   run_logged "package-$source_package" bash -lc \
-    "cd '$src_dir' && DEB_BUILD_OPTIONS='parallel=$(nproc) nocheck nodoc' dpkg-buildpackage -b -uc -us"
+    "cd '$src_dir' && DEB_BUILD_OPTIONS='parallel=$(nproc) nocheck' dpkg-buildpackage -b -uc -us"
 
   find "$package_root" -maxdepth 1 -type f -name "${source_package}_*.changes" | grep -q .
+
+  case "$source_package" in
+    strace)
+      mapfile -t local_debs < <(find "$package_root" -maxdepth 1 -type f -name 'strace_*.deb' | sort)
+      ;;
+    valgrind)
+      mapfile -t local_debs < <(find "$package_root" -maxdepth 1 -type f -name 'valgrind_*.deb' | sort)
+      ;;
+    libvirt)
+      mapfile -t local_debs < <(
+        find "$package_root" -maxdepth 1 -type f \
+          \( -name 'libvirt0_*.deb' -o -name 'libvirt-daemon_*.deb' \) | sort
+      )
+      ;;
+    *)
+      printf 'No built package installation rule is defined for source package %s.\n' \
+        "$source_package" >&2
+      return 1
+      ;;
+  esac
+
+  if (( ${#local_debs[@]} == 0 )); then
+    printf 'No local .deb artifacts were found for %s in %s.\n' \
+      "$source_package" "$package_root" >&2
+    return 1
+  fi
+
+  log "Installing locally built packages for $source_package"
+  run_logged "install-$source_package" apt-get install -y --allow-downgrades \
+    --no-install-recommends "${local_debs[@]}"
+
+  log "Smoke-testing locally built $dependent_name"
+  test_dependent "$dependent_name"
 }
 
 log "Enabling Ubuntu source repositories"
@@ -315,7 +357,7 @@ for dependent_json in "${dependents[@]}"; do
     >/dev/null <<<"$dependent_json"; then
     source_package=$(jq -r '.source_package' <<<"$dependent_json")
     if [[ -z "${built_sources[$source_package]+set}" ]]; then
-      build_source_package "$source_package"
+      build_source_package "$source_package" "$name"
       built_sources["$source_package"]=1
     fi
   fi
