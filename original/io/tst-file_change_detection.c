@@ -18,9 +18,7 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
-#include <inttypes.h>
 #include <resolv.h>
-#include <sched.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -28,13 +26,11 @@
 #include <string.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
-#include <sys/wait.h>
-#include <support/capture_subprocess.h>
 #include <support/check.h>
+#include <support/namespace.h>
 #include <support/support.h>
 #include <support/temp_file.h>
 #include <support/test-driver.h>
-#include <support/xunistd.h>
 #include <unistd.h>
 
 static const char resolv_conf_one[] =
@@ -248,32 +244,21 @@ prepare_test_etc (const char *tempdir)
 }
 
 static int
-do_child_test (const char *tempdir, uid_t uid, gid_t gid)
+run_private_mount_test (void)
 {
-#ifndef CLONE_NEWNS
-  return EXIT_UNSUPPORTED;
-#else
+  support_become_root ();
+  if (!support_enter_mount_namespace ())
+    return EXIT_UNSUPPORTED;
+
+  char *tempdir = support_create_temp_directory ("tst-file-change-");
   char *etcdir = xasprintf ("%s/etc", tempdir);
   char *resolv_path = xasprintf ("%s/resolv.conf", etcdir);
   char *target_one = xasprintf ("%s/target-one", etcdir);
   char *target_two = xasprintf ("%s/target-two", etcdir);
   char *loop = xasprintf ("%s/loop", etcdir);
 
-  if (unshare (CLONE_NEWNS) != 0)
-    {
-      if (errno == EPERM)
-        return EXIT_UNSUPPORTED;
-      FAIL_EXIT1 ("unshare (CLONE_NEWNS): %m");
-    }
-  if (mount ("none", "/", NULL, MS_REC | MS_PRIVATE, NULL) != 0)
-    {
-      if (errno == EPERM)
-        return EXIT_UNSUPPORTED;
-      FAIL_EXIT1 ("mount private /: %m");
-    }
+  prepare_test_etc (tempdir);
   TEST_COMPARE (mount (etcdir, "/etc", NULL, MS_BIND, NULL), 0);
-  TEST_COMPARE (setgid (gid), 0);
-  TEST_COMPARE (setuid (uid), 0);
 
   unsetenv ("LOCALDOMAIN");
   unsetenv ("RES_OPTIONS");
@@ -351,129 +336,21 @@ do_child_test (const char *tempdir, uid_t uid, gid_t gid)
   check_same_snapshot ("empty file", &empty,
                        "restored empty file", &restored_empty);
 
+  TEST_COMPARE (umount2 ("/etc", MNT_DETACH), 0);
   free (loop);
   free (target_two);
   free (target_one);
   free (resolv_path);
   free (etcdir);
-  return 0;
-#endif
-}
-
-static bool
-can_run_passwordless_sudo (void)
-{
-  static const char sudo_path[] = "/usr/bin/sudo";
-  char *const argv[] = { (char *) sudo_path, (char *) "-n",
-                         (char *) "true", NULL };
-  struct support_capture_subprocess proc
-    = support_capture_subprogram (sudo_path, argv);
-  bool ok = WIFEXITED (proc.status) && WEXITSTATUS (proc.status) == 0;
-  support_capture_subprocess_free (&proc);
-  return ok;
-}
-
-static int
-run_private_mount_child (const char *argv0)
-{
-  if (!can_run_passwordless_sudo ())
-    {
-      if (test_verbose > 0)
-        puts ("warning: passwordless sudo unavailable");
-      return EXIT_UNSUPPORTED;
-    }
-
-  char *self = realpath (argv0, NULL);
-  TEST_VERIFY_EXIT (self != NULL);
-  char *tempdir = support_create_temp_directory ("tst-file-change-");
-  prepare_test_etc (tempdir);
-  static const char sudo_path[] = "/usr/bin/sudo";
-  char *etcdir = xasprintf ("%s/etc", tempdir);
-  char *hosts = xasprintf ("%s/hosts", etcdir);
-  char *host_conf = xasprintf ("%s/host.conf", etcdir);
-  char *aliases = xasprintf ("%s/aliases", etcdir);
-  char *nsswitch = xasprintf ("%s/nsswitch.conf", etcdir);
-  char *resolv_path = xasprintf ("%s/resolv.conf", etcdir);
-  char *target_one = xasprintf ("%s/target-one", etcdir);
-  char *target_two = xasprintf ("%s/target-two", etcdir);
-  char *loop = xasprintf ("%s/loop", etcdir);
-
-  char *uid = xasprintf ("%" PRIuMAX, (uintmax_t) getuid ());
-  char *gid = xasprintf ("%" PRIuMAX, (uintmax_t) getgid ());
-  char *const argv[] =
-    {
-      (char *) sudo_path,
-      (char *) "-n",
-      self,
-      (char *) "--direct",
-      (char *) "--",
-      (char *) "--child",
-      tempdir,
-      uid,
-      gid,
-      NULL
-    };
-
-  struct support_capture_subprocess proc
-    = support_capture_subprogram (sudo_path, argv);
-
-  int result;
-  if (WIFEXITED (proc.status) && WEXITSTATUS (proc.status) == 0)
-    result = 0;
-  else if (WIFEXITED (proc.status)
-           && WEXITSTATUS (proc.status) == EXIT_UNSUPPORTED)
-    {
-      if (test_verbose > 0)
-        puts ("warning: private mount namespace unavailable");
-      result = EXIT_UNSUPPORTED;
-    }
-  else
-    {
-      if (proc.out.buffer[0] != '\0')
-        printf ("%s", proc.out.buffer);
-      if (proc.err.buffer[0] != '\0')
-        printf ("%s", proc.err.buffer);
-      FAIL_EXIT1 ("sudo child failed with status %#x", proc.status);
-    }
-
-  support_capture_subprocess_free (&proc);
-  remove_path_if_exists (resolv_path);
-  remove_path_if_exists (target_one);
-  remove_path_if_exists (target_two);
-  remove_path_if_exists (loop);
-  remove_path_if_exists (nsswitch);
-  remove_path_if_exists (aliases);
-  remove_path_if_exists (host_conf);
-  remove_path_if_exists (hosts);
-  remove_path_if_exists (etcdir);
-  free (loop);
-  free (target_two);
-  free (target_one);
-  free (resolv_path);
-  free (nsswitch);
-  free (aliases);
-  free (host_conf);
-  free (hosts);
-  free (etcdir);
-  free (gid);
-  free (uid);
   free (tempdir);
-  free (self);
-  return result;
+  return 0;
 }
 
 static int
-do_test_argv (int argc, char **argv)
+do_test (void)
 {
-  for (int i = 1; i + 3 < argc; ++i)
-    if (strcmp (argv[i], "--child") == 0)
-      return do_child_test (argv[i + 1],
-                            (uid_t) strtoumax (argv[i + 2], NULL, 10),
-                            (gid_t) strtoumax (argv[i + 3], NULL, 10));
-
-  return run_private_mount_child (argv[0]);
+  return run_private_mount_test ();
 }
 
-#define TEST_FUNCTION_ARGV do_test_argv
 #define TIMEOUT 20
 #include <support/test-driver.c>
