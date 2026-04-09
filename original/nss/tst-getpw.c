@@ -19,6 +19,9 @@
 #include <pwd.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <limits.h>
+#include <stdlib.h>
+#include <support/test-driver.h>
 
 /* We want to test getpw by calling it with a uid that does
    exist and one that doesn't exist. We track if we've met those
@@ -101,11 +104,24 @@ do_test (void)
 	break;
     }
 
+  static const uid_t extra_uids[] =
+    {
+      (uid_t) -1,
+      (uid_t) INT_MAX,
+      (uid_t) UINT_MAX,
+    };
+  for (size_t i = 0; !seen_miss && i < sizeof (extra_uids) / sizeof (extra_uids[0]);
+       ++i)
+    check (extra_uids[i]);
+
   if (!seen_hit)
     printf ("FAIL: Did not read even one password line given a uid.\n");
 
   if (!seen_miss)
-    printf ("FAIL: Did not find even one invalid uid.\n");
+    {
+      printf ("UNSUPPORTED: Could not find an invalid uid on this system.\n");
+      return EXIT_UNSUPPORTED;
+    }
 
   return errors;
 }

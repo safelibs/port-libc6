@@ -86,18 +86,18 @@ tests := \
   test_ifindex \
   tst-checks \
   tst-checks-posix \
+  tst-deadline \
   tst-ether_aton \
   tst-ether_line \
   tst-getni1 \
   tst-getni2 \
+  tst-idna_name_classify \
   tst-if_index-long \
   tst-inet6_rth \
   tst-inet6_scopeid_pton \
   tst-network \
   tst-ntoa \
   tst-sockaddr \
-  tst-deadline \
-  tst-idna_name_classify \
   # tests
 
 include ../Rules

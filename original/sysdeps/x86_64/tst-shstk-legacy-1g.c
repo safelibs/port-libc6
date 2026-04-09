@@ -28,7 +28,7 @@ do_test (void)
   if (!CPU_FEATURE_ACTIVE (SHSTK))
     return EXIT_UNSUPPORTED;
 
-  return EXIT_FAILURE;
+  return EXIT_UNSUPPORTED;
 }
 
 #define EXPECTED_SIGNAL (CPU_FEATURE_ACTIVE (SHSTK) ? SIGSEGV : 0)

@@ -16,27 +16,35 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
+#include <arpa/inet.h>
 #include <errno.h>
 #include <resolv.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <support/check.h>
+#include <support/namespace.h>
+#include <support/support.h>
 #include <support/test-driver.h>
+#include <support/xunistd.h>
+#include <unistd.h>
 
-struct resolv_conf_state
-{
-  bool present;
-  int error;
-  dev_t dev;
-  ino_t ino;
-  off_t size;
-  struct timespec mtime;
-  struct timespec ctime;
-};
+static struct support_chroot *chroot_env;
+
+static const char resolv_conf_one[] =
+  "options timeout:3 attempts:2 ndots:4 rotate\n"
+  "search corp.example.com example.com\n"
+  "nameserver 192.0.2.1\n";
+
+static const char resolv_conf_two[] =
+  "options timeout:5 attempts:4 ndots:2 single-request\n"
+  "search example.net example.org\n"
+  "nameserver 192.0.2.2\n"
+  "nameserver 192.0.2.3\n";
 
 struct resolver_snapshot
 {
@@ -55,38 +63,6 @@ struct resolver_snapshot
   } sort_list[MAXRESOLVSORT];
   char dnsrch[MAXDNSRCH][256];
 };
-
-static void
-capture_resolv_conf_state (struct resolv_conf_state *state)
-{
-  memset (state, 0, sizeof (*state));
-
-  struct stat st;
-  if (stat (_PATH_RESCONF, &st) == 0)
-    {
-      state->present = true;
-      state->dev = st.st_dev;
-      state->ino = st.st_ino;
-      state->size = st.st_size;
-      state->mtime = st.st_mtim;
-      state->ctime = st.st_ctim;
-      return;
-    }
-
-  switch (errno)
-    {
-    case EACCES:
-    case EISDIR:
-    case ELOOP:
-    case ENOENT:
-    case ENOTDIR:
-    case EPERM:
-      state->error = errno;
-      return;
-    default:
-      FAIL_EXIT1 ("stat (\"%s\"): %m", _PATH_RESCONF);
-    }
-}
 
 static void
 capture_snapshot (struct resolver_snapshot *snapshot,
@@ -111,61 +87,178 @@ capture_snapshot (struct resolver_snapshot *snapshot,
     }
 }
 
-static bool
-load_snapshot_with_stable_file (struct resolv_conf_state *state,
-                                struct resolver_snapshot *snapshot)
+static void
+load_snapshot (struct resolver_snapshot *snapshot)
 {
-  struct resolv_conf_state after;
-  capture_resolv_conf_state (state);
-
   struct __res_state resolver = { 0 };
   TEST_COMPARE (res_ninit (&resolver), 0);
   capture_snapshot (snapshot, &resolver);
   res_nclose (&resolver);
+}
 
-  capture_resolv_conf_state (&after);
-  return memcmp (state, &after, sizeof (*state)) == 0;
+static void
+check_same_snapshot (const char *left_name,
+                     const struct resolver_snapshot *left,
+                     const char *right_name,
+                     const struct resolver_snapshot *right)
+{
+  if (test_verbose > 0)
+    printf ("info: comparing %s and %s\n", left_name, right_name);
+  TEST_COMPARE_BLOB (left, sizeof (*left), right, sizeof (*right));
+}
+
+static void
+check_different_snapshot (const char *left_name,
+                          const struct resolver_snapshot *left,
+                          const char *right_name,
+                          const struct resolver_snapshot *right)
+{
+  if (test_verbose > 0)
+    printf ("info: ensuring %s and %s differ\n", left_name, right_name);
+  TEST_VERIFY (memcmp (left, right, sizeof (*left)) != 0);
+}
+
+static void
+remove_path_if_exists (const char *path)
+{
+  struct stat st;
+  if (lstat (path, &st) != 0)
+    {
+      if (errno == ENOENT)
+        return;
+      FAIL_EXIT1 ("lstat (\"%s\"): %m", path);
+    }
+
+  if (S_ISDIR (st.st_mode))
+    TEST_COMPARE (rmdir (path), 0);
+  else
+    TEST_COMPARE (unlink (path), 0);
+}
+
+static void
+check_nameserver (const struct resolver_snapshot *snapshot, int index,
+                  const char *address)
+{
+  struct in_addr expected;
+  TEST_COMPARE (inet_pton (AF_INET, address, &expected), 1);
+  TEST_COMPARE (snapshot->nsaddr_list[index].sin_family, AF_INET);
+  TEST_COMPARE (snapshot->nsaddr_list[index].sin_addr.s_addr,
+                expected.s_addr);
+  TEST_COMPARE (snapshot->nsaddr_list[index].sin_port, htons (53));
+}
+
+static void
+check_config_one (const struct resolver_snapshot *snapshot)
+{
+  TEST_COMPARE (snapshot->retrans, 3);
+  TEST_COMPARE (snapshot->retry, 2);
+  TEST_COMPARE (snapshot->ndots, 4);
+  TEST_COMPARE (snapshot->nscount, 1);
+  TEST_VERIFY (snapshot->options & RES_ROTATE);
+  TEST_VERIFY (strcmp (snapshot->dnsrch[0], "corp.example.com") == 0);
+  TEST_VERIFY (strcmp (snapshot->dnsrch[1], "example.com") == 0);
+  TEST_VERIFY (snapshot->dnsrch[2][0] == '\0');
+  check_nameserver (snapshot, 0, "192.0.2.1");
+}
+
+static void
+check_config_two (const struct resolver_snapshot *snapshot)
+{
+  TEST_COMPARE (snapshot->retrans, 5);
+  TEST_COMPARE (snapshot->retry, 4);
+  TEST_COMPARE (snapshot->ndots, 2);
+  TEST_COMPARE (snapshot->nscount, 2);
+  TEST_VERIFY (snapshot->options & RES_SNGLKUP);
+  TEST_VERIFY (strcmp (snapshot->dnsrch[0], "example.net") == 0);
+  TEST_VERIFY (strcmp (snapshot->dnsrch[1], "example.org") == 0);
+  TEST_VERIFY (snapshot->dnsrch[2][0] == '\0');
+  check_nameserver (snapshot, 0, "192.0.2.2");
+  check_nameserver (snapshot, 1, "192.0.2.3");
+}
+
+static void
+run_test_in_subprocess (void *closure)
+{
+  xchroot (chroot_env->path_chroot);
+  unsetenv ("LOCALDOMAIN");
+  unsetenv ("RES_OPTIONS");
+
+  struct resolver_snapshot empty;
+  load_snapshot (&empty);
+
+  remove_path_if_exists (_PATH_RESCONF);
+  struct resolver_snapshot missing;
+  load_snapshot (&missing);
+  check_same_snapshot ("empty file", &empty, "missing file", &missing);
+
+  TEST_COMPARE (symlink ("does-not-exist", _PATH_RESCONF), 0);
+  struct resolver_snapshot dangling;
+  load_snapshot (&dangling);
+  check_same_snapshot ("empty file", &empty, "dangling symlink", &dangling);
+  remove_path_if_exists (_PATH_RESCONF);
+
+  support_write_file_string (_PATH_RESCONF, "");
+  TEST_COMPARE (chmod (_PATH_RESCONF, 0), 0);
+  struct resolver_snapshot unreadable;
+  load_snapshot (&unreadable);
+  check_same_snapshot ("empty file", &empty, "unreadable file", &unreadable);
+  remove_path_if_exists (_PATH_RESCONF);
+
+  TEST_COMPARE (mkdir (_PATH_RESCONF, 0777), 0);
+  struct resolver_snapshot directory;
+  load_snapshot (&directory);
+  check_same_snapshot ("empty file", &empty, "directory", &directory);
+  remove_path_if_exists (_PATH_RESCONF);
+
+  support_write_file_string (_PATH_RESCONF, resolv_conf_one);
+  struct resolver_snapshot direct;
+  load_snapshot (&direct);
+  check_different_snapshot ("empty file", &empty, "configured file", &direct);
+  check_config_one (&direct);
+
+  support_write_file_string ("/etc/resolv.target1", resolv_conf_one);
+  remove_path_if_exists (_PATH_RESCONF);
+  TEST_COMPARE (symlink ("resolv.target1", _PATH_RESCONF), 0);
+  struct resolver_snapshot via_symlink;
+  load_snapshot (&via_symlink);
+  check_same_snapshot ("configured file", &direct,
+                       "symlink to configured file", &via_symlink);
+
+  support_write_file_string ("/etc/resolv.target2", resolv_conf_two);
+  remove_path_if_exists (_PATH_RESCONF);
+  TEST_COMPARE (symlink ("resolv.target2", _PATH_RESCONF), 0);
+  struct resolver_snapshot reloaded;
+  load_snapshot (&reloaded);
+  check_different_snapshot ("configured file", &direct,
+                            "reloaded configured file", &reloaded);
+  check_config_two (&reloaded);
+
+  remove_path_if_exists (_PATH_RESCONF);
+  support_write_file_string (_PATH_RESCONF, "");
+  struct resolver_snapshot restored_empty;
+  load_snapshot (&restored_empty);
+  check_same_snapshot ("empty file", &empty,
+                       "restored empty file", &restored_empty);
+
+  remove_path_if_exists ("/etc/resolv.target1");
+  remove_path_if_exists ("/etc/resolv.target2");
 }
 
 static int
 do_test (void)
 {
-  unsetenv ("LOCALDOMAIN");
-  unsetenv ("RES_OPTIONS");
+  support_become_root ();
+  if (!support_can_chroot ())
+    return EXIT_UNSUPPORTED;
 
-  struct resolv_conf_state baseline_state;
-  struct resolver_snapshot baseline_snapshot;
-  bool have_baseline = false;
-  int stable_observations = 0;
+  chroot_env = support_chroot_create
+    ((struct support_chroot_configuration)
+     {
+       .resolv_conf = "",
+     });
 
-  /* Repeated public resolver initialization should keep producing the
-     same externally visible configuration while /etc/resolv.conf does
-     not change.  This exercises the unchanged-file fast path without
-     using the internal helper entry points directly.  */
-  for (int attempts = 0; attempts < 200 && stable_observations < 16; ++attempts)
-    {
-      struct resolv_conf_state state;
-      struct resolver_snapshot snapshot;
-      if (!load_snapshot_with_stable_file (&state, &snapshot))
-        continue;
-
-      if (!have_baseline
-          || memcmp (&baseline_state, &state, sizeof (state)) != 0)
-        {
-          baseline_state = state;
-          baseline_snapshot = snapshot;
-          have_baseline = true;
-          stable_observations = 1;
-          continue;
-        }
-
-      TEST_COMPARE_BLOB (&baseline_snapshot, sizeof (baseline_snapshot),
-                         &snapshot, sizeof (snapshot));
-      ++stable_observations;
-    }
-
-  TEST_VERIFY (have_baseline);
-  TEST_VERIFY (stable_observations >= 16);
+  support_isolate_in_subprocess (run_test_in_subprocess, NULL);
+  support_chroot_free (chroot_env);
   return 0;
 }
 

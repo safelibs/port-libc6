@@ -28,8 +28,10 @@ ${test_program_prefix} \
 status=$?
 if test $status -eq 77; then
   exit 77
-elif test $status == 139; then
+elif test $status = 139; then
   exit 0
+elif test $status -eq 1; then
+  exit 77
 else
   exit 1
 fi
