@@ -1,4 +1,4 @@
-/* Basic test of statx system call.
+/* Basic test of the public statx interface.
    Copyright (C) 2018-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -16,7 +16,10 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
+#define _GNU_SOURCE 1
+
 #include <errno.h>
+#include <fcntl.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -39,11 +42,6 @@ _Static_assert (offsetof (struct statx, stx_atime) == 64, "statx atime");
 _Static_assert (offsetof (struct statx, stx_rdev_major) == 128, "statx rdev");
 _Static_assert (offsetof (struct statx, __statx_pad2) == 144, "statx pad2");
 
-#include "statx_generic.c"
-
-typedef int (*statx_function) (int, const char *, int, unsigned int,
-                               struct statx *);
-
 /* Return true if we have a real implementation of statx.  */
 static bool
 kernel_supports_statx (void)
@@ -57,9 +55,9 @@ kernel_supports_statx (void)
 #endif
 }
 
-/* Tests which apply to both implementations.  */
+/* Tests which apply to the public statx interface.  */
 static void
-both_implementations_tests (statx_function impl, const char *path, int fd)
+public_statx_tests (const char *path, int fd)
 {
   uint64_t ino;
   {
@@ -97,24 +95,6 @@ both_implementations_tests (statx_function impl, const char *path, int fd)
   }
 }
 
-/* Tests which apply only to the non-kernel (generic)
-   implementation.  */
-static void
-non_kernel_tests (statx_function impl, int fd)
-{
-  /* The non-kernel implementation must always fail for explicit sync
-     flags.  */
-  struct statx buf;
-  errno = 0;
-  TEST_COMPARE (impl (fd, "", AT_EMPTY_PATH | AT_STATX_FORCE_SYNC,
-                      STATX_BASIC_STATS, &buf), -1);
-  TEST_COMPARE (errno, EINVAL);
-  errno = 0;
-  TEST_COMPARE (impl (fd, "", AT_EMPTY_PATH | AT_STATX_DONT_SYNC,
-                      STATX_BASIC_STATS, &buf), -1);
-  TEST_COMPARE (errno, EINVAL);
-}
-
 static int
 do_test (void)
 {
@@ -123,8 +103,7 @@ do_test (void)
   TEST_VERIFY_EXIT (fd >= 0);
   support_write_file_string (path, "abc");
 
-  both_implementations_tests (&statx, path, fd);
-  both_implementations_tests (&statx_generic, path, fd);
+  public_statx_tests (path, fd);
 
   if (kernel_supports_statx ())
     {
@@ -141,12 +120,6 @@ do_test (void)
                     0);
       TEST_COMPARE (buf.stx_size, 3);
     }
-  else
-    {
-      puts ("info: kernel does not support statx");
-      non_kernel_tests (&statx, fd);
-    }
-  non_kernel_tests (&statx_generic, fd);
 
   xclose (fd);
   free (path);

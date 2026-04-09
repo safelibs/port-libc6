@@ -1,4 +1,4 @@
-/* Test for <file_change_detection.c>.
+/* Test public stat/fstat-based file change snapshots.
    Copyright (C) 2020-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -15,11 +15,11 @@
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
-
-#include <file_change_detection.h>
-
 #include <array_length.h>
+#include <errno.h>
+#include <stdbool.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <support/check.h>
 #include <support/support.h>
 #include <support/temp_file.h>
@@ -28,20 +28,100 @@
 #include <support/xunistd.h>
 #include <unistd.h>
 
+struct file_snapshot
+{
+  off_t size;
+  ino_t ino;
+  struct timespec mtime;
+  struct timespec ctime;
+};
+
+static bool
+snapshot_is_unchanged (const struct file_snapshot *left,
+                       const struct file_snapshot *right)
+{
+  if (left->size < 0 || right->size < 0)
+    return false;
+  else if (left->size == 0 && right->size == 0)
+    return true;
+  else
+    return left->size == right->size
+      && left->ino == right->ino
+      && left->mtime.tv_sec == right->mtime.tv_sec
+      && left->mtime.tv_nsec == right->mtime.tv_nsec
+      && left->ctime.tv_sec == right->ctime.tv_sec
+      && left->ctime.tv_nsec == right->ctime.tv_nsec;
+}
+
 static void
-all_same (struct file_change_detection *array, size_t length)
+snapshot_from_stat (struct file_snapshot *file, const struct stat *st)
+{
+  if (S_ISDIR (st->st_mode))
+    file->size = 0;
+  else if (!S_ISREG (st->st_mode))
+    file->size = -1;
+  else
+    {
+      file->size = st->st_size;
+      file->ino = st->st_ino;
+      file->mtime = st->st_mtim;
+      file->ctime = st->st_ctim;
+    }
+}
+
+static bool
+snapshot_for_path (struct file_snapshot *file, const char *path)
+{
+  struct stat st;
+  if (stat (path, &st) != 0)
+    switch (errno)
+      {
+      case EACCES:
+      case EISDIR:
+      case ELOOP:
+      case ENOENT:
+      case ENOTDIR:
+      case EPERM:
+        file->size = 0;
+        return true;
+      default:
+        return false;
+      }
+
+  snapshot_from_stat (file, &st);
+  return true;
+}
+
+static bool
+snapshot_for_fp (struct file_snapshot *file, FILE *fp)
+{
+  if (fp == NULL)
+    {
+      file->size = 0;
+      return true;
+    }
+
+  struct stat st;
+  if (fstat (fileno (fp), &st) != 0)
+    return false;
+  snapshot_from_stat (file, &st);
+  return true;
+}
+
+static void
+all_same (struct file_snapshot *array, size_t length)
 {
   for (size_t i = 0; i < length; ++i)
     for (size_t j = 0; j < length; ++j)
       {
         if (test_verbose > 0)
           printf ("info: comparing %zu and %zu\n", i, j);
-        TEST_VERIFY (__file_is_unchanged (array + i, array + j));
+        TEST_VERIFY (snapshot_is_unchanged (array + i, array + j));
       }
 }
 
 static void
-all_different (struct file_change_detection *array, size_t length)
+all_different (struct file_snapshot *array, size_t length)
 {
   for (size_t i = 0; i < length; ++i)
     for (size_t j = 0; j < length; ++j)
@@ -50,7 +130,7 @@ all_different (struct file_change_detection *array, size_t length)
           continue;
         if (test_verbose > 0)
           printf ("info: comparing %zu and %zu\n", i, j);
-        TEST_VERIFY (!__file_is_unchanged (array + i, array + j));
+        TEST_VERIFY (!snapshot_is_unchanged (array + i, array + j));
       }
 }
 
@@ -98,27 +178,26 @@ do_test (void)
 
   /* Test for the same (empty) files.  */
   {
-    struct file_change_detection fcd[10];
+    struct file_snapshot fcd[10];
     int i = 0;
     /* Two empty files always have the same contents.  */
-    TEST_VERIFY (__file_change_detection_for_path (&fcd[i++], path_empty1));
-    TEST_VERIFY (__file_change_detection_for_path (&fcd[i++], path_empty2));
+    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_empty1));
+    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_empty2));
     /* So does a missing file (which is treated as empty).  */
-    TEST_VERIFY (__file_change_detection_for_path (&fcd[i++],
-                                                   path_does_not_exist));
+    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_does_not_exist));
     /* And a symbolic link loop.  */
-    TEST_VERIFY (__file_change_detection_for_path (&fcd[i++], path_loop));
+    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_loop));
     /* And a dangling symbolic link.  */
-    TEST_VERIFY (__file_change_detection_for_path (&fcd[i++], path_dangling));
+    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_dangling));
     /* And a directory.  */
-    TEST_VERIFY (__file_change_detection_for_path (&fcd[i++], tempdir));
+    TEST_VERIFY (snapshot_for_path (&fcd[i++], tempdir));
     /* And a symbolic link to an empty file.  */
-    TEST_VERIFY (__file_change_detection_for_path (&fcd[i++], path_to_empty1));
+    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_to_empty1));
     /* Likewise for access the file via a FILE *.  */
-    TEST_VERIFY (__file_change_detection_for_fp (&fcd[i++], fp_empty1));
-    TEST_VERIFY (__file_change_detection_for_fp (&fcd[i++], fp_empty2));
+    TEST_VERIFY (snapshot_for_fp (&fcd[i++], fp_empty1));
+    TEST_VERIFY (snapshot_for_fp (&fcd[i++], fp_empty2));
     /* And a NULL FILE * (missing file).  */
-    TEST_VERIFY (__file_change_detection_for_fp (&fcd[i++], NULL));
+    TEST_VERIFY (snapshot_for_fp (&fcd[i++], NULL));
     TEST_COMPARE (i, array_length (fcd));
 
     all_same (fcd, array_length (fcd));
@@ -126,34 +205,34 @@ do_test (void)
 
   /* Symbolic links are resolved.  */
   {
-    struct file_change_detection fcd[3];
+    struct file_snapshot fcd[3];
     int i = 0;
-    TEST_VERIFY (__file_change_detection_for_path (&fcd[i++], path_file1));
-    TEST_VERIFY (__file_change_detection_for_path (&fcd[i++], path_to_file1));
-    TEST_VERIFY (__file_change_detection_for_fp (&fcd[i++], fp_file1));
+    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_file1));
+    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_to_file1));
+    TEST_VERIFY (snapshot_for_fp (&fcd[i++], fp_file1));
     TEST_COMPARE (i, array_length (fcd));
     all_same (fcd, array_length (fcd));
   }
 
   /* Test for different files.  */
   {
-    struct file_change_detection fcd[5];
+    struct file_snapshot fcd[5];
     int i = 0;
     /* The other files are not empty.  */
-    TEST_VERIFY (__file_change_detection_for_path (&fcd[i++], path_empty1));
+    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_empty1));
     /* These two files have the same contents, but have different file
        identity.  */
-    TEST_VERIFY (__file_change_detection_for_path (&fcd[i++], path_file1));
-    TEST_VERIFY (__file_change_detection_for_path (&fcd[i++], path_file2));
+    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_file1));
+    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_file2));
     /* FIFOs are always different, even with themselves.  */
-    TEST_VERIFY (__file_change_detection_for_path (&fcd[i++], path_fifo));
-    TEST_VERIFY (__file_change_detection_for_path (&fcd[i++], path_fifo));
+    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_fifo));
+    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_fifo));
     TEST_COMPARE (i, array_length (fcd));
     all_different (fcd, array_length (fcd));
 
     /* Replacing the file with its symbolic link does not make a
        difference.  */
-    TEST_VERIFY (__file_change_detection_for_path (&fcd[1], path_to_file1));
+    TEST_VERIFY (snapshot_for_path (&fcd[1], path_to_file1));
     all_different (fcd, array_length (fcd));
   }
 
@@ -161,18 +240,17 @@ do_test (void)
      resolution, this subtest blocks for a while.  */
   for (int use_stdio = 0; use_stdio < 2; ++use_stdio)
     {
-      struct file_change_detection initial;
-      TEST_VERIFY (__file_change_detection_for_path (&initial, path_file1));
+      struct file_snapshot initial;
+      TEST_VERIFY (snapshot_for_path (&initial, path_file1));
       while (true)
         {
           support_write_file_string (path_file1, "line\n");
-          struct file_change_detection current;
+          struct file_snapshot current;
           if (use_stdio)
-            TEST_VERIFY (__file_change_detection_for_fp (&current, fp_file1));
+            TEST_VERIFY (snapshot_for_fp (&current, fp_file1));
           else
-            TEST_VERIFY (__file_change_detection_for_path
-                         (&current, path_file1));
-          if (!__file_is_unchanged (&initial, &current))
+            TEST_VERIFY (snapshot_for_path (&current, path_file1));
+          if (!snapshot_is_unchanged (&initial, &current))
             break;
           /* Wait for a bit to reduce system load.  */
           usleep (100 * 1000);

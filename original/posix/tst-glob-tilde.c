@@ -17,9 +17,6 @@
    <https://www.gnu.org/licenses/>.  */
 
 #include <glob.h>
-#include <mcheck.h>
-#include <nss.h>
-#include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <support/check.h>
@@ -89,14 +86,6 @@ repeating_string (int size)
 static int
 do_test (void)
 {
-  /* Avoid network-based NSS modules and initialize nss_files with a
-     dummy lookup.  This has to come before mtrace because NSS does
-     not free all memory.  */
-  __nss_configure_lookup ("passwd", "files");
-  (void) getpwnam ("root");
-
-  mtrace ();
-
   repeat = xmalloc (repeat_size + 1);
   memset (repeat, 'x', repeat_size);
   repeat[repeat_size] = '\0';

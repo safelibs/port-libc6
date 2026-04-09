@@ -70,12 +70,9 @@ tests := \
   tst-accept4 \
   tst-cmsg_cloexec \
   tst-cmsghdr \
+  tst-sockaddr_un_set \
   tst-sockopt \
   # tests
-
-tests-internal := \
-  tst-sockaddr_un_set \
-  # tests-internal
 
 tests-time64 := \
   tst-sockopt-time64 \

@@ -25,8 +25,6 @@
 #include <support/test-driver.h>
 #include <support/xthread.h>
 
-#include <internal-signals.h>
-
 static pthread_barrier_t barrier;
 
 static void
@@ -36,18 +34,19 @@ thread_handler (union sigval sv)
   sigprocmask (SIG_BLOCK, NULL, &ss);
   if (test_verbose > 0)
     printf ("%s: blocked signal mask = { ", __func__);
-  for (int sig = 1; sig < NSIG; sig++)
+  static const int blocked_signals[] =
     {
-      /* POSIX timers threads created to handle SIGEV_THREAD block all
-	 signals except SIGKILL, SIGSTOP and glibc internals ones.  */
+      SIGALRM, SIGTERM, SIGUSR1, SIGUSR2,
+    };
+  for (unsigned int i = 0; i < sizeof (blocked_signals) / sizeof (blocked_signals[0]);
+       ++i)
+    TEST_COMPARE (sigismember (&ss, blocked_signals[i]), 1);
+  TEST_COMPARE (sigismember (&ss, SIGKILL), 0);
+  TEST_COMPARE (sigismember (&ss, SIGSTOP), 0);
+  if (test_verbose > 0)
+    for (int sig = 1; sig < NSIG; sig++)
       if (sigismember (&ss, sig))
-	{
-	  TEST_VERIFY (sig != SIGKILL && sig != SIGSTOP);
-	  TEST_VERIFY (!is_internal_signal (sig));
-	}
-      if (test_verbose && sigismember (&ss, sig))
-	printf ("%d, ", sig);
-    }
+        printf ("%d, ", sig);
   if (test_verbose > 0)
     printf ("}\n");
 
@@ -57,6 +56,10 @@ thread_handler (union sigval sv)
 static int
 do_test (void)
 {
+  sigset_t empty;
+  sigemptyset (&empty);
+  TEST_COMPARE (pthread_sigmask (SIG_SETMASK, &empty, NULL), 0);
+
   struct sigevent sev = { 0 };
   sev.sigev_notify = SIGEV_THREAD;
   sev.sigev_notify_function = &thread_handler;

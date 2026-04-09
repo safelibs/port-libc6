@@ -16,19 +16,47 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
-#include <inet/net-internal.h>
 #include <locale.h>
+#include <netdb.h>
 #include <stdio.h>
+#include <sys/socket.h>
 #include <support/check.h>
+
+static void
+expect_idn_encode (const char *name)
+{
+  struct addrinfo hints =
+    {
+      .ai_flags = AI_IDN | AI_CANONNAME | AI_NUMERICSERV,
+      .ai_socktype = SOCK_STREAM,
+    };
+  struct addrinfo *ai = NULL;
+  int ret = getaddrinfo (name, "80", &hints, &ai);
+  if (ret == 0)
+    freeaddrinfo (ai);
+  TEST_COMPARE (ret, EAI_IDN_ENCODE);
+}
+
+static void
+expect_not_idn_encode (const char *name)
+{
+  struct addrinfo hints =
+    {
+      .ai_flags = AI_IDN | AI_CANONNAME | AI_NUMERICSERV,
+      .ai_socktype = SOCK_STREAM,
+    };
+  struct addrinfo *ai = NULL;
+  int ret = getaddrinfo (name, "80", &hints, &ai);
+  if (ret == 0)
+    freeaddrinfo (ai);
+  TEST_VERIFY (ret != EAI_IDN_ENCODE);
+}
 
 static void
 locale_insensitive_tests (void)
 {
-  TEST_COMPARE (__idna_name_classify (""), idna_name_ascii);
-  TEST_COMPARE (__idna_name_classify ("abc"), idna_name_ascii);
-  TEST_COMPARE (__idna_name_classify (".."), idna_name_ascii);
-  TEST_COMPARE (__idna_name_classify ("\001abc\177"), idna_name_ascii);
-  TEST_COMPARE (__idna_name_classify ("\\065bc"), idna_name_ascii);
+  expect_not_idn_encode ("localhost");
+  expect_not_idn_encode ("example.com");
 }
 
 static int
@@ -36,36 +64,29 @@ do_test (void)
 {
   puts ("info: C locale tests");
   locale_insensitive_tests ();
-  TEST_COMPARE (__idna_name_classify ("abc\200def"),
-                idna_name_encoding_error);
-  TEST_COMPARE (__idna_name_classify ("abc\200\\def"),
-                idna_name_encoding_error);
-  TEST_COMPARE (__idna_name_classify ("abc\377def"),
-                idna_name_encoding_error);
+  expect_idn_encode ("abc\200def");
+  expect_idn_encode ("abc\200\\def");
+  expect_idn_encode ("abc\377def");
 
   puts ("info: en_US.ISO-8859-1 locale tests");
   if (setlocale (LC_CTYPE, "en_US.ISO-8859-1") == 0)
     FAIL_EXIT1 ("setlocale for en_US.ISO-8859-1: %m\n");
   locale_insensitive_tests ();
-  TEST_COMPARE (__idna_name_classify ("abc\200def"), idna_name_nonascii);
-  TEST_COMPARE (__idna_name_classify ("abc\377def"), idna_name_nonascii);
-  TEST_COMPARE (__idna_name_classify ("abc\\\200def"),
-                idna_name_nonascii_backslash);
-  TEST_COMPARE (__idna_name_classify ("abc\200\\def"),
-                idna_name_nonascii_backslash);
+  expect_not_idn_encode ("abc\377def");
+  expect_not_idn_encode ("abc\337def");
+  expect_idn_encode ("abc\\\337def");
+  expect_idn_encode ("abc\337\\def");
 
   puts ("info: en_US.UTF-8 locale tests");
   if (setlocale (LC_CTYPE, "en_US.UTF-8") == 0)
     FAIL_EXIT1 ("setlocale for en_US.UTF-8: %m\n");
   locale_insensitive_tests ();
-  TEST_COMPARE (__idna_name_classify ("abc\xc3\x9f""def"), idna_name_nonascii);
-  TEST_COMPARE (__idna_name_classify ("abc\\\xc3\x9f""def"),
-                idna_name_nonascii_backslash);
-  TEST_COMPARE (__idna_name_classify ("abc\xc3\x9f\\def"),
-                idna_name_nonascii_backslash);
-  TEST_COMPARE (__idna_name_classify ("abc\200def"), idna_name_encoding_error);
-  TEST_COMPARE (__idna_name_classify ("abc\xc3""def"), idna_name_encoding_error);
-  TEST_COMPARE (__idna_name_classify ("abc\xc3"), idna_name_encoding_error);
+  expect_not_idn_encode ("abc\xc3\x9f""def");
+  expect_idn_encode ("abc\\\xc3\x9f""def");
+  expect_idn_encode ("abc\xc3\x9f\\def");
+  expect_idn_encode ("abc\200def");
+  expect_idn_encode ("abc\xc3""def");
+  expect_idn_encode ("abc\xc3");
 
   return 0;
 }

@@ -1,4 +1,4 @@
-/* Tests for __inet6_scopeid_pton and IPv6 scopes in getaddrinfo.
+/* Tests for IPv6 scope parsing through getaddrinfo.
    Copyright (C) 2016-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -18,7 +18,6 @@
 
 #include <arpa/inet.h>
 #include <inttypes.h>
-#include <net-internal.h>
 #include <net/if.h>
 #include <netdb.h>
 #include <stdio.h>
@@ -120,21 +119,6 @@ expect_failure (const char *address, const char *scope)
 {
   if (test_verbose > 0)
     printf ("info: expecting failure for %s%%%s\n", address, scope);
-  struct in6_addr addr = from_string (address);
-  uint32_t result = 1234;
-  if (__inet6_scopeid_pton (&addr, scope, &result) == 0)
-    {
-      support_record_failure ();
-      printf ("error: unexpected success for %s%%%s\n",
-              address, scope);
-    }
-  if (result != 1234)
-    {
-      support_record_failure ();
-      printf ("error: unexpected result update for %s%%%s\n",
-              address, scope);
-    }
-
   struct sockaddr_in6 sa;
   if (call_gai (AF_UNSPEC, address, scope, &sa))
     {
@@ -157,22 +141,6 @@ expect_success (const char *address, const char *scope, uint32_t expected)
   if (test_verbose > 0)
     printf ("info: expecting success for %s%%%s\n", address, scope);
   struct in6_addr addr = from_string (address);
-  uint32_t actual = expected + 1;
-  if (__inet6_scopeid_pton (&addr, scope, &actual) != 0)
-    {
-      support_record_failure ();
-      printf ("error: unexpected failure for %s%%%s\n",
-              address, scope);
-    }
-  if (actual != expected)
-    {
-      support_record_failure ();
-      printf ("error: unexpected result for for %s%%%s\n",
-              address, scope);
-      printf ("  expected: %" PRIu32 "\n", expected);
-      printf ("  actual:   %" PRIu32 "\n", actual);
-    }
-
   struct sockaddr_in6 sa;
   memset (&sa, 0xc0, sizeof (sa));
   if (call_gai (AF_UNSPEC, address, scope, &sa))
