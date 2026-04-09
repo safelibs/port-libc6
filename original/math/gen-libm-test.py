@@ -256,7 +256,9 @@ def read_all_ulps(srcdir):
     """Read all platforms' libm-test-ulps files."""
     all_ulps = {}
     for dirpath, dirnames, filenames in os.walk(srcdir):
-        if 'libm-test-ulps' in filenames:
+        dirnames[:] = [d for d in dirnames if d not in ('.git', '.pc')]
+        if ('libm-test-ulps' in filenames
+                and 'libm-test-ulps-name' in filenames):
             with open(os.path.join(dirpath, 'libm-test-ulps-name')) as f:
                 name = f.read().rstrip()
             all_ulps[name] = Ulps()

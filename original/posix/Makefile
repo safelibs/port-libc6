@@ -441,6 +441,8 @@ generated += \
   tst-fnmatch-mem.out \
   tst-fnmatch.mtrace \
   tst-getconf.out \
+  tst-glob-tilde-mem.out \
+  tst-glob-tilde.mtrace \
   tst-pcre-mem.out \
   tst-pcre.mtrace \
   tst-rxspencer-no-utf8-mem.out \
@@ -476,6 +478,7 @@ tests-special += \
   $(objpfx)tst-boost-mem.out \
   $(objpfx)tst-fnmatch-mem.out \
   $(objpfx)tst-getconf.out \
+  $(objpfx)tst-glob-tilde-mem.out \
   $(objpfx)tst-pcre-mem.out \
   $(objpfx)tst-rxspencer-no-utf8-mem.out \
   $(objpfx)tst-vfork3-mem.out \
@@ -728,6 +731,13 @@ bug-glob2-ENV = MALLOC_TRACE=$(objpfx)bug-glob2.mtrace \
 
 $(objpfx)bug-glob2-mem.out: $(objpfx)bug-glob2.out
 	$(common-objpfx)malloc/mtrace $(objpfx)bug-glob2.mtrace > $@; \
+	$(evaluate-test)
+
+tst-glob-tilde-ENV = MALLOC_TRACE=$(objpfx)tst-glob-tilde.mtrace \
+		     LD_PRELOAD=$(common-objpfx)/malloc/libc_malloc_debug.so
+
+$(objpfx)tst-glob-tilde-mem.out: $(objpfx)tst-glob-tilde.out
+	$(common-objpfx)malloc/mtrace $(objpfx)tst-glob-tilde.mtrace > $@; \
 	$(evaluate-test)
 
 $(inst_libexecdir)/getconf: $(inst_bindir)/getconf \
