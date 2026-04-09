@@ -26,27 +26,23 @@
 #include <support/xthread.h>
 
 static pthread_barrier_t barrier;
+static sigset_t expected_mask;
 
 static void
 thread_handler (union sigval sv)
 {
   sigset_t ss;
-  sigprocmask (SIG_BLOCK, NULL, &ss);
+  TEST_COMPARE (pthread_sigmask (SIG_SETMASK, NULL, &ss), 0);
   if (test_verbose > 0)
     printf ("%s: blocked signal mask = { ", __func__);
-  static const int blocked_signals[] =
+  for (int sig = 1; sig < NSIG; ++sig)
     {
-      SIGALRM, SIGTERM, SIGUSR1, SIGUSR2,
-    };
-  for (unsigned int i = 0; i < sizeof (blocked_signals) / sizeof (blocked_signals[0]);
-       ++i)
-    TEST_COMPARE (sigismember (&ss, blocked_signals[i]), 1);
-  TEST_COMPARE (sigismember (&ss, SIGKILL), 0);
-  TEST_COMPARE (sigismember (&ss, SIGSTOP), 0);
-  if (test_verbose > 0)
-    for (int sig = 1; sig < NSIG; sig++)
-      if (sigismember (&ss, sig))
+      int blocked = sigismember (&ss, sig);
+      int expected = sigismember (&expected_mask, sig);
+      TEST_COMPARE (blocked, expected);
+      if (test_verbose > 0 && blocked == 1)
         printf ("%d, ", sig);
+    }
   if (test_verbose > 0)
     printf ("}\n");
 
@@ -56,8 +52,12 @@ thread_handler (union sigval sv)
 static int
 do_test (void)
 {
+  sigset_t full;
   sigset_t empty;
+  TEST_COMPARE (sigfillset (&full), 0);
   sigemptyset (&empty);
+  TEST_COMPARE (pthread_sigmask (SIG_SETMASK, &full, NULL), 0);
+  TEST_COMPARE (pthread_sigmask (SIG_SETMASK, NULL, &expected_mask), 0);
   TEST_COMPARE (pthread_sigmask (SIG_SETMASK, &empty, NULL), 0);
 
   struct sigevent sev = { 0 };
@@ -74,6 +74,7 @@ do_test (void)
   TEST_COMPARE (timer_settime (timerid, 0, &trigger, NULL), 0);
 
   xpthread_barrier_wait (&barrier);
+  TEST_COMPARE (timer_delete (timerid), 0);
 
   return 0;
 }

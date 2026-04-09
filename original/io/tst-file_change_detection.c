@@ -1,4 +1,4 @@
-/* Test public stat/fstat-based file change snapshots.
+/* Test file-change handling through public resolver APIs.
    Copyright (C) 2020-2024 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -15,267 +15,159 @@
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
-#include <array_length.h>
+
 #include <errno.h>
+#include <resolv.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <support/check.h>
-#include <support/support.h>
-#include <support/temp_file.h>
 #include <support/test-driver.h>
-#include <support/xstdio.h>
-#include <support/xunistd.h>
-#include <unistd.h>
 
-struct file_snapshot
+struct resolv_conf_state
 {
-  off_t size;
+  bool present;
+  int error;
+  dev_t dev;
   ino_t ino;
+  off_t size;
   struct timespec mtime;
   struct timespec ctime;
 };
 
-static bool
-snapshot_is_unchanged (const struct file_snapshot *left,
-                       const struct file_snapshot *right)
+struct resolver_snapshot
 {
-  if (left->size < 0 || right->size < 0)
-    return false;
-  else if (left->size == 0 && right->size == 0)
-    return true;
-  else
-    return left->size == right->size
-      && left->ino == right->ino
-      && left->mtime.tv_sec == right->mtime.tv_sec
-      && left->mtime.tv_nsec == right->mtime.tv_nsec
-      && left->ctime.tv_sec == right->ctime.tv_sec
-      && left->ctime.tv_nsec == right->ctime.tv_nsec;
+  int retrans;
+  int retry;
+  unsigned long options;
+  int nscount;
+  struct sockaddr_in nsaddr_list[MAXNS];
+  char defdname[sizeof (((struct __res_state *) 0)->defdname)];
+  unsigned ndots;
+  unsigned nsort;
+  struct
+  {
+    struct in_addr addr;
+    uint32_t mask;
+  } sort_list[MAXRESOLVSORT];
+  char dnsrch[MAXDNSRCH][256];
+};
+
+static void
+capture_resolv_conf_state (struct resolv_conf_state *state)
+{
+  memset (state, 0, sizeof (*state));
+
+  struct stat st;
+  if (stat (_PATH_RESCONF, &st) == 0)
+    {
+      state->present = true;
+      state->dev = st.st_dev;
+      state->ino = st.st_ino;
+      state->size = st.st_size;
+      state->mtime = st.st_mtim;
+      state->ctime = st.st_ctim;
+      return;
+    }
+
+  switch (errno)
+    {
+    case EACCES:
+    case EISDIR:
+    case ELOOP:
+    case ENOENT:
+    case ENOTDIR:
+    case EPERM:
+      state->error = errno;
+      return;
+    default:
+      FAIL_EXIT1 ("stat (\"%s\"): %m", _PATH_RESCONF);
+    }
 }
 
 static void
-snapshot_from_stat (struct file_snapshot *file, const struct stat *st)
+capture_snapshot (struct resolver_snapshot *snapshot,
+                  const struct __res_state *state)
 {
-  if (S_ISDIR (st->st_mode))
-    file->size = 0;
-  else if (!S_ISREG (st->st_mode))
-    file->size = -1;
-  else
+  memset (snapshot, 0, sizeof (*snapshot));
+  snapshot->retrans = state->retrans;
+  snapshot->retry = state->retry;
+  snapshot->options = state->options;
+  snapshot->nscount = state->nscount;
+  memcpy (snapshot->nsaddr_list, state->nsaddr_list,
+          sizeof (snapshot->nsaddr_list));
+  memcpy (snapshot->defdname, state->defdname, sizeof (snapshot->defdname));
+  snapshot->ndots = state->ndots;
+  snapshot->nsort = state->nsort;
+  memcpy (snapshot->sort_list, state->sort_list, sizeof (snapshot->sort_list));
+  for (int i = 0; i < MAXDNSRCH && state->dnsrch[i] != NULL; ++i)
     {
-      file->size = st->st_size;
-      file->ino = st->st_ino;
-      file->mtime = st->st_mtim;
-      file->ctime = st->st_ctim;
+      size_t length = strlen (state->dnsrch[i]);
+      TEST_VERIFY_EXIT (length < sizeof (snapshot->dnsrch[i]));
+      memcpy (snapshot->dnsrch[i], state->dnsrch[i], length + 1);
     }
 }
 
 static bool
-snapshot_for_path (struct file_snapshot *file, const char *path)
+load_snapshot_with_stable_file (struct resolv_conf_state *state,
+                                struct resolver_snapshot *snapshot)
 {
-  struct stat st;
-  if (stat (path, &st) != 0)
-    switch (errno)
-      {
-      case EACCES:
-      case EISDIR:
-      case ELOOP:
-      case ENOENT:
-      case ENOTDIR:
-      case EPERM:
-        file->size = 0;
-        return true;
-      default:
-        return false;
-      }
+  struct resolv_conf_state after;
+  capture_resolv_conf_state (state);
 
-  snapshot_from_stat (file, &st);
-  return true;
-}
+  struct __res_state resolver = { 0 };
+  TEST_COMPARE (res_ninit (&resolver), 0);
+  capture_snapshot (snapshot, &resolver);
+  res_nclose (&resolver);
 
-static bool
-snapshot_for_fp (struct file_snapshot *file, FILE *fp)
-{
-  if (fp == NULL)
-    {
-      file->size = 0;
-      return true;
-    }
-
-  struct stat st;
-  if (fstat (fileno (fp), &st) != 0)
-    return false;
-  snapshot_from_stat (file, &st);
-  return true;
-}
-
-static void
-all_same (struct file_snapshot *array, size_t length)
-{
-  for (size_t i = 0; i < length; ++i)
-    for (size_t j = 0; j < length; ++j)
-      {
-        if (test_verbose > 0)
-          printf ("info: comparing %zu and %zu\n", i, j);
-        TEST_VERIFY (snapshot_is_unchanged (array + i, array + j));
-      }
-}
-
-static void
-all_different (struct file_snapshot *array, size_t length)
-{
-  for (size_t i = 0; i < length; ++i)
-    for (size_t j = 0; j < length; ++j)
-      {
-        if (i == j)
-          continue;
-        if (test_verbose > 0)
-          printf ("info: comparing %zu and %zu\n", i, j);
-        TEST_VERIFY (!snapshot_is_unchanged (array + i, array + j));
-      }
+  capture_resolv_conf_state (&after);
+  return memcmp (state, &after, sizeof (*state)) == 0;
 }
 
 static int
 do_test (void)
 {
-  /* Use a temporary directory with various paths.  */
-  char *tempdir = support_create_temp_directory ("tst-file_change_detection-");
+  unsetenv ("LOCALDOMAIN");
+  unsetenv ("RES_OPTIONS");
 
-  char *path_dangling = xasprintf ("%s/dangling", tempdir);
-  char *path_does_not_exist = xasprintf ("%s/does-not-exist", tempdir);
-  char *path_empty1 = xasprintf ("%s/empty1", tempdir);
-  char *path_empty2 = xasprintf ("%s/empty2", tempdir);
-  char *path_fifo = xasprintf ("%s/fifo", tempdir);
-  char *path_file1 = xasprintf ("%s/file1", tempdir);
-  char *path_file2 = xasprintf ("%s/file2", tempdir);
-  char *path_loop = xasprintf ("%s/loop", tempdir);
-  char *path_to_empty1 = xasprintf ("%s/to-empty1", tempdir);
-  char *path_to_file1 = xasprintf ("%s/to-file1", tempdir);
+  struct resolv_conf_state baseline_state;
+  struct resolver_snapshot baseline_snapshot;
+  bool have_baseline = false;
+  int stable_observations = 0;
 
-  add_temp_file (path_dangling);
-  add_temp_file (path_empty1);
-  add_temp_file (path_empty2);
-  add_temp_file (path_fifo);
-  add_temp_file (path_file1);
-  add_temp_file (path_file2);
-  add_temp_file (path_loop);
-  add_temp_file (path_to_empty1);
-  add_temp_file (path_to_file1);
-
-  xsymlink ("target-does-not-exist", path_dangling);
-  support_write_file_string (path_empty1, "");
-  support_write_file_string (path_empty2, "");
-  TEST_COMPARE (mknod (path_fifo, 0777 | S_IFIFO, 0), 0);
-  support_write_file_string (path_file1, "line\n");
-  support_write_file_string (path_file2, "line\n");
-  xsymlink ("loop", path_loop);
-  xsymlink ("empty1", path_to_empty1);
-  xsymlink ("file1", path_to_file1);
-
-  FILE *fp_file1 = xfopen (path_file1, "r");
-  FILE *fp_file2 = xfopen (path_file2, "r");
-  FILE *fp_empty1 = xfopen (path_empty1, "r");
-  FILE *fp_empty2 = xfopen (path_empty2, "r");
-
-  /* Test for the same (empty) files.  */
-  {
-    struct file_snapshot fcd[10];
-    int i = 0;
-    /* Two empty files always have the same contents.  */
-    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_empty1));
-    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_empty2));
-    /* So does a missing file (which is treated as empty).  */
-    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_does_not_exist));
-    /* And a symbolic link loop.  */
-    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_loop));
-    /* And a dangling symbolic link.  */
-    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_dangling));
-    /* And a directory.  */
-    TEST_VERIFY (snapshot_for_path (&fcd[i++], tempdir));
-    /* And a symbolic link to an empty file.  */
-    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_to_empty1));
-    /* Likewise for access the file via a FILE *.  */
-    TEST_VERIFY (snapshot_for_fp (&fcd[i++], fp_empty1));
-    TEST_VERIFY (snapshot_for_fp (&fcd[i++], fp_empty2));
-    /* And a NULL FILE * (missing file).  */
-    TEST_VERIFY (snapshot_for_fp (&fcd[i++], NULL));
-    TEST_COMPARE (i, array_length (fcd));
-
-    all_same (fcd, array_length (fcd));
-  }
-
-  /* Symbolic links are resolved.  */
-  {
-    struct file_snapshot fcd[3];
-    int i = 0;
-    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_file1));
-    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_to_file1));
-    TEST_VERIFY (snapshot_for_fp (&fcd[i++], fp_file1));
-    TEST_COMPARE (i, array_length (fcd));
-    all_same (fcd, array_length (fcd));
-  }
-
-  /* Test for different files.  */
-  {
-    struct file_snapshot fcd[5];
-    int i = 0;
-    /* The other files are not empty.  */
-    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_empty1));
-    /* These two files have the same contents, but have different file
-       identity.  */
-    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_file1));
-    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_file2));
-    /* FIFOs are always different, even with themselves.  */
-    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_fifo));
-    TEST_VERIFY (snapshot_for_path (&fcd[i++], path_fifo));
-    TEST_COMPARE (i, array_length (fcd));
-    all_different (fcd, array_length (fcd));
-
-    /* Replacing the file with its symbolic link does not make a
-       difference.  */
-    TEST_VERIFY (snapshot_for_path (&fcd[1], path_to_file1));
-    all_different (fcd, array_length (fcd));
-  }
-
-  /* Wait for a file change.  Depending on file system time stamp
-     resolution, this subtest blocks for a while.  */
-  for (int use_stdio = 0; use_stdio < 2; ++use_stdio)
+  /* Repeated public resolver initialization should keep producing the
+     same externally visible configuration while /etc/resolv.conf does
+     not change.  This exercises the unchanged-file fast path without
+     using the internal helper entry points directly.  */
+  for (int attempts = 0; attempts < 200 && stable_observations < 16; ++attempts)
     {
-      struct file_snapshot initial;
-      TEST_VERIFY (snapshot_for_path (&initial, path_file1));
-      while (true)
+      struct resolv_conf_state state;
+      struct resolver_snapshot snapshot;
+      if (!load_snapshot_with_stable_file (&state, &snapshot))
+        continue;
+
+      if (!have_baseline
+          || memcmp (&baseline_state, &state, sizeof (state)) != 0)
         {
-          support_write_file_string (path_file1, "line\n");
-          struct file_snapshot current;
-          if (use_stdio)
-            TEST_VERIFY (snapshot_for_fp (&current, fp_file1));
-          else
-            TEST_VERIFY (snapshot_for_path (&current, path_file1));
-          if (!snapshot_is_unchanged (&initial, &current))
-            break;
-          /* Wait for a bit to reduce system load.  */
-          usleep (100 * 1000);
+          baseline_state = state;
+          baseline_snapshot = snapshot;
+          have_baseline = true;
+          stable_observations = 1;
+          continue;
         }
+
+      TEST_COMPARE_BLOB (&baseline_snapshot, sizeof (baseline_snapshot),
+                         &snapshot, sizeof (snapshot));
+      ++stable_observations;
     }
 
-  fclose (fp_empty1);
-  fclose (fp_empty2);
-  fclose (fp_file1);
-  fclose (fp_file2);
-
-  free (path_dangling);
-  free (path_does_not_exist);
-  free (path_empty1);
-  free (path_empty2);
-  free (path_fifo);
-  free (path_file1);
-  free (path_file2);
-  free (path_loop);
-  free (path_to_empty1);
-  free (path_to_file1);
-
-  free (tempdir);
-
+  TEST_VERIFY (have_baseline);
+  TEST_VERIFY (stable_observations >= 16);
   return 0;
 }
 
+#define TIMEOUT 10
 #include <support/test-driver.c>

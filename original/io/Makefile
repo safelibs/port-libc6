@@ -256,6 +256,8 @@ endif
 
 include ../Rules
 
+$(objpfx)tst-file_change_detection: $(common-objpfx)resolv/libresolv.so
+
 CFLAGS-open.c += -fexceptions -fasynchronous-unwind-tables $(config-cflags-wno-ignored-attributes)
 CFLAGS-openat.c += $(config-cflags-wno-ignored-attributes)
 CFLAGS-open64.c += -fexceptions -fasynchronous-unwind-tables
