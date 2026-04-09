@@ -281,6 +281,9 @@ tests-clone-internal = \
   tst-clone3-internal \
   tst-getpid1-internal
   # tests-clone-internal
+tests-internal += \
+  $(tests-clone-internal) \
+  # tests-internal
 tests-static += \
   $(tests-clone-internal) \
   # tests-static

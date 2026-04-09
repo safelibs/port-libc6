@@ -366,6 +366,10 @@ CFLAGS-tst-shstk-legacy-1a-static.c += -fcf-protection=none
 CFLAGS-tst-shstk-legacy-1d.c += -fcf-protection=none
 CFLAGS-tst-shstk-legacy-1d-static.c += -fcf-protection=none
 CFLAGS-tst-shstk-legacy-1f.c += -fcf-protection=none
+LDFLAGS-tst-shstk-legacy-1f = -Wl,--no-as-needed \
+			      $(objpfx)tst-shstk-legacy-mod-1.so
+LDFLAGS-tst-shstk-legacy-1g = -Wl,--no-as-needed \
+			      $(objpfx)tst-shstk-legacy-mod-1.so
 
 $(objpfx)tst-cet-legacy-1: $(objpfx)tst-cet-legacy-mod-1.so \
 		       $(objpfx)tst-cet-legacy-mod-2.so

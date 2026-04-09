@@ -1469,7 +1469,7 @@ $(objpfx)tst-tlsmod13a.so: $(objpfx)tst-tlsmod13.so
 $(objpfx)tst-tlsmod5.so: $(common-objpfx)libc.so
 $(objpfx)tst-tlsmod6.so: $(common-objpfx)libc.so
 $(objpfx)tst-tls19mod1.so: $(objpfx)tst-tls19mod2.so $(objpfx)tst-tls19mod3.so
-$(objpfx)tst-tls19mod3.so: $(objpfx)ld.so
+$(objpfx)tst-tls19mod3.so: $(link-libc-deps)
 $(objpfx)reldep8mod3.so: $(objpfx)reldep8mod1.so $(objpfx)reldep8mod2.so
 $(objpfx)nodel2mod3.so: $(objpfx)nodel2mod1.so $(objpfx)nodel2mod2.so
 $(objpfx)reldep9mod2.so: $(objpfx)reldep9mod1.so

@@ -523,6 +523,44 @@ libc-for-link = $(common-objpfx)libc.so
 link-libc-deps = $(common-objpfx)libc.so $(common-objpfx)linkobj/libc.so \
 		 $(common-objpfx)libc_nonshared.a $(elf-objpfx)ld.so
 
+# Some compatibility DSOs are rebuilt as cross-subdir prerequisites during
+# other test sweeps (for example, elf/tests).  Keep their special link-time
+# dependencies visible globally so they do not fall back to the generic libc
+# link or drop required helper DSOs when the originating subdir makefile is
+# not in scope.
+$(common-objpfx)nis/libnsl.so: libc-for-link = $(common-objpfx)linkobj/libc.so
+$(common-objpfx)nss/libnss_%.so: libc-for-link = $(common-objpfx)linkobj/libc.so
+$(common-objpfx)hesiod/libnss_hesiod.so: \
+  $(common-objpfx)resolv/libresolv.so \
+  $(common-objpfx)nss/libnss_files.so
+$(common-objpfx)resolv/libnss_dns.so: $(common-objpfx)resolv/libresolv.so
+$(common-objpfx)resolv/libanl.so: $(shared-thread-library)
+$(common-objpfx)rt/librt.so: $(shared-thread-library)
+$(common-objpfx)mathvec/libmvec.so: $(libm)
+libthread_db.so-no-z-defs = yes
+libthread_db.so-no-dt-relr = yes
+
+$(common-objpfx)hesiod/libnss_hesiod.so$(libnss_hesiod.so-version): \
+  $(common-objpfx)hesiod/libnss_hesiod.so
+	$(make-link)
+$(common-objpfx)mathvec/libmvec.so$(libmvec.so-version): \
+  $(common-objpfx)mathvec/libmvec.so
+	$(make-link)
+$(common-objpfx)nis/libnsl.so$(libnsl.so-version): \
+  $(common-objpfx)nis/libnsl.so
+	$(make-link)
+$(common-objpfx)nptl_db/libthread_db.so$(libthread_db.so-version): \
+  $(common-objpfx)nptl_db/libthread_db.so
+	$(make-link)
+$(common-objpfx)resolv/libanl.so$(libanl.so-version): \
+  $(common-objpfx)resolv/libanl.so
+	$(make-link)
+$(common-objpfx)resolv/libnss_dns.so$(libnss_dns.so-version): \
+  $(common-objpfx)resolv/libnss_dns.so
+	$(make-link)
+$(common-objpfx)rt/librt.so$(librt.so-version): $(common-objpfx)rt/librt.so
+	$(make-link)
+
 # Pattern rule to build a shared object from an archive of PIC objects.
 # This must come after the installation rules so Make doesn't try to
 # build shared libraries in place from the installed *_pic.a files.

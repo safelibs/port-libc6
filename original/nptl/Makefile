@@ -578,6 +578,10 @@ endif
 
 include ../Rules
 
+$(objpfx)tst-pthread-gdb-attach.out: $(common-objpfx)nptl_db/libthread_db.so
+$(objpfx)tst-pthread-gdb-attach-static.out: \
+  $(common-objpfx)nptl_db/libthread_db.so
+
 ifeq (yes,$(build-shared))
 # Make sure these things are built in the `make lib' pass so they can be used
 # to run programs during the `make others' pass.
