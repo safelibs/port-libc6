@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <support/check.h>
 #include <support/support.h>
 #include <support/temp_file.h>
@@ -95,6 +96,49 @@ public_statx_tests (const char *path, int fd)
   }
 }
 
+static void
+public_statx_symlink_tests (const char *path, const char *symlink_path)
+{
+  TEST_COMPARE (symlink (path, symlink_path), 0);
+
+  struct stat target;
+  TEST_COMPARE (stat (path, &target), 0);
+
+  struct stat link;
+  TEST_COMPARE (lstat (symlink_path, &link), 0);
+  TEST_VERIFY (S_ISLNK (link.st_mode));
+
+  struct statx followed = { 0, };
+  TEST_COMPARE (statx (AT_FDCWD, symlink_path, 0, STATX_BASIC_STATS,
+                       &followed),
+                0);
+  TEST_COMPARE (followed.stx_mode, target.st_mode);
+  TEST_COMPARE (followed.stx_ino, (uint64_t) target.st_ino);
+  TEST_COMPARE (followed.stx_size, target.st_size);
+
+  struct statx not_followed = { 0, };
+  TEST_COMPARE (statx (AT_FDCWD, symlink_path, AT_SYMLINK_NOFOLLOW,
+                       STATX_BASIC_STATS, &not_followed),
+                0);
+  TEST_COMPARE (not_followed.stx_mode, link.st_mode);
+  TEST_COMPARE (not_followed.stx_ino, (uint64_t) link.st_ino);
+  TEST_COMPARE (not_followed.stx_size, link.st_size);
+  TEST_COMPARE (not_followed.stx_size, strlen (path));
+
+  int link_fd = open (symlink_path, O_PATH | O_NOFOLLOW);
+  TEST_VERIFY_EXIT (link_fd >= 0);
+  struct statx empty_path = { 0, };
+  TEST_COMPARE (statx (link_fd, "", AT_EMPTY_PATH, STATX_BASIC_STATS,
+                       &empty_path),
+                0);
+  TEST_COMPARE (empty_path.stx_mode, not_followed.stx_mode);
+  TEST_COMPARE (empty_path.stx_ino, not_followed.stx_ino);
+  TEST_COMPARE (empty_path.stx_size, not_followed.stx_size);
+  xclose (link_fd);
+
+  TEST_COMPARE (unlink (symlink_path), 0);
+}
+
 static int
 do_test (void)
 {
@@ -102,8 +146,10 @@ do_test (void)
   int fd = create_temp_file ("tst-statx-", &path);
   TEST_VERIFY_EXIT (fd >= 0);
   support_write_file_string (path, "abc");
+  char *symlink_path = xasprintf ("%s-link", path);
 
   public_statx_tests (path, fd);
+  public_statx_symlink_tests (path, symlink_path);
 
   if (kernel_supports_statx ())
     {
@@ -122,6 +168,7 @@ do_test (void)
     }
 
   xclose (fd);
+  free (symlink_path);
   free (path);
 
   return 0;

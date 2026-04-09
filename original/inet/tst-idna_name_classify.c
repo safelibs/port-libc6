@@ -16,6 +16,7 @@
    License along with the GNU C Library; if not, see
    <https://www.gnu.org/licenses/>.  */
 
+#include <arpa/inet.h>
 #include <dlfcn.h>
 #include <iconv.h>
 #include <langinfo.h>
@@ -23,6 +24,7 @@
 #include <netdb.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <support/check.h>
 
@@ -78,8 +80,49 @@ current_locale_supports_idn (void)
 }
 
 static void
+expect_numeric_address (const char *name, int family)
+{
+  struct addrinfo hints =
+    {
+      .ai_family = family,
+      .ai_flags = AI_IDN | AI_NUMERICHOST | AI_NUMERICSERV,
+      .ai_socktype = SOCK_STREAM,
+    };
+  struct addrinfo *ai = NULL;
+  TEST_COMPARE (getaddrinfo (name, "80", &hints, &ai), 0);
+  TEST_VERIFY_EXIT (ai != NULL);
+  TEST_COMPARE (ai->ai_family, family);
+  TEST_COMPARE (ai->ai_socktype, SOCK_STREAM);
+
+  if (family == AF_INET)
+    {
+      struct sockaddr_in *sin = (struct sockaddr_in *) ai->ai_addr;
+      struct in_addr expected;
+      TEST_VERIFY_EXIT (ai->ai_addrlen >= sizeof (*sin));
+      TEST_COMPARE (inet_pton (family, name, &expected), 1);
+      TEST_COMPARE (sin->sin_port, htons (80));
+      TEST_COMPARE (sin->sin_addr.s_addr, expected.s_addr);
+    }
+  else
+    {
+      struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) ai->ai_addr;
+      struct in6_addr expected;
+      TEST_VERIFY_EXIT (family == AF_INET6);
+      TEST_VERIFY_EXIT (ai->ai_addrlen >= sizeof (*sin6));
+      TEST_COMPARE (inet_pton (family, name, &expected), 1);
+      TEST_COMPARE (sin6->sin6_port, htons (80));
+      TEST_COMPARE (memcmp (&sin6->sin6_addr, &expected, sizeof (expected)),
+                    0);
+    }
+
+  freeaddrinfo (ai);
+}
+
+static void
 locale_insensitive_tests (void)
 {
+  expect_numeric_address ("127.0.0.1", AF_INET);
+  expect_numeric_address ("::1", AF_INET6);
   expect_result ("", EAI_NONAME);
   expect_result ("abc", EAI_NONAME);
   expect_result ("..", EAI_NONAME);
