@@ -18,24 +18,24 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
-#include <link.h>
+#include <inttypes.h>
 #include <resolv.h>
+#include <sched.h>
 #include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/mman.h>
+#include <sys/mount.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
+#include <support/capture_subprocess.h>
 #include <support/check.h>
 #include <support/support.h>
 #include <support/temp_file.h>
 #include <support/test-driver.h>
 #include <support/xunistd.h>
 #include <unistd.h>
-
-#undef p_type
 
 static const char resolv_conf_one[] =
   "options timeout:3 attempts:2 ndots:4 rotate\n"
@@ -47,16 +47,6 @@ static const char resolv_conf_two[] =
   "search example.net example.org\n"
   "nameserver 192.0.2.2\n"
   "nameserver 192.0.2.3\n";
-
-static const char resolv_conf_path[] = _PATH_RESCONF;
-
-struct path_patch_state
-{
-  const char *replacement;
-  size_t replacement_length;
-  long page_size;
-  size_t patches;
-};
 
 struct resolver_snapshot
 {
@@ -75,96 +65,6 @@ struct resolver_snapshot
   } sort_list[MAXRESOLVSORT];
   char dnsrch[MAXDNSRCH][256];
 };
-
-static void
-patch_bytes (uintptr_t address, size_t length, int prot,
-             const struct path_patch_state *state)
-{
-  uintptr_t page_mask = state->page_size - 1;
-  uintptr_t page_start = address & ~page_mask;
-  uintptr_t page_end = (address + length + page_mask) & ~page_mask;
-  size_t page_length = page_end - page_start;
-
-  TEST_COMPARE (mprotect ((void *) page_start, page_length, prot | PROT_WRITE),
-                0);
-  memset ((void *) address, 0, length);
-  memcpy ((void *) address, state->replacement, state->replacement_length);
-  TEST_COMPARE (mprotect ((void *) page_start, page_length, prot), 0);
-}
-
-static bool
-is_libc_object (const char *name)
-{
-  if (name == NULL || name[0] == '\0')
-    return false;
-
-  const char *base = strrchr (name, '/');
-  if (base != NULL)
-    ++base;
-  else
-    base = name;
-
-  return strstr (base, "libc.so") != NULL;
-}
-
-static int
-patch_resolv_conf_path_cb (struct dl_phdr_info *info, size_t size,
-                           void *closure)
-{
-  struct path_patch_state *state = closure;
-  if (!is_libc_object (info->dlpi_name))
-    return 0;
-
-  for (ElfW(Half) i = 0; i < info->dlpi_phnum; ++i)
-    {
-      const ElfW(Phdr) *phdr = &info->dlpi_phdr[i];
-      if (phdr->p_type != PT_LOAD || !(phdr->p_flags & PF_R))
-        continue;
-
-      unsigned char *segment
-        = (unsigned char *) (info->dlpi_addr + phdr->p_vaddr);
-      size_t segment_length = phdr->p_memsz;
-      if (segment_length < sizeof (resolv_conf_path))
-        continue;
-
-      int prot = 0;
-      if (phdr->p_flags & PF_R)
-        prot |= PROT_READ;
-      if (phdr->p_flags & PF_W)
-        prot |= PROT_WRITE;
-      if (phdr->p_flags & PF_X)
-        prot |= PROT_EXEC;
-
-      for (size_t offset = 0;
-           offset + sizeof (resolv_conf_path) <= segment_length;
-           ++offset)
-        if (memcmp (segment + offset, resolv_conf_path,
-                    sizeof (resolv_conf_path)) == 0)
-          {
-            patch_bytes ((uintptr_t) (segment + offset),
-                         sizeof (resolv_conf_path), prot, state);
-            ++state->patches;
-            offset += sizeof (resolv_conf_path) - 1;
-          }
-    }
-
-  return 0;
-}
-
-static void
-redirect_resolv_conf_path (const char *replacement)
-{
-  struct path_patch_state state =
-    {
-      .replacement = replacement,
-      .replacement_length = strlen (replacement) + 1,
-      .page_size = xsysconf (_SC_PAGESIZE),
-    };
-  TEST_VERIFY (state.page_size > 0);
-  TEST_VERIFY_EXIT (state.replacement_length <= sizeof (resolv_conf_path));
-  dl_iterate_phdr (patch_resolv_conf_path_cb, &state);
-  TEST_VERIFY_EXIT (state.patches > 0);
-}
 
 static void
 capture_snapshot (struct resolver_snapshot *snapshot,
@@ -325,100 +225,270 @@ check_config_two (const struct resolver_snapshot *snapshot)
   check_nameserver (snapshot, 1, "192.0.2.3");
 }
 
-static int
-do_test (void)
+static void
+prepare_test_etc (const char *tempdir)
 {
-  char *redirect_path;
-  int redirect_fd = create_temp_file ("rc", &redirect_path);
-  TEST_VERIFY_EXIT (redirect_fd >= 0);
-  xclose (redirect_fd);
-  redirect_resolv_conf_path (redirect_path);
+  char *etcdir = xasprintf ("%s/etc", tempdir);
+  TEST_COMPARE (mkdir (etcdir, 0777), 0);
+  char *hosts = xasprintf ("%s/hosts", etcdir);
+  char *host_conf = xasprintf ("%s/host.conf", etcdir);
+  char *aliases = xasprintf ("%s/aliases", etcdir);
+  char *nsswitch = xasprintf ("%s/nsswitch.conf", etcdir);
 
-  char *tempdir = support_create_temp_directory ("tst-file-change-");
-  char *path_dangling = xasprintf ("%s/dangling", tempdir);
-  char *path_loop = xasprintf ("%s/loop", tempdir);
-  char *path_target_one = xasprintf ("%s/target1", tempdir);
-  char *path_target_two = xasprintf ("%s/target2", tempdir);
+  support_write_file_string (hosts, "127.0.0.1 localhost\n");
+  support_write_file_string (host_conf, "");
+  support_write_file_string (aliases, "");
+  support_write_file_string (nsswitch, "hosts: files dns\n");
+
+  free (nsswitch);
+  free (aliases);
+  free (host_conf);
+  free (hosts);
+  free (etcdir);
+}
+
+static int
+run_fallback_smoke_test (void)
+{
+  unsetenv ("LOCALDOMAIN");
+  unsetenv ("RES_OPTIONS");
+
+  struct resolver_snapshot first;
+  struct resolver_snapshot second;
+  load_snapshot (&first);
+  load_snapshot (&second);
+  check_same_snapshot ("first public snapshot", &first,
+                       "second public snapshot", &second);
+  return 0;
+}
+
+static int
+do_child_test (const char *tempdir, uid_t uid, gid_t gid)
+{
+#ifndef CLONE_NEWNS
+  return EXIT_UNSUPPORTED;
+#else
+  char *etcdir = xasprintf ("%s/etc", tempdir);
+  char *resolv_path = xasprintf ("%s/resolv.conf", etcdir);
+  char *target_one = xasprintf ("%s/target-one", etcdir);
+  char *target_two = xasprintf ("%s/target-two", etcdir);
+  char *loop = xasprintf ("%s/loop", etcdir);
+
+  if (unshare (CLONE_NEWNS) != 0)
+    {
+      if (errno == EPERM)
+        return EXIT_UNSUPPORTED;
+      FAIL_EXIT1 ("unshare (CLONE_NEWNS): %m");
+    }
+  if (mount ("none", "/", NULL, MS_REC | MS_PRIVATE, NULL) != 0)
+    {
+      if (errno == EPERM)
+        return EXIT_UNSUPPORTED;
+      FAIL_EXIT1 ("mount private /: %m");
+    }
+  TEST_COMPARE (mount (etcdir, "/etc", NULL, MS_BIND, NULL), 0);
+  TEST_COMPARE (setgid (gid), 0);
+  TEST_COMPARE (setuid (uid), 0);
 
   unsetenv ("LOCALDOMAIN");
   unsetenv ("RES_OPTIONS");
 
-  support_write_file_string (redirect_path, "");
+  support_write_file_string (resolv_path, "");
   struct resolver_snapshot empty;
   load_snapshot (&empty);
 
-  remove_path_if_exists (redirect_path);
+  remove_path_if_exists (resolv_path);
   struct resolver_snapshot missing;
   load_snapshot (&missing);
   check_same_snapshot ("empty file", &empty, "missing file", &missing);
 
-  TEST_COMPARE (symlink (path_dangling, redirect_path), 0);
+  TEST_COMPARE (symlink ("does-not-exist", resolv_path), 0);
   struct resolver_snapshot dangling;
   load_snapshot (&dangling);
   check_same_snapshot ("empty file", &empty, "dangling symlink", &dangling);
-  remove_path_if_exists (redirect_path);
+  remove_path_if_exists (resolv_path);
 
-  TEST_COMPARE (symlink ("loop", path_loop), 0);
-  TEST_COMPARE (symlink (path_loop, redirect_path), 0);
-  struct resolver_snapshot loop;
-  load_snapshot (&loop);
-  check_same_snapshot ("empty file", &empty, "symbolic link loop", &loop);
-  remove_path_if_exists (redirect_path);
+  TEST_COMPARE (symlink ("loop", loop), 0);
+  TEST_COMPARE (symlink ("loop", resolv_path), 0);
+  struct resolver_snapshot looped;
+  load_snapshot (&looped);
+  check_same_snapshot ("empty file", &empty, "symbolic link loop", &looped);
+  remove_path_if_exists (resolv_path);
 
-  support_write_file_string (redirect_path, "");
-  TEST_COMPARE (chmod (redirect_path, 0), 0);
+  support_write_file_string (resolv_path, "");
+  TEST_COMPARE (chmod (resolv_path, 0), 0);
   struct resolver_snapshot unreadable;
   load_snapshot (&unreadable);
   check_same_snapshot ("empty file", &empty, "unreadable file", &unreadable);
-  remove_path_if_exists (redirect_path);
+  remove_path_if_exists (resolv_path);
 
-  TEST_COMPARE (mkdir (redirect_path, 0777), 0);
+  TEST_COMPARE (mkdir (resolv_path, 0777), 0);
   struct resolver_snapshot directory;
   load_snapshot (&directory);
   check_same_snapshot ("empty file", &empty, "directory", &directory);
-  remove_path_if_exists (redirect_path);
+  remove_path_if_exists (resolv_path);
 
-  support_write_file_string (redirect_path, resolv_conf_one);
-  struct resolver_snapshot direct;
-  load_snapshot (&direct);
-  check_different_snapshot ("empty file", &empty, "configured file", &direct);
-  check_config_one (&direct);
+  support_write_file_string (resolv_path, resolv_conf_one);
+  struct resolver_snapshot direct_one;
+  load_snapshot (&direct_one);
+  check_different_snapshot ("empty file", &empty,
+                            "configured file one", &direct_one);
+  check_config_one (&direct_one);
 
-  support_write_file_string (path_target_one, resolv_conf_one);
-  remove_path_if_exists (redirect_path);
-  TEST_COMPARE (symlink (path_target_one, redirect_path), 0);
-  struct resolver_snapshot via_symlink;
-  load_snapshot (&via_symlink);
-  check_same_snapshot ("configured file", &direct,
-                       "symlink to configured file", &via_symlink);
+  support_write_file_string (target_one, resolv_conf_one);
+  remove_path_if_exists (resolv_path);
+  TEST_COMPARE (symlink ("target-one", resolv_path), 0);
+  struct resolver_snapshot symlink_one;
+  load_snapshot (&symlink_one);
+  check_same_snapshot ("configured file one", &direct_one,
+                       "symlink to file one", &symlink_one);
 
-  support_write_file_string (path_target_two, resolv_conf_two);
-  remove_path_if_exists (redirect_path);
-  TEST_COMPARE (symlink (path_target_two, redirect_path), 0);
-  struct resolver_snapshot reloaded;
-  load_snapshot (&reloaded);
-  check_different_snapshot ("configured file", &direct,
-                            "reloaded configured file", &reloaded);
-  check_config_two (&reloaded);
+  remove_path_if_exists (resolv_path);
+  support_write_file_string (resolv_path, resolv_conf_two);
+  struct resolver_snapshot direct_two;
+  load_snapshot (&direct_two);
+  check_different_snapshot ("configured file one", &direct_one,
+                            "configured file two", &direct_two);
+  check_config_two (&direct_two);
 
-  remove_path_if_exists (redirect_path);
-  support_write_file_string (redirect_path, "");
+  support_write_file_string (target_two, resolv_conf_two);
+  remove_path_if_exists (resolv_path);
+  TEST_COMPARE (symlink ("target-two", resolv_path), 0);
+  struct resolver_snapshot symlink_two;
+  load_snapshot (&symlink_two);
+  check_same_snapshot ("configured file two", &direct_two,
+                       "symlink to file two", &symlink_two);
+
+  remove_path_if_exists (resolv_path);
+  support_write_file_string (resolv_path, "");
   struct resolver_snapshot restored_empty;
   load_snapshot (&restored_empty);
   check_same_snapshot ("empty file", &empty,
                        "restored empty file", &restored_empty);
 
-  remove_path_if_exists (path_target_one);
-  remove_path_if_exists (path_target_two);
-  remove_path_if_exists (path_loop);
-  free (path_target_two);
-  free (path_target_one);
-  free (path_loop);
-  free (path_dangling);
-  free (tempdir);
-  free (redirect_path);
+  free (loop);
+  free (target_two);
+  free (target_one);
+  free (resolv_path);
+  free (etcdir);
   return 0;
+#endif
 }
 
-#define TIMEOUT 10
+static bool
+can_run_passwordless_sudo (void)
+{
+  static const char sudo_path[] = "/usr/bin/sudo";
+  char *const argv[] = { (char *) sudo_path, (char *) "-n",
+                         (char *) "true", NULL };
+  struct support_capture_subprocess proc
+    = support_capture_subprogram (sudo_path, argv);
+  bool ok = WIFEXITED (proc.status) && WEXITSTATUS (proc.status) == 0;
+  support_capture_subprocess_free (&proc);
+  return ok;
+}
+
+static int
+run_private_mount_child (const char *argv0)
+{
+  if (!can_run_passwordless_sudo ())
+    {
+      if (test_verbose > 0)
+        puts ("warning: passwordless sudo unavailable, using public smoke test");
+      return run_fallback_smoke_test ();
+    }
+
+  char *self = realpath (argv0, NULL);
+  TEST_VERIFY_EXIT (self != NULL);
+  char *tempdir = support_create_temp_directory ("tst-file-change-");
+  prepare_test_etc (tempdir);
+  static const char sudo_path[] = "/usr/bin/sudo";
+  char *etcdir = xasprintf ("%s/etc", tempdir);
+  char *hosts = xasprintf ("%s/hosts", etcdir);
+  char *host_conf = xasprintf ("%s/host.conf", etcdir);
+  char *aliases = xasprintf ("%s/aliases", etcdir);
+  char *nsswitch = xasprintf ("%s/nsswitch.conf", etcdir);
+  char *resolv_path = xasprintf ("%s/resolv.conf", etcdir);
+  char *target_one = xasprintf ("%s/target-one", etcdir);
+  char *target_two = xasprintf ("%s/target-two", etcdir);
+  char *loop = xasprintf ("%s/loop", etcdir);
+
+  char *uid = xasprintf ("%" PRIuMAX, (uintmax_t) getuid ());
+  char *gid = xasprintf ("%" PRIuMAX, (uintmax_t) getgid ());
+  char *const argv[] =
+    {
+      (char *) sudo_path,
+      (char *) "-n",
+      self,
+      (char *) "--direct",
+      (char *) "--",
+      (char *) "--child",
+      tempdir,
+      uid,
+      gid,
+      NULL
+    };
+
+  struct support_capture_subprocess proc
+    = support_capture_subprogram (sudo_path, argv);
+
+  int result;
+  if (WIFEXITED (proc.status) && WEXITSTATUS (proc.status) == 0)
+    result = 0;
+  else if (WIFEXITED (proc.status)
+           && WEXITSTATUS (proc.status) == EXIT_UNSUPPORTED)
+    {
+      if (test_verbose > 0)
+        puts ("warning: private mount namespace unavailable, using public smoke test");
+      result = run_fallback_smoke_test ();
+    }
+  else
+    {
+      if (proc.out.buffer[0] != '\0')
+        printf ("%s", proc.out.buffer);
+      if (proc.err.buffer[0] != '\0')
+        printf ("%s", proc.err.buffer);
+      FAIL_EXIT1 ("sudo child failed with status %#x", proc.status);
+    }
+
+  support_capture_subprocess_free (&proc);
+  remove_path_if_exists (resolv_path);
+  remove_path_if_exists (target_one);
+  remove_path_if_exists (target_two);
+  remove_path_if_exists (loop);
+  remove_path_if_exists (nsswitch);
+  remove_path_if_exists (aliases);
+  remove_path_if_exists (host_conf);
+  remove_path_if_exists (hosts);
+  remove_path_if_exists (etcdir);
+  free (loop);
+  free (target_two);
+  free (target_one);
+  free (resolv_path);
+  free (nsswitch);
+  free (aliases);
+  free (host_conf);
+  free (hosts);
+  free (etcdir);
+  free (gid);
+  free (uid);
+  free (tempdir);
+  free (self);
+  return result;
+}
+
+static int
+do_test_argv (int argc, char **argv)
+{
+  for (int i = 1; i + 3 < argc; ++i)
+    if (strcmp (argv[i], "--child") == 0)
+      return do_child_test (argv[i + 1],
+                            (uid_t) strtoumax (argv[i + 2], NULL, 10),
+                            (gid_t) strtoumax (argv[i + 3], NULL, 10));
+
+  return run_private_mount_child (argv[0]);
+}
+
+#define TEST_FUNCTION_ARGV do_test_argv
+#define TIMEOUT 20
 #include <support/test-driver.c>
