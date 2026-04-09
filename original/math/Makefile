@@ -207,6 +207,13 @@ ifeq ($(build-mathvec),yes)
 # for transparent use of vector math library.
 install-lib-ldscripts := libm.so libm.a
 install-others = $(inst_libdir)/libm.so $(inst_libdir)/libm.a
+
+# Some math tests link against the libmvec soname from the math subdir, so
+# teach this makefile how to materialize the versioned build-tree symlink.
+$(common-objpfx)mathvec/libmvec.so$(libmvec.so-version): \
+  $(common-objpfx)mathvec/libmvec.so
+	$(make-link)
+
 $(inst_libdir)/libm.so: $(common-objpfx)format.lds \
 			$(libm) \
 			$(libmvec) \

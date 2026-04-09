@@ -1604,7 +1604,8 @@ $(objpfx)restest1.out: $(test-modules)
 preloadtest-preloads = testobj1 testobj2 testobj3 testobj4 testobj5
 $(objpfx)preloadtest: $(objpfx)testobj6.so
 LDFLAGS-preloadtest = -rdynamic
-$(objpfx)preloadtest.out: $(preloadtest-preloads:%=$(objpfx)%.so)
+$(objpfx)preloadtest.out: $(preloadtest-preloads:%=$(objpfx)%.so) \
+			  $(common-objpfx)libc.so$(libc.so-version)
 preloadtest-ENV = \
   LD_PRELOAD=$(subst $(empty) ,:,$(strip $(preloadtest-preloads:=.so)))
 
@@ -1713,7 +1714,8 @@ $(objpfx)tst-rtld-load-self.out: tst-rtld-load-self.sh $(objpfx)ld.so
 tst-rtld-preload-OBJS = $(subst $(empty) ,:,$(strip $(preloadtest-preloads:=.so)))
 $(objpfx)tst-rtld-preload.out: tst-rtld-preload.sh $(objpfx)ld.so \
 			       $(objpfx)preloadtest \
-			       $(preloadtest-preloads:%=$(objpfx)%.so)
+			       $(preloadtest-preloads:%=$(objpfx)%.so) \
+			       $(common-objpfx)libc.so$(libc.so-version)
 	$(SHELL) $< $(objpfx)ld.so $(objpfx)preloadtest \
 		    '$(test-wrapper-env)' '$(run_program_env)' \
 		    '$(rpath-link)' '$(tst-rtld-preload-OBJS)' > $@; \
