@@ -329,6 +329,7 @@ test_libvirt() {
   getent group libvirt-qemu >/dev/null || groupadd --system libvirt-qemu
   id -u libvirt-qemu >/dev/null 2>&1 || \
     useradd --system --gid libvirt-qemu --home-dir /var/lib/libvirt/qemu --create-home libvirt-qemu
+  getent group kvm >/dev/null || groupadd --system kvm
 
   rm -rf /run/libvirt /var/log/libvirt /var/cache/libvirt "$libvirt_root"
   mkdir -p /run/libvirt /var/log/libvirt /var/cache/libvirt "$libvirt_root"
@@ -363,7 +364,8 @@ LIBVIRT_CONF
       srv-list >"$admin_log" 2>&1
   fi
 
-  grep -Eq '^ 1 +libvirtd$' "$admin_log"
+  grep -Eq '^[[:space:]]*[0-9]+[[:space:]]+admin$' "$admin_log"
+  grep -Eq '^[[:space:]]*[0-9]+[[:space:]]+libvirtd$' "$admin_log"
 
   cleanup_libvirt
   trap - RETURN
