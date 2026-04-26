@@ -1,0 +1,601 @@
+linear: true
+yaml_source_mode: inline-only
+verifier_encoding: explicit-phases
+phases:
+  - order: 1
+    id: impl_05a_commit_prepared_safe_frontier
+    type: implement
+    bounce_target: null
+    required_preexisting_inputs:
+      - safe/.gitignore
+      - safe/Cargo.toml
+      - safe/Cargo.lock
+      - safe/README.md
+      - safe/rust-toolchain.toml
+      - safe/crates/**
+      - safe/xtask/**
+      - safe/generated/**
+      - safe/tests/**
+      - safe/debian/**
+      - safe/upstream-compat/*.toml
+      - safe/upstream-tests/README.md
+      - safe/scripts/build-debs.sh
+      - safe/scripts/install-safe-repo.sh
+      - original/**
+      - dependents.json
+      - relevant_cves.json
+      - test-original.sh
+  - order: 2
+    id: check_05a_frontier_tracking
+    type: check
+    bounce_target: impl_05a_commit_prepared_safe_frontier
+    required_preexisting_inputs:
+      - original/**
+      - safe/generated/baseline/committed-safe-frontier.txt
+      - safe/generated/baseline/package-files/*.json
+      - safe/generated/install-manifests/*.json
+      - safe/generated/packaging/package-build-manifest.json
+      - safe/upstream-compat/*.toml
+      - safe/scripts/stage-original-build.sh
+  - order: 3
+    id: impl_06_io_stdio_string_path
+    type: implement
+    bounce_target: null
+    required_preexisting_inputs:
+      - original/**
+      - safe/scripts/stage-original-build.sh
+      - safe/xtask/src/common.rs
+      - safe/xtask/src/commands/build.rs
+      - safe/generated/baseline/committed-safe-frontier.txt
+      - safe/generated/baseline/abi/libc.json
+      - safe/generated/baseline/abi/libpthread.json
+      - safe/generated/baseline/abi/libthread_db.json
+      - safe/generated/baseline/abi/libc_malloc_debug.json
+      - safe/generated/baseline/abi/libmemusage.json
+      - safe/generated/version-scripts/libc.map
+      - safe/generated/baseline/package-files/libc6.json
+      - safe/generated/baseline/package-files/libc6-dev.json
+      - safe/generated/baseline/package-files/libc6-dbg.json
+      - safe/generated/packaging/package-build-manifest.json
+      - safe/generated/baseline/test-catalog.json
+      - safe/generated/baseline/test-port-plan.json
+      - safe/generated/baseline/fallback-c-inventory.json
+      - safe/tests/manifest.toml
+      - safe/tests/support/**
+      - safe/tests/support/glibcpp.py
+      - safe/tests/include/**
+      - safe/tests/bits/**
+      - safe/tests/top-level/Makefile
+      - safe/tests/top-level/Makeconfig
+      - safe/tests/top-level/Makerules
+      - safe/tests/test-skeleton.c
+      - safe/tests/c++-types.data
+      - safe/tests/scripts/**
+      - safe/tests/libio/**
+      - safe/tests/stdlib/**
+      - safe/tests/sysdeps/**
+      - safe/tests/sysdeps-x86_64/**
+      - safe/tests/sysdeps-linux-x86_64/**
+      - safe/upstream-compat/*.toml
+  - order: 4
+    id: check_06_phase_metadata_backcompat
+    type: check
+    bounce_target: impl_06_io_stdio_string_path
+    required_preexisting_inputs:
+      - original/**
+      - safe/scripts/stage-original-build.sh
+      - safe/xtask/src/common.rs
+      - safe/xtask/src/commands/build.rs
+      - safe/xtask/src/commands/stage_upstream_build.rs
+      - safe/xtask/src/commands/check_04_loader_tests.rs
+      - safe/xtask/src/commands/check_04_loader_abi.rs
+      - safe/xtask/src/commands/check_04_loader_tools.rs
+      - safe/xtask/src/commands/check_05_core_runtime_tests.rs
+      - safe/xtask/src/commands/check_05_core_runtime_abi.rs
+      - safe/xtask/src/commands/check_05_runtime_tools.rs
+      - safe/xtask/src/commands/check_05_base_dependent_smoke.rs
+  - order: 5
+    id: check_06_io_stdio_tests
+    type: check
+    bounce_target: impl_06_io_stdio_string_path
+    required_preexisting_inputs:
+      - original/**
+      - safe/scripts/stage-original-build.sh
+      - safe/generated/baseline/test-catalog.json
+      - safe/generated/baseline/test-port-plan.json
+      - safe/tests/manifest.toml
+      - safe/tests/support/**
+      - safe/tests/support/glibcpp.py
+      - safe/tests/include/**
+      - safe/tests/bits/**
+      - safe/tests/top-level/Makefile
+      - safe/tests/top-level/Makeconfig
+      - safe/tests/top-level/Makerules
+      - safe/tests/test-skeleton.c
+      - safe/tests/c++-types.data
+      - safe/tests/scripts/**
+      - safe/tests/libio/**
+      - safe/tests/stdlib/**
+      - safe/tests/sysdeps/**
+      - safe/tests/sysdeps-x86_64/**
+      - safe/tests/sysdeps-linux-x86_64/**
+      - safe/xtask/src/commands/check_owned_tests.rs
+      - safe/xtask/src/commands/run_original_tests.rs
+  - order: 6
+    id: check_06_io_stdio_abi
+    type: check
+    bounce_target: impl_06_io_stdio_string_path
+    required_preexisting_inputs:
+      - original/**
+      - safe/scripts/stage-original-build.sh
+      - safe/generated/baseline/link-compat-corpus.json
+      - safe/generated/baseline/abi/libc.json
+      - safe/generated/baseline/abi/libpthread.json
+      - safe/generated/baseline/abi/libthread_db.json
+      - safe/generated/baseline/abi/libc_malloc_debug.json
+      - safe/generated/baseline/abi/libmemusage.json
+      - safe/generated/version-scripts/libc.map
+      - safe/xtask/src/commands/link_compat_smoke.rs
+      - safe/xtask/src/commands/check_headers.rs
+  - order: 7
+    id: check_06_io_stdio_packages
+    type: check
+    bounce_target: impl_06_io_stdio_string_path
+    required_preexisting_inputs:
+      - original/**
+      - safe/scripts/stage-original-build.sh
+      - safe/scripts/install-safe-repo.sh
+      - safe/generated/baseline/package-files/libc6.json
+      - safe/generated/baseline/package-files/libc6-dev.json
+      - safe/generated/baseline/package-files/libc6-dbg.json
+      - safe/generated/install-manifests/required-packages.json
+      - safe/generated/install-manifests/test-install-root.json
+      - safe/generated/packaging/package-build-manifest.json
+      - safe/upstream-compat/package-scope.toml
+      - safe/generated/baseline/fallback-c-inventory.json
+      - safe/xtask/src/commands/test_package_install.rs
+  - order: 8
+    id: check_06_io_stdio_safety
+    type: check
+    bounce_target: impl_06_io_stdio_string_path
+    required_preexisting_inputs:
+      - safe/generated/baseline/fallback-c-inventory.json
+      - safe/upstream-compat/cve-status.toml
+      - safe/upstream-compat/package-scope.toml
+      - safe/upstream-compat/safety-policy.toml
+      - safe/xtask/src/commands/audit_safety.rs
+  - order: 9
+    id: impl_07_nss_resolver_nscd
+    type: implement
+    bounce_target: null
+    required_preexisting_inputs:
+      - original/**
+      - dependents.json
+      - relevant_cves.json
+      - safe/scripts/stage-original-build.sh
+      - safe/generated/baseline/link-compat-corpus.json
+      - safe/generated/baseline/test-catalog.json
+      - safe/generated/baseline/test-port-plan.json
+      - safe/generated/baseline/fallback-c-inventory.json
+      - safe/generated/baseline/abi/libanl.json
+      - safe/generated/baseline/abi/libnsl.json
+      - safe/generated/baseline/abi/libnss_compat.json
+      - safe/generated/baseline/abi/libnss_dns.json
+      - safe/generated/baseline/abi/libnss_files.json
+      - safe/generated/baseline/abi/libnss_hesiod.json
+      - safe/generated/baseline/abi/libresolv.json
+      - safe/generated/baseline/package-files/libc6.json
+      - safe/generated/baseline/package-files/libc-bin.json
+      - safe/generated/baseline/package-files/nscd.json
+      - safe/generated/install-manifests/required-packages.json
+      - safe/generated/install-manifests/test-install-root.json
+      - safe/generated/packaging/package-build-manifest.json
+      - safe/tests/manifest.toml
+      - safe/tests/support/**
+      - safe/tests/support/glibcpp.py
+      - safe/tests/include/**
+      - safe/tests/bits/**
+      - safe/tests/top-level/Makefile
+      - safe/tests/top-level/Makeconfig
+      - safe/tests/top-level/Makerules
+      - safe/tests/test-skeleton.c
+      - safe/tests/c++-types.data
+      - safe/tests/scripts/**
+      - safe/tests/resolv/**
+      - safe/tests/sysdeps/**
+      - safe/upstream-compat/*.toml
+  - order: 10
+    id: check_07_network_tests
+    type: check
+    bounce_target: impl_07_nss_resolver_nscd
+    required_preexisting_inputs:
+      - original/**
+      - safe/scripts/stage-original-build.sh
+      - safe/generated/baseline/test-catalog.json
+      - safe/generated/baseline/test-port-plan.json
+      - safe/tests/manifest.toml
+      - safe/tests/support/**
+      - safe/tests/support/glibcpp.py
+      - safe/tests/include/**
+      - safe/tests/bits/**
+      - safe/tests/top-level/Makefile
+      - safe/tests/top-level/Makeconfig
+      - safe/tests/top-level/Makerules
+      - safe/tests/test-skeleton.c
+      - safe/tests/c++-types.data
+      - safe/tests/scripts/**
+      - safe/tests/resolv/**
+      - safe/tests/sysdeps/**
+      - safe/tests/nscd/.gitkeep
+      - safe/xtask/src/commands/check_owned_tests.rs
+      - safe/xtask/src/commands/run_original_tests.rs
+  - order: 11
+    id: check_07_network_abi
+    type: check
+    bounce_target: impl_07_nss_resolver_nscd
+    required_preexisting_inputs:
+      - original/**
+      - safe/scripts/stage-original-build.sh
+      - safe/generated/baseline/link-compat-corpus.json
+      - safe/generated/baseline/abi/libanl.json
+      - safe/generated/baseline/abi/libnsl.json
+      - safe/generated/baseline/abi/libnss_compat.json
+      - safe/generated/baseline/abi/libnss_dns.json
+      - safe/generated/baseline/abi/libnss_files.json
+      - safe/generated/baseline/abi/libnss_hesiod.json
+      - safe/generated/baseline/abi/libresolv.json
+      - safe/xtask/src/commands/link_compat_smoke.rs
+  - order: 12
+    id: check_07_network_packages
+    type: check
+    bounce_target: impl_07_nss_resolver_nscd
+    required_preexisting_inputs:
+      - original/**
+      - safe/scripts/stage-original-build.sh
+      - safe/scripts/install-safe-repo.sh
+      - safe/generated/baseline/package-files/libc6.json
+      - safe/generated/baseline/package-files/libc-bin.json
+      - safe/generated/baseline/package-files/nscd.json
+      - safe/generated/install-manifests/required-packages.json
+      - safe/generated/install-manifests/test-install-root.json
+      - safe/generated/packaging/package-build-manifest.json
+      - safe/upstream-compat/package-scope.toml
+      - safe/generated/baseline/fallback-c-inventory.json
+      - safe/xtask/src/commands/test_package_install.rs
+  - order: 13
+    id: check_07_network_safety
+    type: check
+    bounce_target: impl_07_nss_resolver_nscd
+    required_preexisting_inputs:
+      - safe/generated/baseline/fallback-c-inventory.json
+      - safe/upstream-compat/cve-status.toml
+      - safe/upstream-compat/package-scope.toml
+      - safe/upstream-compat/safety-policy.toml
+      - safe/xtask/src/commands/audit_safety.rs
+  - order: 14
+    id: impl_08_locale_iconv_posix_parsers
+    type: implement
+    bounce_target: null
+    required_preexisting_inputs:
+      - original/**
+      - relevant_cves.json
+      - safe/scripts/stage-original-build.sh
+      - safe/generated/baseline/link-compat-corpus.json
+      - safe/generated/baseline/test-catalog.json
+      - safe/generated/baseline/test-port-plan.json
+      - safe/generated/baseline/fallback-c-inventory.json
+      - safe/generated/baseline/abi/libBrokenLocale.json
+      - safe/generated/baseline/package-files/libc6.json
+      - safe/generated/baseline/package-files/libc-bin.json
+      - safe/generated/baseline/package-files/locales.json
+      - safe/generated/install-manifests/required-packages.json
+      - safe/generated/install-manifests/test-install-root.json
+      - safe/generated/packaging/package-build-manifest.json
+      - safe/tests/manifest.toml
+      - safe/tests/support/**
+      - safe/tests/support/glibcpp.py
+      - safe/tests/include/**
+      - safe/tests/bits/**
+      - safe/tests/top-level/Makefile
+      - safe/tests/top-level/Makeconfig
+      - safe/tests/top-level/Makerules
+      - safe/tests/test-skeleton.c
+      - safe/tests/c++-types.data
+      - safe/tests/scripts/**
+      - safe/tests/sysdeps/**
+      - safe/tests/sysdeps-x86_64/**
+      - safe/tests/sysdeps-linux-x86_64/**
+      - safe/upstream-compat/*.toml
+  - order: 15
+    id: check_08_locale_tests
+    type: check
+    bounce_target: impl_08_locale_iconv_posix_parsers
+    required_preexisting_inputs:
+      - original/**
+      - safe/scripts/stage-original-build.sh
+      - safe/generated/baseline/test-catalog.json
+      - safe/generated/baseline/test-port-plan.json
+      - safe/tests/manifest.toml
+      - safe/tests/support/**
+      - safe/tests/support/glibcpp.py
+      - safe/tests/include/**
+      - safe/tests/bits/**
+      - safe/tests/top-level/Makefile
+      - safe/tests/top-level/Makeconfig
+      - safe/tests/top-level/Makerules
+      - safe/tests/test-skeleton.c
+      - safe/tests/c++-types.data
+      - safe/tests/scripts/**
+      - safe/tests/sysdeps/**
+      - safe/tests/sysdeps-x86_64/**
+      - safe/tests/sysdeps-linux-x86_64/**
+      - safe/tests/po/.gitkeep
+      - safe/xtask/src/commands/check_owned_tests.rs
+      - safe/xtask/src/commands/run_original_tests.rs
+  - order: 16
+    id: check_08_locale_abi
+    type: check
+    bounce_target: impl_08_locale_iconv_posix_parsers
+    required_preexisting_inputs:
+      - original/**
+      - safe/scripts/stage-original-build.sh
+      - safe/generated/baseline/link-compat-corpus.json
+      - safe/generated/baseline/abi/libBrokenLocale.json
+      - safe/generated/baseline/abi/libc.json
+      - safe/xtask/src/commands/link_compat_smoke.rs
+      - safe/xtask/src/commands/check_headers.rs
+  - order: 17
+    id: check_08_locale_packages
+    type: check
+    bounce_target: impl_08_locale_iconv_posix_parsers
+    required_preexisting_inputs:
+      - original/**
+      - safe/scripts/stage-original-build.sh
+      - safe/scripts/install-safe-repo.sh
+      - safe/generated/baseline/package-files/libc6.json
+      - safe/generated/baseline/package-files/libc-bin.json
+      - safe/generated/baseline/package-files/locales.json
+      - safe/generated/install-manifests/required-packages.json
+      - safe/generated/install-manifests/test-install-root.json
+      - safe/generated/packaging/package-build-manifest.json
+      - safe/upstream-compat/package-scope.toml
+      - safe/generated/baseline/fallback-c-inventory.json
+      - safe/xtask/src/commands/test_package_install.rs
+  - order: 18
+    id: check_08_locale_safety
+    type: check
+    bounce_target: impl_08_locale_iconv_posix_parsers
+    required_preexisting_inputs:
+      - safe/generated/baseline/fallback-c-inventory.json
+      - safe/upstream-compat/cve-status.toml
+      - safe/upstream-compat/package-scope.toml
+      - safe/upstream-compat/safety-policy.toml
+      - safe/xtask/src/commands/audit_safety.rs
+  - order: 19
+    id: impl_09_math_and_aux_dsos
+    type: implement
+    bounce_target: null
+    required_preexisting_inputs:
+      - original/**
+      - relevant_cves.json
+      - safe/scripts/stage-original-build.sh
+      - safe/generated/baseline/link-compat-corpus.json
+      - safe/generated/baseline/test-catalog.json
+      - safe/generated/baseline/test-port-plan.json
+      - safe/generated/baseline/fallback-c-inventory.json
+      - safe/generated/baseline/abi/libdl.json
+      - safe/generated/baseline/abi/libm.json
+      - safe/generated/baseline/abi/libmvec.json
+      - safe/generated/baseline/abi/libpcprofile.json
+      - safe/generated/baseline/abi/librt.json
+      - safe/generated/baseline/abi/libutil.json
+      - safe/generated/baseline/package-files/libc6.json
+      - safe/generated/baseline/package-files/libc-bin.json
+      - safe/generated/baseline/package-files/libc-dev-bin.json
+      - safe/generated/install-manifests/required-packages.json
+      - safe/generated/install-manifests/test-install-root.json
+      - safe/generated/packaging/package-build-manifest.json
+      - safe/tests/manifest.toml
+      - safe/tests/support/**
+      - safe/tests/support/glibcpp.py
+      - safe/tests/include/**
+      - safe/tests/bits/**
+      - safe/tests/top-level/Makefile
+      - safe/tests/top-level/Makeconfig
+      - safe/tests/top-level/Makerules
+      - safe/tests/test-skeleton.c
+      - safe/tests/c++-types.data
+      - safe/tests/scripts/**
+      - safe/tests/sysdeps/**
+      - safe/tests/sysdeps-x86_64/**
+      - safe/upstream-compat/*.toml
+  - order: 20
+    id: check_09_math_tests
+    type: check
+    bounce_target: impl_09_math_and_aux_dsos
+    required_preexisting_inputs:
+      - original/**
+      - safe/scripts/stage-original-build.sh
+      - safe/generated/baseline/test-catalog.json
+      - safe/generated/baseline/test-port-plan.json
+      - safe/tests/manifest.toml
+      - safe/tests/support/**
+      - safe/tests/support/glibcpp.py
+      - safe/tests/include/**
+      - safe/tests/bits/**
+      - safe/tests/top-level/Makefile
+      - safe/tests/top-level/Makeconfig
+      - safe/tests/top-level/Makerules
+      - safe/tests/test-skeleton.c
+      - safe/tests/c++-types.data
+      - safe/tests/scripts/**
+      - safe/tests/sysdeps/**
+      - safe/tests/sysdeps-x86_64/**
+      - safe/tests/manual/.gitkeep
+      - safe/xtask/src/commands/check_owned_tests.rs
+      - safe/xtask/src/commands/run_original_tests.rs
+  - order: 21
+    id: check_09_math_abi
+    type: check
+    bounce_target: impl_09_math_and_aux_dsos
+    required_preexisting_inputs:
+      - original/**
+      - safe/scripts/stage-original-build.sh
+      - safe/generated/baseline/link-compat-corpus.json
+      - safe/generated/baseline/abi/libdl.json
+      - safe/generated/baseline/abi/libm.json
+      - safe/generated/baseline/abi/libmvec.json
+      - safe/generated/baseline/abi/libpcprofile.json
+      - safe/generated/baseline/abi/librt.json
+      - safe/generated/baseline/abi/libutil.json
+      - safe/xtask/src/commands/link_compat_smoke.rs
+  - order: 22
+    id: check_09_math_packages
+    type: check
+    bounce_target: impl_09_math_and_aux_dsos
+    required_preexisting_inputs:
+      - original/**
+      - safe/scripts/stage-original-build.sh
+      - safe/scripts/install-safe-repo.sh
+      - safe/generated/baseline/package-files/libc6.json
+      - safe/generated/baseline/package-files/libc-bin.json
+      - safe/generated/baseline/package-files/libc-dev-bin.json
+      - safe/generated/install-manifests/required-packages.json
+      - safe/generated/install-manifests/test-install-root.json
+      - safe/generated/packaging/package-build-manifest.json
+      - safe/upstream-compat/package-scope.toml
+      - safe/generated/baseline/fallback-c-inventory.json
+      - safe/xtask/src/commands/test_package_install.rs
+  - order: 23
+    id: check_09_math_safety
+    type: check
+    bounce_target: impl_09_math_and_aux_dsos
+    required_preexisting_inputs:
+      - safe/generated/baseline/fallback-c-inventory.json
+      - safe/upstream-compat/cve-status.toml
+      - safe/upstream-compat/package-scope.toml
+      - safe/upstream-compat/safety-policy.toml
+      - safe/xtask/src/commands/audit_safety.rs
+  - order: 24
+    id: impl_10_final_fixup_and_audit
+    type: implement
+    bounce_target: null
+    required_preexisting_inputs:
+      - original/**
+      - dependents.json
+      - relevant_cves.json
+      - test-original.sh
+      - safe/scripts/stage-original-build.sh
+      - safe/scripts/build-debs.sh
+      - safe/scripts/install-safe-repo.sh
+      - safe/generated/baseline/link-compat-corpus.json
+      - safe/generated/baseline/test-catalog.json
+      - safe/generated/baseline/test-port-plan.json
+      - safe/generated/baseline/fallback-c-inventory.json
+      - safe/generated/baseline/package-files/*.json
+      - safe/generated/install-manifests/*.json
+      - safe/generated/packaging/package-build-manifest.json
+      - safe/tests/manifest.toml
+      - safe/tests/support/**
+      - safe/tests/support/glibcpp.py
+      - safe/tests/include/**
+      - safe/tests/bits/**
+      - safe/tests/top-level/Makefile
+      - safe/tests/top-level/Makeconfig
+      - safe/tests/top-level/Makerules
+      - safe/tests/test-skeleton.c
+      - safe/tests/c++-types.data
+      - safe/tests/scripts/**
+      - safe/tests/nscd/.gitkeep
+      - safe/tests/po/.gitkeep
+      - safe/tests/manual/.gitkeep
+      - safe/upstream-compat/package-scope.toml
+      - safe/upstream-compat/cve-status.toml
+      - safe/upstream-compat/safety-policy.toml
+  - order: 25
+    id: check_10_workspace_unit_tests
+    type: check
+    bounce_target: impl_10_final_fixup_and_audit
+    required_preexisting_inputs:
+      - safe/Cargo.toml
+      - safe/Cargo.lock
+      - safe/crates/**
+      - safe/xtask/**
+  - order: 26
+    id: check_10_full_abi_link
+    type: check
+    bounce_target: impl_10_final_fixup_and_audit
+    required_preexisting_inputs:
+      - original/**
+      - safe/scripts/stage-original-build.sh
+      - safe/generated/baseline/abi/*.json
+      - safe/generated/version-scripts/*.map
+      - safe/generated/baseline/link-compat-corpus.json
+      - safe/generated/baseline/package-files/libc6-dev.json
+      - safe/xtask/src/commands/link_compat_smoke.rs
+      - safe/xtask/src/commands/check_headers.rs
+  - order: 27
+    id: check_10_full_upstream_tests
+    type: check
+    bounce_target: impl_10_final_fixup_and_audit
+    required_preexisting_inputs:
+      - original/**
+      - safe/scripts/stage-original-build.sh
+      - safe/generated/baseline/test-catalog.json
+      - safe/generated/baseline/test-port-plan.json
+      - safe/tests/manifest.toml
+      - safe/tests/support/**
+      - safe/tests/support/glibcpp.py
+      - safe/tests/include/**
+      - safe/tests/bits/**
+      - safe/tests/top-level/Makefile
+      - safe/tests/top-level/Makeconfig
+      - safe/tests/top-level/Makerules
+      - safe/tests/test-skeleton.c
+      - safe/tests/c++-types.data
+      - safe/tests/scripts/**
+      - safe/tests/nscd/.gitkeep
+      - safe/tests/po/.gitkeep
+      - safe/tests/manual/.gitkeep
+      - safe/xtask/src/commands/check_owned_tests.rs
+      - safe/xtask/src/commands/run_original_tests.rs
+  - order: 28
+    id: check_10_full_packages
+    type: check
+    bounce_target: impl_10_final_fixup_and_audit
+    required_preexisting_inputs:
+      - original/**
+      - safe/scripts/stage-original-build.sh
+      - safe/scripts/install-safe-repo.sh
+      - safe/generated/baseline/package-files/*.json
+      - safe/generated/install-manifests/*.json
+      - safe/generated/packaging/package-build-manifest.json
+      - safe/generated/baseline/fallback-c-inventory.json
+      - safe/upstream-compat/package-scope.toml
+      - safe/upstream-compat/safety-policy.toml
+      - safe/xtask/src/commands/test_package_install.rs
+  - order: 29
+    id: check_10_dependents_dropin
+    type: check
+    bounce_target: impl_10_final_fixup_and_audit
+    required_preexisting_inputs:
+      - original/**
+      - dependents.json
+      - test-original.sh
+      - safe/scripts/stage-original-build.sh
+      - safe/scripts/build-debs.sh
+      - safe/scripts/install-safe-repo.sh
+      - safe/generated/packaging/package-build-manifest.json
+      - safe/generated/install-manifests/required-packages.json
+  - order: 30
+    id: check_10_final_safety
+    type: check
+    bounce_target: impl_10_final_fixup_and_audit
+    required_preexisting_inputs:
+      - safe/generated/baseline/fallback-c-inventory.json
+      - safe/generated/baseline/package-files/*.json
+      - safe/generated/install-manifests/*.json
+      - safe/upstream-compat/package-scope.toml
+      - safe/upstream-compat/cve-status.toml
+      - safe/upstream-compat/safety-policy.toml
+      - safe/xtask/src/commands/audit_safety.rs
