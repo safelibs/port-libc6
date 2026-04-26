@@ -1,0 +1,65 @@
+/* Generated from safe/generated/baseline/abi/ld.so.json */
+
+GLIBC_2.2.5 {
+  global:
+    __libc_stack_end;
+    _dl_mcount;
+    _r_debug;
+};
+
+GLIBC_2.3 {
+  global:
+    __tls_get_addr;
+};
+
+GLIBC_2.4 {
+  global:
+    __stack_chk_guard;
+};
+
+GLIBC_2.34 {
+  global:
+    __rtld_version_placeholder;
+};
+
+GLIBC_2.35 {
+  global:
+    __rseq_flags;
+    __rseq_offset;
+    __rseq_size;
+};
+
+GLIBC_PRIVATE {
+  global:
+    __libc_enable_secure;
+    __nptl_change_stack_perm;
+    __nptl_initial_report_events;
+    __nptl_set_robust_list_avail;
+    __pointer_chk_guard;
+    __tunable_get_val;
+    __tunable_is_initialized;
+    _dl_allocate_tls;
+    _dl_allocate_tls_init;
+    _dl_argv;
+    _dl_audit_preinit;
+    _dl_audit_symbind_alt;
+    _dl_catch_exception;
+    _dl_deallocate_tls;
+    _dl_debug_state;
+    _dl_exception_create;
+    _dl_exception_create_format;
+    _dl_exception_free;
+    _dl_fatal_printf;
+    _dl_find_dso_for_object;
+    _dl_get_tls_static_info;
+    _dl_make_stack_executable;
+    _dl_rtld_di_serinfo;
+    _dl_signal_error;
+    _dl_signal_exception;
+    _dl_starting_up;
+    _dl_x86_get_cpu_features;
+    _rtld_global;
+    _rtld_global_ro;
+  local:
+    *;
+};

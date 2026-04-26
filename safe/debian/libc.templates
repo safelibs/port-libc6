@@ -1,0 +1,42 @@
+Template: glibc/upgrade
+Type: boolean
+Default: true
+Description: Restart NSS-dependent services before upgrading libc?
+ Running services and programs that use NSS may need to be restarted during
+ a libc upgrade so name lookups and authentication continue to work.
+
+Template: glibc/restart-services
+Type: string
+Description: Services to restart for the libc upgrade:
+ Review the space-separated list of init scripts that should be restarted as
+ part of this upgrade.
+
+Template: glibc/restart-failed
+Type: error
+Description: Some services could not be restarted after the libc upgrade
+ One or more services failed to restart automatically. Start them manually
+ after the package upgrade completes.
+
+Template: glibc/disable-screensaver
+Type: error
+Description: Restart xscreensaver or xlockmore before upgrading libc
+ Running sessions of xscreensaver or xlockmore may need to be restarted to
+ keep desktop authentication usable after the upgrade.
+
+Template: libraries/restart-without-asking
+Type: boolean
+Default: false
+Description: Restart affected services automatically during library upgrades?
+ If enabled, service restarts required by library upgrades will proceed
+ without asking for confirmation.
+
+Template: glibc/kernel-too-old
+Type: error
+Description: Kernel must be upgraded before installing this libc build
+ This libc build requires kernel version ${kernel_ver} or later.
+
+Template: glibc/kernel-not-supported
+Type: note
+Description: Kernel version is older than the supported libc baseline
+ This libc build expects kernel version ${kernel_ver} or later. Older
+ kernels may still work but are not part of the supported configuration.

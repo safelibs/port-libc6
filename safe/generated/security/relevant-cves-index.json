@@ -1,0 +1,317 @@
+{
+  "cves": [
+    {
+      "component": "iconv state machine",
+      "confidence": "high",
+      "id": "CVE-2026-4046",
+      "ubuntu_tracker_path": "active/CVE-2026-4046"
+    },
+    {
+      "component": "nss_dns / gethostbyaddr",
+      "confidence": "high",
+      "id": "CVE-2026-4438",
+      "ubuntu_tracker_path": "active/CVE-2026-4438"
+    },
+    {
+      "component": "nss_dns / gethostbyaddr",
+      "confidence": "high",
+      "id": "CVE-2026-4437",
+      "ubuntu_tracker_path": "active/CVE-2026-4437"
+    },
+    {
+      "component": "nscd client / NSS shared cache",
+      "confidence": "medium",
+      "id": "CVE-2026-3904",
+      "ubuntu_tracker_path": "retired/CVE-2026-3904"
+    },
+    {
+      "component": "getrandom / arc4random",
+      "confidence": "medium",
+      "id": "CVE-2025-0577",
+      "ubuntu_tracker_path": "retired/CVE-2025-0577"
+    },
+    {
+      "component": "ld.so / static setuid dlopen path handling",
+      "confidence": "high",
+      "id": "CVE-2025-4802",
+      "ubuntu_tracker_path": "retired/CVE-2025-4802"
+    },
+    {
+      "component": "getrandom on powerpc",
+      "confidence": "medium",
+      "id": "CVE-2024-12455",
+      "ubuntu_tracker_path": "retired/CVE-2024-12455"
+    },
+    {
+      "component": "fnmatch",
+      "confidence": "high",
+      "id": "CVE-2015-20109",
+      "ubuntu_tracker_path": "retired/CVE-2015-20109"
+    },
+    {
+      "component": "crypt / sha256crypt / sha512crypt",
+      "confidence": "medium",
+      "id": "CVE-2016-20013",
+      "ubuntu_tracker_path": "retired/CVE-2016-20013"
+    },
+    {
+      "component": "realpath",
+      "confidence": "high",
+      "id": "CVE-2021-3998",
+      "ubuntu_tracker_path": "retired/CVE-2021-3998"
+    },
+    {
+      "component": "iconv state machine",
+      "confidence": "high",
+      "id": "CVE-2020-27618",
+      "ubuntu_tracker_path": "active/CVE-2020-27618"
+    },
+    {
+      "component": "iconv state machine",
+      "confidence": "high",
+      "id": "CVE-2021-3326",
+      "ubuntu_tracker_path": "active/CVE-2021-3326"
+    },
+    {
+      "component": "iconv state machine",
+      "confidence": "high",
+      "id": "CVE-2020-29562",
+      "ubuntu_tracker_path": "retired/CVE-2020-29562"
+    },
+    {
+      "component": "ld.so",
+      "confidence": "high",
+      "id": "CVE-2019-19126",
+      "ubuntu_tracker_path": "retired/CVE-2019-19126"
+    },
+    {
+      "component": "regex engine",
+      "confidence": "medium",
+      "id": "CVE-2018-20796",
+      "ubuntu_tracker_path": "retired/CVE-2018-20796"
+    },
+    {
+      "component": "regex compiler",
+      "confidence": "high",
+      "id": "CVE-2009-5155",
+      "ubuntu_tracker_path": "active/CVE-2009-5155"
+    },
+    {
+      "component": "memcmp x32",
+      "confidence": "high",
+      "id": "CVE-2019-7309",
+      "ubuntu_tracker_path": "retired/CVE-2019-7309"
+    },
+    {
+      "component": "getaddrinfo numeric host parsing",
+      "confidence": "high",
+      "id": "CVE-2016-10739",
+      "ubuntu_tracker_path": "active/CVE-2016-10739"
+    },
+    {
+      "component": "getaddrinfo / if_nametoindex",
+      "confidence": "high",
+      "id": "CVE-2018-19591",
+      "ubuntu_tracker_path": "retired/CVE-2018-19591"
+    },
+    {
+      "component": "ld.so RPATH/RUNPATH",
+      "confidence": "high",
+      "id": "CVE-2017-16997",
+      "ubuntu_tracker_path": "retired/CVE-2017-16997"
+    },
+    {
+      "component": "stub resolver",
+      "confidence": "high",
+      "id": "CVE-2017-12132",
+      "ubuntu_tracker_path": "active/CVE-2017-12132"
+    },
+    {
+      "component": "regex engine",
+      "confidence": "high",
+      "id": "CVE-2015-8985",
+      "ubuntu_tracker_path": "active/CVE-2015-8985"
+    },
+    {
+      "component": "makecontext / unwinder interop",
+      "confidence": "high",
+      "id": "CVE-2016-6323",
+      "ubuntu_tracker_path": "retired/CVE-2016-6323"
+    },
+    {
+      "component": "strftime",
+      "confidence": "high",
+      "id": "CVE-2015-8776",
+      "ubuntu_tracker_path": "retired/CVE-2015-8776"
+    },
+    {
+      "component": "ld.so",
+      "confidence": "high",
+      "id": "CVE-2015-8777",
+      "ubuntu_tracker_path": "retired/CVE-2015-8777"
+    },
+    {
+      "component": "NSS files backend",
+      "confidence": "high",
+      "id": "CVE-2014-8121",
+      "ubuntu_tracker_path": "retired/CVE-2014-8121"
+    },
+    {
+      "component": "nss_dns / getnetbyname",
+      "confidence": "high",
+      "id": "CVE-2014-9402",
+      "ubuntu_tracker_path": "retired/CVE-2014-9402"
+    },
+    {
+      "component": "wordexp",
+      "confidence": "high",
+      "id": "CVE-2014-7817",
+      "ubuntu_tracker_path": "retired/CVE-2014-7817"
+    },
+    {
+      "component": "locale path handling",
+      "confidence": "high",
+      "id": "CVE-2014-0475",
+      "ubuntu_tracker_path": "retired/CVE-2014-0475"
+    },
+    {
+      "component": "PTR_MANGLE / pointer guard",
+      "confidence": "high",
+      "id": "CVE-2013-4788",
+      "ubuntu_tracker_path": "retired/CVE-2013-4788"
+    },
+    {
+      "component": "sunrpc svc_run",
+      "confidence": "medium",
+      "id": "CVE-2011-4609",
+      "ubuntu_tracker_path": "retired/CVE-2011-4609"
+    },
+    {
+      "component": "addmntent",
+      "confidence": "high",
+      "id": "CVE-2011-1089",
+      "ubuntu_tracker_path": "retired/CVE-2011-1089"
+    },
+    {
+      "component": "ld.so RPATH",
+      "confidence": "high",
+      "id": "CVE-2011-1658",
+      "ubuntu_tracker_path": "retired/CVE-2011-1658"
+    },
+    {
+      "component": "glob",
+      "confidence": "medium",
+      "id": "CVE-2010-4756",
+      "ubuntu_tracker_path": "retired/CVE-2010-4756"
+    },
+    {
+      "component": "regex compiler",
+      "confidence": "medium",
+      "id": "CVE-2010-4052",
+      "ubuntu_tracker_path": "retired/CVE-2010-4052"
+    },
+    {
+      "component": "regex compiler",
+      "confidence": "medium",
+      "id": "CVE-2010-4051",
+      "ubuntu_tracker_path": "retired/CVE-2010-4051"
+    },
+    {
+      "component": "ld.so / LD_AUDIT",
+      "confidence": "high",
+      "id": "CVE-2010-3856",
+      "ubuntu_tracker_path": "retired/CVE-2010-3856"
+    },
+    {
+      "component": "ld.so / LD_AUDIT",
+      "confidence": "high",
+      "id": "CVE-2010-3847",
+      "ubuntu_tracker_path": "retired/CVE-2010-3847"
+    },
+    {
+      "component": "mntent encoding",
+      "confidence": "high",
+      "id": "CVE-2010-0296",
+      "ubuntu_tracker_path": "retired/CVE-2010-0296"
+    },
+    {
+      "component": "nss_nis / getpwnam",
+      "confidence": "high",
+      "id": "CVE-2010-0015",
+      "ubuntu_tracker_path": "retired/CVE-2010-0015"
+    }
+  ],
+  "metadata": {
+    "binary_package": "libc6",
+    "excluded_examples": [
+      "nscd daemon-only crashes and memory-corruption bugs",
+      "buffer-overflow / out-of-bounds / use-after-free issues in iconv, malloc, syslog, resolver, printf, glob, and loader code",
+      "tool-only issues in catchsegv, locale, ldd, pt_chown, and the standalone iconv command"
+    ],
+    "generated_at_utc": "2026-04-08T00:54:57.302890Z",
+    "generated_from": "/home/yans/code/safelibs/ported/libc6/all_cves.json",
+    "included_confidence_counts": {
+      "high": 31,
+      "medium": 9
+    },
+    "included_cve_count": 40,
+    "included_ids": [
+      "CVE-2026-4046",
+      "CVE-2026-4438",
+      "CVE-2026-4437",
+      "CVE-2026-3904",
+      "CVE-2025-0577",
+      "CVE-2025-4802",
+      "CVE-2024-12455",
+      "CVE-2015-20109",
+      "CVE-2016-20013",
+      "CVE-2021-3998",
+      "CVE-2020-27618",
+      "CVE-2021-3326",
+      "CVE-2020-29562",
+      "CVE-2019-19126",
+      "CVE-2018-20796",
+      "CVE-2009-5155",
+      "CVE-2019-7309",
+      "CVE-2016-10739",
+      "CVE-2018-19591",
+      "CVE-2017-16997",
+      "CVE-2017-12132",
+      "CVE-2015-8985",
+      "CVE-2016-6323",
+      "CVE-2015-8776",
+      "CVE-2015-8777",
+      "CVE-2014-8121",
+      "CVE-2014-9402",
+      "CVE-2014-7817",
+      "CVE-2014-0475",
+      "CVE-2013-4788",
+      "CVE-2011-4609",
+      "CVE-2011-1089",
+      "CVE-2011-1658",
+      "CVE-2010-4756",
+      "CVE-2010-4052",
+      "CVE-2010-4051",
+      "CVE-2010-3856",
+      "CVE-2010-3847",
+      "CVE-2010-0296",
+      "CVE-2010-0015"
+    ],
+    "ordering_rule": "Entries are sorted by published date descending from all_cves.json; CVE ID year is not used because some older bugs received CVE publication dates later.",
+    "reviewed_cve_count": 164,
+    "selection_goal": "Identify non-memory-corruption CVEs from the libc6/glibc corpus whose root causes could survive a Rust rewrite.",
+    "selection_rules": [
+      "Included semantic, parser, state-machine, privilege-boundary, entropy, concurrency, hardening, ABI, and resource-management bugs.",
+      "Excluded primary memory-corruption and memory-safety CVEs such as buffer overflows, out-of-bounds access, use-after-free, double free, heap corruption, and similar bugs that Rust safe code directly targets.",
+      "Excluded CVEs limited to helper tools or daemons outside the likely libc6 Rust port, such as the nscd daemon, pt_chown, locale/ldd/catchsegv, and the standalone iconv utility, unless the issue touched library-side runtime code.",
+      "Retained a small number of disputed or release-not-affected CVEs when they still describe a bug class that a Rust reimplementation could plausibly reproduce; such caveats are recorded per entry."
+    ],
+    "selection_scope": [
+      "Core libc APIs and runtime behavior.",
+      "Dynamic loader and secure-exec behavior.",
+      "NSS, resolver, regex, glob, wordexp, iconv, crypt, and related library-side helpers.",
+      "Library-side nscd client behavior when it is part of libc call paths."
+    ],
+    "source_package": "glibc"
+  }
+}

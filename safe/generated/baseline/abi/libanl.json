@@ -1,0 +1,44 @@
+{
+  "dso_id": "libanl",
+  "primary_oracle": "build/resolv/libanl.so",
+  "auxiliary_oracles": [],
+  "installed_paths": [
+    "/usr/lib64/libanl.so",
+    "/usr/lib64/libanl.so.1"
+  ],
+  "build_id": "70b4bafa948cd28d5239e773cf48c6d34a48bba1",
+  "soname": "libanl.so.1",
+  "needed": [
+    "libc.so.6"
+  ],
+  "exported_symbols": [
+    "GLIBC_2.2.5",
+    "Name",
+    "__libanl_version_placeholder@GLIBC_2.2.5"
+  ],
+  "map_files": [
+    {
+      "kind": "version_script",
+      "path": "build/libanl.map",
+      "sha256": "46a4c5b9c170a570327b1984b63c67b7c244d5b16dff08e83ff8f40c2470d38b",
+      "versions": {
+        "GLIBC_2.2.5": [
+          "__libanl_version_placeholder"
+        ]
+      }
+    }
+  ],
+  "symlist_files": [
+    {
+      "entries": [
+        {
+          "kind": "F",
+          "symbol": "__libanl_version_placeholder",
+          "version": "GLIBC_2.2.5"
+        }
+      ],
+      "path": "build/resolv/libanl.symlist",
+      "sha256": "a34e4744a0340040b5fd428daa17f829825b19fac8b2d4b9b5dd3fbc390bd783"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+/target/
+/work/
+/upstream-tests/build/
+**/__pycache__/
+**/*.pyc

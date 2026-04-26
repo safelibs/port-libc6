@@ -1,0 +1,32 @@
+{
+  "entries": [
+    {
+      "asset_kind": "rust_target",
+      "executable": true,
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "package": "libc-dev-bin",
+      "path": "/usr/bin/gencat",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "source_origin": "build_testroot",
+      "source_path": "build/testroot.pristine/usr/bin/gencat",
+      "symlink_target": null,
+      "verification": "dev-and-time-tools"
+    }
+  ],
+  "metadata": {
+    "generated_from": [
+      "build/testroot.pristine",
+      "original/debian/control",
+      "original/debian/rules",
+      "original/debian/debhelper.in/*",
+      "original/debian/local/**",
+      "original/debian/script.in/**",
+      "original/debian/rules.d/debhelper.mk",
+      "original/debian/sysdeps/linux.mk"
+    ],
+    "package": "libc-dev-bin",
+    "phase": "impl_01_safe_bootstrap",
+    "scope": "required_package"
+  }
+}

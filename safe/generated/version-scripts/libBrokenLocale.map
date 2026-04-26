@@ -1,0 +1,8 @@
+/* Generated from safe/generated/baseline/abi/libBrokenLocale.json */
+
+GLIBC_2.2.5 {
+  global:
+    __ctype_get_mb_cur_max;
+  local:
+    *;
+};

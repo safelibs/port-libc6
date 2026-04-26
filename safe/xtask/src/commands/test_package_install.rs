@@ -1,0 +1,254 @@
+use crate::common::{repo_relative_path, repo_root, safe_root};
+use anyhow::{bail, Context, Result};
+use clap::Args as ClapArgs;
+use std::path::{Path, PathBuf};
+use std::process::Command;
+
+#[derive(ClapArgs, Debug)]
+pub struct Args {
+    #[arg(long, default_value = "ubuntu:24.04")]
+    pub docker_image: String,
+    #[arg(long, default_value = "work/debs")]
+    pub deb_dir: PathBuf,
+    #[arg(long, default_value = "basic-required-packages")]
+    pub smoke_set: String,
+}
+
+pub fn run(args: Args) -> Result<()> {
+    if args.smoke_set != "basic-required-packages"
+        && args.smoke_set != "loader-tools"
+        && args.smoke_set != "runtime-tools"
+    {
+        bail!(
+            "unsupported smoke set {}; expected basic-required-packages, loader-tools, or runtime-tools",
+            args.smoke_set
+        );
+    }
+
+    let deb_dir = resolve_safe_path(&args.deb_dir);
+    if !deb_dir.exists() {
+        bail!("missing deb directory {}", deb_dir.display());
+    }
+    let deb_dir_rel = repo_relative_path(&deb_dir)?;
+
+    let script = r#"set -euo pipefail
+deb_dir_rel=$SAFE_DEB_DIR_REL
+safe_version=$SAFE_VERSION
+
+log() {
+  printf '\n==> %s\n' "$*"
+}
+
+verify_safe_provenance() {
+  local pkg version arch policy
+  for pkg in libc6 libc6-dev libc-dev-bin libc-bin libc6-dbg locales nscd; do
+    version=$(dpkg-query -W -f='${Version}' "$pkg")
+    arch=$(dpkg-query -W -f='${Architecture}' "$pkg")
+    if [ "$version" != "$safe_version" ]; then
+      printf 'unexpected version for %s: %s (expected %s)\n' "$pkg" "$version" "$safe_version" >&2
+      return 1
+    fi
+    policy=$(apt-cache policy "$pkg")
+    printf '%s\n' "$policy"
+    if ! printf '%s\n' "$policy" | grep -Fq "file:/tmp/safelibs-apt-repo"; then
+      printf 'apt-cache policy for %s does not reference the local safe repo\n' "$pkg" >&2
+      return 1
+    fi
+    printf 'selected %s %s (%s)\n' "$pkg" "$version" "$arch"
+  done
+}
+
+smoke_basic_required_packages() {
+  log "Verifying required package payloads from the committed install manifest"
+  jq -r '.entries[] | select(.shipped_status == "shipped") | [.package, .path] | @tsv' \
+    /workspace/safe/generated/install-manifests/required-packages.json | \
+  while IFS=$'\t' read -r pkg path; do
+    if [ ! -e "$path" ] && [ ! -L "$path" ]; then
+      printf 'missing installed payload for %s: %s\n' "$pkg" "$path" >&2
+      exit 1
+    fi
+  done
+
+  log "Checking basic required-package entrypoints"
+  for path in \
+    /usr/bin/gencat \
+    /usr/bin/getconf \
+    /usr/bin/getent \
+    /usr/bin/iconv \
+    /usr/bin/ld.so \
+    /usr/bin/ldd \
+    /usr/bin/locale \
+    /usr/bin/localedef \
+    /usr/bin/pldd \
+    /usr/bin/tzselect \
+    /usr/bin/zdump \
+    /usr/sbin/iconvconfig \
+    /usr/sbin/ldconfig \
+    /usr/sbin/zic \
+    /usr/sbin/locale-gen \
+    /usr/sbin/update-locale \
+    /usr/sbin/validlocale \
+    /usr/share/locales/install-language-pack \
+    /usr/share/locales/remove-language-pack \
+    /usr/sbin/nscd; do
+    if [ ! -e "$path" ]; then
+      printf 'missing entrypoint %s\n' "$path" >&2
+      exit 1
+    fi
+  done
+
+  log "Checking detached debug companions"
+  jq -r '.entries[] | [.path, .source_path] | @tsv' \
+    /workspace/safe/generated/baseline/package-files/libc6-dbg.json | \
+  while IFS=$'\t' read -r debug_path source_path; do
+    local build_id expected
+    if [ ! -f "$debug_path" ]; then
+      printf 'missing debug companion %s\n' "$debug_path" >&2
+      exit 1
+    fi
+    build_id=$(readelf -n "$source_path" | awk '/Build ID:/ { print $3; exit }')
+    expected="/usr/lib/debug/.build-id/${build_id:0:2}/${build_id:2}.debug"
+    if [ "$expected" != "$debug_path" ]; then
+      printf 'debug manifest mismatch for %s: expected %s got %s\n' \
+        "$source_path" "$expected" "$debug_path" >&2
+      exit 1
+    fi
+  done
+
+  if [ ! -e /etc/nsswitch.conf ]; then
+    printf 'libc-bin postinst did not leave /etc/nsswitch.conf in place\n' >&2
+    exit 1
+  fi
+  if [ ! -e /etc/default/locale ]; then
+    printf 'locales postinst did not create /etc/default/locale\n' >&2
+    exit 1
+  fi
+}
+
+smoke_loader_tools() {
+  log "Verifying loader-tool payloads from the committed install manifest"
+  jq -r '.entries[] | select(.verification == "loader-tools" and .shipped_status == "shipped") | [.package, .path] | @tsv' \
+    /workspace/safe/generated/install-manifests/required-packages.json | \
+  while IFS=$'\t' read -r pkg path; do
+    if [ ! -e "$path" ] && [ ! -L "$path" ]; then
+      printf 'missing installed loader-tool payload for %s: %s\n' "$pkg" "$path" >&2
+      exit 1
+    fi
+  done
+
+  log "Checking loader-tool entrypoints"
+  test -x /usr/bin/ld.so
+  test -x /usr/bin/ldd
+  test -x /usr/sbin/ldconfig
+  test -x /usr/libexec/safelibs/loader-tools/ld.so.backend
+  test -x /usr/libexec/safelibs/loader-tools/ldconfig.backend
+
+  /usr/bin/ld.so --help >/tmp/ld-so-help.txt
+  /usr/bin/ldd --version >/tmp/ldd-version.txt
+  /usr/bin/ldd /bin/true >/tmp/ldd-output.txt
+  /usr/sbin/ldconfig -p >/tmp/ldconfig-cache.txt
+
+  if [ ! -s /tmp/ldd-version.txt ] || [ ! -s /tmp/ldd-output.txt ]; then
+    printf 'ldd smoke output was empty\n' >&2
+    exit 1
+  fi
+  if ! grep -q 'libs found in cache' /tmp/ldconfig-cache.txt; then
+    printf 'ldconfig smoke output did not include cache summary\n' >&2
+    exit 1
+  fi
+}
+
+smoke_runtime_tools() {
+  log "Verifying runtime-tool payloads from the committed install manifest"
+  jq -r '.entries[] | select(.verification == "runtime-tools" and .shipped_status == "shipped") | [.package, .path] | @tsv' \
+    /workspace/safe/generated/install-manifests/required-packages.json | \
+  while IFS=$'\t' read -r pkg path; do
+    if [ ! -e "$path" ] && [ ! -L "$path" ]; then
+      printf 'missing installed runtime-tool payload for %s: %s\n' "$pkg" "$path" >&2
+      exit 1
+    fi
+  done
+
+  log "Checking runtime-tool entrypoints"
+  test -x /usr/bin/pldd
+  test -x /usr/libexec/safelibs/runtime-tools/pldd.backend
+  if [ -e /usr/lib/pt_chown ]; then
+    printf '/usr/lib/pt_chown should remain absent on amd64\n' >&2
+    exit 1
+  fi
+}
+
+log "Updating base package indexes"
+apt-get update
+
+log "Installing bootstrap tools"
+apt-get install -y --no-install-recommends ca-certificates jq dpkg-dev binutils file debconf
+
+log "Configuring the local safe apt repository"
+/workspace/safe/scripts/install-safe-repo.sh "$deb_dir_rel"
+
+log "Installing the required safe package set"
+apt-get install -y --no-install-recommends --allow-downgrades \
+  libc6 libc6-dev libc6-dbg libc-bin libc-dev-bin locales nscd
+
+verify_safe_provenance
+case "${SAFE_SMOKE_SET}" in
+  basic-required-packages)
+    smoke_basic_required_packages
+    ;;
+  loader-tools)
+    smoke_loader_tools
+    ;;
+  runtime-tools)
+    smoke_runtime_tools
+    ;;
+  *)
+    printf 'unsupported smoke set in container: %s\n' "${SAFE_SMOKE_SET}" >&2
+    exit 1
+    ;;
+esac
+"#;
+
+    let output = Command::new("docker")
+        .arg("run")
+        .arg("--rm")
+        .arg("-i")
+        .arg("--privileged")
+        .arg("-e")
+        .arg("DEBIAN_FRONTEND=noninteractive")
+        .arg("-e")
+        .arg(format!("SAFE_DEB_DIR_REL={deb_dir_rel}"))
+        .arg("-e")
+        .arg("SAFE_VERSION=2.39-0ubuntu8.7+safelibs03")
+        .arg("-e")
+        .arg(format!("SAFE_SMOKE_SET={}", args.smoke_set))
+        .arg("-v")
+        .arg(format!("{}:/workspace:ro", repo_root().display()))
+        .arg("-w")
+        .arg("/workspace")
+        .arg(&args.docker_image)
+        .arg("bash")
+        .arg("-lc")
+        .arg(script)
+        .output()
+        .with_context(|| format!("failed to start docker image {}", args.docker_image))?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        bail!(
+            "test-package-install failed ({}):\n{}\n{}",
+            output.status,
+            stdout,
+            stderr
+        );
+    }
+    Ok(())
+}
+
+fn resolve_safe_path(path: &Path) -> PathBuf {
+    if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        safe_root().join(path)
+    }
+}

@@ -1,0 +1,27 @@
+{
+  "dso_id": "libmemusage",
+  "primary_oracle": "build/malloc/libmemusage.so",
+  "auxiliary_oracles": [],
+  "installed_paths": [
+    "/usr/lib64/libmemusage.so"
+  ],
+  "build_id": "9306b8e8fbe805e76476be6694a7a409f2a45d40",
+  "soname": "libmemusage.so",
+  "needed": [
+    "libc.so.6",
+    "ld-linux-x86-64.so.2"
+  ],
+  "exported_symbols": [
+    "Name",
+    "calloc",
+    "free",
+    "malloc",
+    "mmap",
+    "mmap64",
+    "mremap",
+    "munmap",
+    "realloc"
+  ],
+  "map_files": [],
+  "symlist_files": []
+}

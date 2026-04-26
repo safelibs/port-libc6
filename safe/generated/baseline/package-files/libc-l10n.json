@@ -1,0 +1,18 @@
+{
+  "entries": [],
+  "metadata": {
+    "generated_from": [
+      "build/testroot.pristine",
+      "original/debian/control",
+      "original/debian/rules",
+      "original/debian/debhelper.in/*",
+      "original/debian/local/**",
+      "original/debian/script.in/**",
+      "original/debian/rules.d/debhelper.mk",
+      "original/debian/sysdeps/linux.mk"
+    ],
+    "package": "libc-l10n",
+    "phase": "impl_01_safe_bootstrap",
+    "scope": "deferred_package"
+  }
+}

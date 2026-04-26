@@ -1,0 +1,323 @@
+{
+  "dso_id": "libthread_db",
+  "primary_oracle": "build/nptl_db/libthread_db.so",
+  "auxiliary_oracles": [],
+  "installed_paths": [
+    "/usr/lib64/libthread_db.so",
+    "/usr/lib64/libthread_db.so.1"
+  ],
+  "build_id": "21d2c77483653705d3ae420cac2110820a09b2e7",
+  "soname": "libthread_db.so.1",
+  "needed": [
+    "libc.so.6"
+  ],
+  "exported_symbols": [
+    "GLIBC_2.2.5",
+    "GLIBC_2.3",
+    "GLIBC_2.3.3",
+    "Name",
+    "td_init@@GLIBC_2.2.5",
+    "td_log@@GLIBC_2.2.5",
+    "td_symbol_list@@GLIBC_2.2.5",
+    "td_ta_clear_event@@GLIBC_2.2.5",
+    "td_ta_delete@@GLIBC_2.2.5",
+    "td_ta_enable_stats@@GLIBC_2.2.5",
+    "td_ta_event_addr@@GLIBC_2.2.5",
+    "td_ta_event_getmsg@@GLIBC_2.2.5",
+    "td_ta_get_nthreads@@GLIBC_2.2.5",
+    "td_ta_get_ph@@GLIBC_2.2.5",
+    "td_ta_get_stats@@GLIBC_2.2.5",
+    "td_ta_map_id2thr@@GLIBC_2.2.5",
+    "td_ta_map_lwp2thr@@GLIBC_2.2.5",
+    "td_ta_new@@GLIBC_2.2.5",
+    "td_ta_reset_stats@@GLIBC_2.2.5",
+    "td_ta_set_event@@GLIBC_2.2.5",
+    "td_ta_setconcurrency@@GLIBC_2.2.5",
+    "td_ta_thr_iter@@GLIBC_2.2.5",
+    "td_ta_tsd_iter@@GLIBC_2.2.5",
+    "td_thr_clear_event@@GLIBC_2.2.5",
+    "td_thr_dbresume@@GLIBC_2.2.5",
+    "td_thr_dbsuspend@@GLIBC_2.2.5",
+    "td_thr_event_enable@@GLIBC_2.2.5",
+    "td_thr_event_getmsg@@GLIBC_2.2.5",
+    "td_thr_get_info@@GLIBC_2.2.5",
+    "td_thr_getfpregs@@GLIBC_2.2.5",
+    "td_thr_getgregs@@GLIBC_2.2.5",
+    "td_thr_getxregs@@GLIBC_2.2.5",
+    "td_thr_getxregsize@@GLIBC_2.2.5",
+    "td_thr_set_event@@GLIBC_2.2.5",
+    "td_thr_setfpregs@@GLIBC_2.2.5",
+    "td_thr_setgregs@@GLIBC_2.2.5",
+    "td_thr_setprio@@GLIBC_2.2.5",
+    "td_thr_setsigpending@@GLIBC_2.2.5",
+    "td_thr_setxregs@@GLIBC_2.2.5",
+    "td_thr_sigsetmask@@GLIBC_2.2.5",
+    "td_thr_tls_get_addr@@GLIBC_2.3",
+    "td_thr_tlsbase@@GLIBC_2.3.3",
+    "td_thr_tsd@@GLIBC_2.2.5",
+    "td_thr_validate@@GLIBC_2.2.5"
+  ],
+  "map_files": [
+    {
+      "kind": "version_script",
+      "path": "build/libthread_db.map",
+      "sha256": "f30e7e23fae1007ba18c0a39e54c34c3c7b4562c4fc6b903ad127dfe117f0eec",
+      "versions": {
+        "GLIBC_2.2.5": [
+          "td_init",
+          "td_log",
+          "td_ta_clear_event",
+          "td_ta_delete",
+          "td_ta_enable_stats",
+          "td_symbol_list",
+          "td_ta_event_addr",
+          "td_ta_event_getmsg",
+          "td_ta_get_nthreads",
+          "td_ta_get_ph",
+          "td_ta_get_stats",
+          "td_ta_map_id2thr",
+          "td_ta_map_lwp2thr",
+          "td_ta_new",
+          "td_ta_reset_stats",
+          "td_ta_set_event",
+          "td_ta_setconcurrency",
+          "td_ta_thr_iter",
+          "td_ta_tsd_iter",
+          "td_thr_clear_event",
+          "td_thr_dbresume",
+          "td_thr_dbsuspend",
+          "td_thr_event_enable",
+          "td_thr_event_getmsg",
+          "td_thr_get_info",
+          "td_thr_getfpregs",
+          "td_thr_getgregs",
+          "td_thr_getxregs",
+          "td_thr_getxregsize",
+          "td_thr_set_event",
+          "td_thr_setfpregs",
+          "td_thr_setgregs",
+          "td_thr_setprio",
+          "td_thr_setsigpending",
+          "td_thr_setxregs",
+          "td_thr_sigsetmask",
+          "td_thr_tsd",
+          "td_thr_validate"
+        ],
+        "GLIBC_2.3": [
+          "td_thr_tls_get_addr"
+        ],
+        "GLIBC_2.3.3": [
+          "td_thr_tlsbase"
+        ]
+      }
+    }
+  ],
+  "symlist_files": [
+    {
+      "entries": [
+        {
+          "kind": "F",
+          "symbol": "td_init",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_log",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_symbol_list",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_ta_clear_event",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_ta_delete",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_ta_enable_stats",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_ta_event_addr",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_ta_event_getmsg",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_ta_get_nthreads",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_ta_get_ph",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_ta_get_stats",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_ta_map_id2thr",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_ta_map_lwp2thr",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_ta_new",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_ta_reset_stats",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_ta_set_event",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_ta_setconcurrency",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_ta_thr_iter",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_ta_tsd_iter",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_clear_event",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_dbresume",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_dbsuspend",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_event_enable",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_event_getmsg",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_get_info",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_getfpregs",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_getgregs",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_getxregs",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_getxregsize",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_set_event",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_setfpregs",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_setgregs",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_setprio",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_setsigpending",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_setxregs",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_sigsetmask",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_tsd",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_validate",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_tls_get_addr",
+          "version": "GLIBC_2.3"
+        },
+        {
+          "kind": "F",
+          "symbol": "td_thr_tlsbase",
+          "version": "GLIBC_2.3.3"
+        }
+      ],
+      "path": "build/nptl_db/libthread_db.symlist",
+      "sha256": "733b8375573f1ad821c72739c66b34c88e708303ac3e31f636e163c5f021a995"
+    }
+  ]
+}

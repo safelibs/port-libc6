@@ -1,0 +1,20 @@
+{
+  "dso_id": "libpcprofile",
+  "primary_oracle": "build/debug/libpcprofile.so",
+  "auxiliary_oracles": [],
+  "installed_paths": [
+    "/usr/lib64/libpcprofile.so"
+  ],
+  "build_id": "3eaa07800161b32dfab965349c86eabc1b6f0d66",
+  "soname": "libpcprofile.so",
+  "needed": [
+    "libc.so.6"
+  ],
+  "exported_symbols": [
+    "Name",
+    "__cyg_profile_func_enter",
+    "__cyg_profile_func_exit"
+  ],
+  "map_files": [],
+  "symlist_files": []
+}

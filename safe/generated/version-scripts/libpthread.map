@@ -1,0 +1,68 @@
+/* Generated from safe/generated/baseline/abi/libpthread.json */
+
+GLIBC_2.2.5 {
+  global:
+    __libpthread_version_placeholder;
+    __libpthread_version_placeholder;
+    __libpthread_version_placeholder;
+    __libpthread_version_placeholder;
+    __libpthread_version_placeholder;
+    __libpthread_version_placeholder;
+};
+
+GLIBC_2.2.6 {
+  global:
+    __libpthread_version_placeholder;
+};
+
+GLIBC_2.3.2 {
+  global:
+    __libpthread_version_placeholder;
+};
+
+GLIBC_2.3.3 {
+  global:
+    __libpthread_version_placeholder;
+};
+
+GLIBC_2.3.4 {
+  global:
+    __libpthread_version_placeholder;
+};
+
+GLIBC_2.4 {
+  global:
+    __libpthread_version_placeholder;
+};
+
+GLIBC_2.11 {
+  global:
+    __libpthread_version_placeholder;
+};
+
+GLIBC_2.12 {
+  global:
+    __libpthread_version_placeholder;
+};
+
+GLIBC_2.18 {
+  global:
+    __libpthread_version_placeholder;
+};
+
+GLIBC_2.28 {
+  global:
+    __libpthread_version_placeholder;
+};
+
+GLIBC_2.30 {
+  global:
+    __libpthread_version_placeholder;
+};
+
+GLIBC_2.31 {
+  global:
+    __libpthread_version_placeholder;
+  local:
+    *;
+};

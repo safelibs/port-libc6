@@ -1,0 +1,898 @@
+{
+  "dso_id": "libnsl",
+  "primary_oracle": "build/nis/libnsl.so",
+  "auxiliary_oracles": [],
+  "installed_paths": [
+    "/usr/lib64/libnsl.so.1"
+  ],
+  "build_id": "a0006e4dcd86c3254a5db89a2227e341d6f58ef9",
+  "soname": "libnsl.so.1",
+  "needed": [
+    "libc.so.6"
+  ],
+  "exported_symbols": [
+    "GLIBC_2.2.5",
+    "GLIBC_PRIVATE",
+    "Name",
+    "__create_ib_request@GLIBC_PRIVATE",
+    "__do_niscall3@GLIBC_PRIVATE",
+    "__follow_path@GLIBC_PRIVATE",
+    "__free_fdresult@GLIBC_2.2.5",
+    "__nis_default_access@GLIBC_2.2.5",
+    "__nis_default_group@GLIBC_2.2.5",
+    "__nis_default_owner@GLIBC_2.2.5",
+    "__nis_default_ttl@GLIBC_2.2.5",
+    "__nis_finddirectory@GLIBC_2.2.5",
+    "__nis_hash@GLIBC_2.2.5",
+    "__nisbind_connect@GLIBC_2.2.5",
+    "__nisbind_create@GLIBC_2.2.5",
+    "__nisbind_destroy@GLIBC_2.2.5",
+    "__nisbind_next@GLIBC_2.2.5",
+    "__prepare_niscall@GLIBC_PRIVATE",
+    "__yp_check@GLIBC_2.2.5",
+    "_xdr_ib_request@GLIBC_PRIVATE",
+    "_xdr_nis_result@GLIBC_PRIVATE",
+    "nis_add@GLIBC_2.2.5",
+    "nis_add_entry@GLIBC_2.2.5",
+    "nis_addmember@GLIBC_2.2.5",
+    "nis_checkpoint@GLIBC_2.2.5",
+    "nis_clone_directory@GLIBC_2.2.5",
+    "nis_clone_object@GLIBC_2.2.5",
+    "nis_clone_result@GLIBC_2.2.5",
+    "nis_creategroup@GLIBC_2.2.5",
+    "nis_destroy_object@GLIBC_2.2.5",
+    "nis_destroygroup@GLIBC_2.2.5",
+    "nis_dir_cmp@GLIBC_2.2.5",
+    "nis_domain_of@GLIBC_2.2.5",
+    "nis_domain_of_r@GLIBC_2.2.5",
+    "nis_first_entry@GLIBC_2.2.5",
+    "nis_free_directory@GLIBC_2.2.5",
+    "nis_free_object@GLIBC_2.2.5",
+    "nis_free_request@GLIBC_2.2.5",
+    "nis_freenames@GLIBC_2.2.5",
+    "nis_freeresult@GLIBC_2.2.5",
+    "nis_freeservlist@GLIBC_2.2.5",
+    "nis_freetags@GLIBC_2.2.5",
+    "nis_getnames@GLIBC_2.2.5",
+    "nis_getservlist@GLIBC_2.2.5",
+    "nis_ismember@GLIBC_2.2.5",
+    "nis_leaf_of@GLIBC_2.2.5",
+    "nis_leaf_of_r@GLIBC_2.2.5",
+    "nis_lerror@GLIBC_2.2.5",
+    "nis_list@GLIBC_2.2.5",
+    "nis_local_directory@GLIBC_2.2.5",
+    "nis_local_group@GLIBC_2.2.5",
+    "nis_local_host@GLIBC_2.2.5",
+    "nis_local_principal@GLIBC_2.2.5",
+    "nis_lookup@GLIBC_2.2.5",
+    "nis_mkdir@GLIBC_2.2.5",
+    "nis_modify@GLIBC_2.2.5",
+    "nis_modify_entry@GLIBC_2.2.5",
+    "nis_name_of@GLIBC_2.2.5",
+    "nis_name_of_r@GLIBC_2.2.5",
+    "nis_next_entry@GLIBC_2.2.5",
+    "nis_perror@GLIBC_2.2.5",
+    "nis_ping@GLIBC_2.2.5",
+    "nis_print_directory@GLIBC_2.2.5",
+    "nis_print_entry@GLIBC_2.2.5",
+    "nis_print_group@GLIBC_2.2.5",
+    "nis_print_group_entry@GLIBC_2.2.5",
+    "nis_print_link@GLIBC_2.2.5",
+    "nis_print_object@GLIBC_2.2.5",
+    "nis_print_result@GLIBC_2.2.5",
+    "nis_print_rights@GLIBC_2.2.5",
+    "nis_print_table@GLIBC_2.2.5",
+    "nis_read_obj@GLIBC_2.2.5",
+    "nis_remove@GLIBC_2.2.5",
+    "nis_remove_entry@GLIBC_2.2.5",
+    "nis_removemember@GLIBC_2.2.5",
+    "nis_rmdir@GLIBC_2.2.5",
+    "nis_servstate@GLIBC_2.2.5",
+    "nis_sperrno@GLIBC_2.2.5",
+    "nis_sperror@GLIBC_2.2.5",
+    "nis_sperror_r@GLIBC_2.2.5",
+    "nis_stats@GLIBC_2.2.5",
+    "nis_verifygroup@GLIBC_2.2.5",
+    "nis_write_obj@GLIBC_2.2.5",
+    "readColdStartFile@GLIBC_2.2.5",
+    "writeColdStartFile@GLIBC_2.2.5",
+    "xdr_cback_data@GLIBC_2.2.5",
+    "xdr_domainname@GLIBC_2.2.5",
+    "xdr_keydat@GLIBC_2.2.5",
+    "xdr_mapname@GLIBC_2.2.5",
+    "xdr_obj_p@GLIBC_2.2.5",
+    "xdr_peername@GLIBC_2.2.5",
+    "xdr_valdat@GLIBC_2.2.5",
+    "xdr_yp_buf@GLIBC_2.2.5",
+    "xdr_ypall@GLIBC_2.2.5",
+    "xdr_ypbind_binding@GLIBC_2.2.5",
+    "xdr_ypbind_resp@GLIBC_2.2.5",
+    "xdr_ypbind_resptype@GLIBC_2.2.5",
+    "xdr_ypbind_setdom@GLIBC_2.2.5",
+    "xdr_ypdelete_args@GLIBC_2.2.5",
+    "xdr_ypmap_parms@GLIBC_2.2.5",
+    "xdr_ypmaplist@GLIBC_2.2.5",
+    "xdr_yppush_status@GLIBC_2.2.5",
+    "xdr_yppushresp_xfr@GLIBC_2.2.5",
+    "xdr_ypreq_key@GLIBC_2.2.5",
+    "xdr_ypreq_nokey@GLIBC_2.2.5",
+    "xdr_ypreq_xfr@GLIBC_2.2.5",
+    "xdr_ypresp_all@GLIBC_2.2.5",
+    "xdr_ypresp_key_val@GLIBC_2.2.5",
+    "xdr_ypresp_maplist@GLIBC_2.2.5",
+    "xdr_ypresp_master@GLIBC_2.2.5",
+    "xdr_ypresp_order@GLIBC_2.2.5",
+    "xdr_ypresp_val@GLIBC_2.2.5",
+    "xdr_ypresp_xfr@GLIBC_2.2.5",
+    "xdr_ypstat@GLIBC_2.2.5",
+    "xdr_ypupdate_args@GLIBC_2.2.5",
+    "xdr_ypxfrstat@GLIBC_2.2.5",
+    "yp_all@GLIBC_2.2.5",
+    "yp_bind@GLIBC_2.2.5",
+    "yp_first@GLIBC_2.2.5",
+    "yp_get_default_domain@GLIBC_2.2.5",
+    "yp_maplist@GLIBC_2.2.5",
+    "yp_master@GLIBC_2.2.5",
+    "yp_match@GLIBC_2.2.5",
+    "yp_next@GLIBC_2.2.5",
+    "yp_order@GLIBC_2.2.5",
+    "yp_unbind@GLIBC_2.2.5",
+    "yp_update@GLIBC_2.2.5",
+    "ypbinderr_string@GLIBC_2.2.5",
+    "yperr_string@GLIBC_2.2.5",
+    "ypprot_err@GLIBC_2.2.5"
+  ],
+  "map_files": [
+    {
+      "kind": "version_script",
+      "path": "build/libnsl.map",
+      "sha256": "00baf0c84614910cbddbd7e8c013da951650389bb528247c47c33f5a41d84e88",
+      "versions": {
+        "GLIBC_2.2.5": [
+          "__free_fdresult",
+          "__nis_default_access",
+          "__nis_default_group",
+          "__nis_default_owner",
+          "__nis_default_ttl",
+          "__nis_finddirectory",
+          "__nis_hash",
+          "__nisbind_connect",
+          "__nisbind_create",
+          "__nisbind_destroy",
+          "__nisbind_next",
+          "__yp_check",
+          "nis_add",
+          "nis_add_entry",
+          "nis_addmember",
+          "nis_checkpoint",
+          "nis_clone_directory",
+          "nis_clone_object",
+          "nis_clone_result",
+          "nis_creategroup",
+          "nis_destroy_object",
+          "nis_destroygroup",
+          "nis_dir_cmp",
+          "nis_domain_of",
+          "nis_domain_of_r",
+          "nis_first_entry",
+          "nis_free_directory",
+          "nis_free_object",
+          "nis_free_request",
+          "nis_freenames",
+          "nis_freeresult",
+          "nis_freeservlist",
+          "nis_freetags",
+          "nis_getnames",
+          "nis_getservlist",
+          "nis_ismember",
+          "nis_leaf_of",
+          "nis_leaf_of_r",
+          "nis_lerror",
+          "nis_list",
+          "nis_local_directory",
+          "nis_local_group",
+          "nis_local_host",
+          "nis_local_principal",
+          "nis_lookup",
+          "nis_mkdir",
+          "nis_modify",
+          "nis_modify_entry",
+          "nis_name_of",
+          "nis_name_of_r",
+          "nis_next_entry",
+          "nis_perror",
+          "nis_ping",
+          "nis_print_directory",
+          "nis_print_entry",
+          "nis_print_group",
+          "nis_print_group_entry",
+          "nis_print_link",
+          "nis_print_object",
+          "nis_print_result",
+          "nis_print_rights",
+          "nis_print_table",
+          "nis_read_obj",
+          "nis_remove",
+          "nis_remove_entry",
+          "nis_removemember",
+          "nis_rmdir",
+          "nis_servstate",
+          "nis_sperrno",
+          "nis_sperror",
+          "nis_sperror_r",
+          "nis_stats",
+          "nis_verifygroup",
+          "nis_write_obj",
+          "readColdStartFile",
+          "writeColdStartFile",
+          "xdr_cback_data",
+          "xdr_obj_p",
+          "xdr_domainname",
+          "xdr_keydat",
+          "xdr_mapname",
+          "xdr_peername",
+          "xdr_valdat",
+          "xdr_yp_buf",
+          "xdr_ypall",
+          "xdr_ypbind_binding",
+          "xdr_ypbind_resp",
+          "xdr_ypbind_resptype",
+          "xdr_ypbind_setdom",
+          "xdr_ypdelete_args",
+          "xdr_ypmap_parms",
+          "xdr_ypmaplist",
+          "xdr_yppush_status",
+          "xdr_yppushresp_xfr",
+          "xdr_ypreq_key",
+          "xdr_ypreq_nokey",
+          "xdr_ypreq_xfr",
+          "xdr_ypresp_all",
+          "xdr_ypresp_key_val",
+          "xdr_ypresp_maplist",
+          "xdr_ypresp_master",
+          "xdr_ypresp_order",
+          "xdr_ypresp_val",
+          "xdr_ypresp_xfr",
+          "xdr_ypstat",
+          "xdr_ypupdate_args",
+          "xdr_ypxfrstat",
+          "yp_all",
+          "yp_bind",
+          "yp_first",
+          "yp_get_default_domain",
+          "yp_maplist",
+          "yp_master",
+          "yp_match",
+          "yp_next",
+          "yp_order",
+          "yp_unbind",
+          "yp_update",
+          "ypbinderr_string",
+          "yperr_string",
+          "ypprot_err"
+        ],
+        "GLIBC_PRIVATE": [
+          "__create_ib_request",
+          "_xdr_ib_request",
+          "_xdr_nis_result",
+          "__prepare_niscall",
+          "__follow_path",
+          "__do_niscall3"
+        ]
+      }
+    }
+  ],
+  "symlist_files": [
+    {
+      "entries": [
+        {
+          "kind": "F",
+          "symbol": "__free_fdresult",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "__nis_default_access",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "__nis_default_group",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "__nis_default_owner",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "__nis_default_ttl",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "__nis_finddirectory",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "__nis_hash",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "__nisbind_connect",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "__nisbind_create",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "__nisbind_destroy",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "__nisbind_next",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "__yp_check",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_add",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_add_entry",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_addmember",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_checkpoint",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_clone_directory",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_clone_object",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_clone_result",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_creategroup",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_destroy_object",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_destroygroup",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_dir_cmp",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_domain_of",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_domain_of_r",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_first_entry",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_free_directory",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_free_object",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_free_request",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_freenames",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_freeresult",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_freeservlist",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_freetags",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_getnames",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_getservlist",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_ismember",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_leaf_of",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_leaf_of_r",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_lerror",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_list",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_local_directory",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_local_group",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_local_host",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_local_principal",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_lookup",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_mkdir",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_modify",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_modify_entry",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_name_of",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_name_of_r",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_next_entry",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_perror",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_ping",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_print_directory",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_print_entry",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_print_group",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_print_group_entry",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_print_link",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_print_object",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_print_result",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_print_rights",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_print_table",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_read_obj",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_remove",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_remove_entry",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_removemember",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_rmdir",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_servstate",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_sperrno",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_sperror",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_sperror_r",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_stats",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_verifygroup",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "nis_write_obj",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "readColdStartFile",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "writeColdStartFile",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_cback_data",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_domainname",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_keydat",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_mapname",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_obj_p",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_peername",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_valdat",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_yp_buf",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypall",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypbind_binding",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypbind_resp",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypbind_resptype",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypbind_setdom",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypdelete_args",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypmap_parms",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypmaplist",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_yppush_status",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_yppushresp_xfr",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypreq_key",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypreq_nokey",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypreq_xfr",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypresp_all",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypresp_key_val",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypresp_maplist",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypresp_master",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypresp_order",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypresp_val",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypresp_xfr",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypstat",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypupdate_args",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "xdr_ypxfrstat",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "yp_all",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "yp_bind",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "yp_first",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "yp_get_default_domain",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "yp_maplist",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "yp_master",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "yp_match",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "yp_next",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "yp_order",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "yp_unbind",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "yp_update",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "ypbinderr_string",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "yperr_string",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "ypprot_err",
+          "version": "GLIBC_2.2.5"
+        }
+      ],
+      "path": "build/nis/libnsl.symlist",
+      "sha256": "16de96d6cc90eaf3a47fceca63f8cd820f46f92203273ffc482ba16ee4750523"
+    }
+  ]
+}

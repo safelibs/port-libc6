@@ -1,0 +1,89 @@
+Source: safelibs-glibc
+Section: libs
+Priority: required
+Maintainer: SafeLibs Port Authors <ports@example.invalid>
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+Build-Depends: bash, binutils, coreutils, debhelper-compat (= 13), dpkg-dev, file
+XSafelibs-Shipped-Packages: libc6, libc6-dev, libc6-dbg, libc-bin, libc-dev-bin, locales, nscd
+XSafelibs-Deferred-Packages: libc-devtools, libc-l10n, locales-all, glibc-doc, glibc-source, libc6-udeb
+XSafelibs-Deferred-Surfaces: docs, source packages, udebs
+Description: Safe libc6 packaging scaffold for the required Ubuntu 24.04 amd64 set
+ This committed packaging surface only ships the seven required runtime packages:
+ libc6, libc6-dev, libc6-dbg, libc-bin, libc-dev-bin, locales, and nscd.
+ Deferred for later phases: libc-devtools, libc-l10n, locales-all, docs,
+ source packages, and udebs.
+
+Package: libc-bin
+Architecture: amd64
+Section: libs
+Priority: required
+Essential: yes
+Multi-Arch: foreign
+Depends: libc6 (= @SAFE_VERSION@)
+Description: GNU C Library: Binaries
+ This package contains the committed runtime helper surface for the safe
+ libc6 port, including ldconfig, ldd, iconv, locale, and related tools.
+
+Package: libc-dev-bin
+Architecture: amd64
+Section: libdevel
+Priority: optional
+Multi-Arch: foreign
+Depends: libc6 (= @SAFE_VERSION@)
+Description: GNU C Library: Development binaries
+ This package ships the required development helper binaries that remain in
+ scope for the phase-3 safe packaging surface.
+
+Package: locales
+Architecture: all
+Section: localization
+Priority: standard
+Depends: libc-bin (= @SAFE_VERSION@), debconf | debconf-2.0
+Description: GNU C Library: National Language (locale) data [support]
+ This package ships the locale data, locale-generation helpers, and debconf
+ configuration surface required by the committed safe packaging harness.
+
+Package: nscd
+Architecture: amd64
+Section: admin
+Priority: optional
+Multi-Arch: foreign
+Depends: libc6 (= @SAFE_VERSION@), libc-bin (= @SAFE_VERSION@)
+Pre-Depends: libc6 (= @SAFE_VERSION@)
+Description: GNU C Library: Name Service Cache Daemon
+ This package contains the safe packaging wrapper for nscd together with the
+ committed init, service, and tmpfiles metadata required by the harness.
+
+Package: libc6
+Architecture: amd64
+Section: libs
+Priority: required
+Multi-Arch: same
+Depends: libc-bin (= @SAFE_VERSION@)
+Suggests: debconf | debconf-2.0, locales
+Description: GNU C Library: Shared libraries
+ This package contains the committed libc shared-library payload and the
+ compatibility mirrors used by the phase-3 packaging harness.
+
+Package: libc6-dev
+Architecture: amd64
+Section: libdevel
+Priority: optional
+Multi-Arch: same
+Depends: libc6 (= @SAFE_VERSION@), libc-dev-bin (= @SAFE_VERSION@), linux-libc-dev
+Suggests: manpages-dev
+Description: GNU C Library: Development libraries and header files
+ This package ships the headers, startup objects, development symlinks, and
+ compatibility mirrors needed to compile against the safe amd64 libc surface.
+
+Package: libc6-dbg
+Architecture: amd64
+Section: debug
+Priority: optional
+Multi-Arch: same
+Depends: libc6 (= @SAFE_VERSION@)
+Provides: libc-dbg, libc6-dbgsym
+Description: GNU C Library: detached debugging symbols
+ This package contains detached debug artifacts derived only from the
+ committed libc6 ELF payload manifest.

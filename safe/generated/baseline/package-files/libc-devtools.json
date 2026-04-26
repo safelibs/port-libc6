@@ -1,0 +1,58 @@
+{
+  "entries": [
+    {
+      "asset_kind": "script_asset",
+      "executable": true,
+      "owner_phase": null,
+      "package": "libc-devtools",
+      "path": "/usr/bin/mtrace",
+      "scope": "deferred_package",
+      "shipped_status": "shipped",
+      "source_origin": "build_testroot",
+      "source_path": "build/testroot.pristine/usr/bin/mtrace",
+      "symlink_target": null,
+      "verification": null
+    },
+    {
+      "asset_kind": "script_asset",
+      "executable": true,
+      "owner_phase": null,
+      "package": "libc-devtools",
+      "path": "/usr/bin/sotruss",
+      "scope": "deferred_package",
+      "shipped_status": "shipped",
+      "source_origin": "build_testroot",
+      "source_path": "build/testroot.pristine/usr/bin/sotruss",
+      "symlink_target": null,
+      "verification": null
+    },
+    {
+      "asset_kind": "rust_target",
+      "executable": true,
+      "owner_phase": null,
+      "package": "libc-devtools",
+      "path": "/usr/bin/sprof",
+      "scope": "deferred_package",
+      "shipped_status": "shipped",
+      "source_origin": "build_testroot",
+      "source_path": "build/testroot.pristine/usr/bin/sprof",
+      "symlink_target": null,
+      "verification": null
+    }
+  ],
+  "metadata": {
+    "generated_from": [
+      "build/testroot.pristine",
+      "original/debian/control",
+      "original/debian/rules",
+      "original/debian/debhelper.in/*",
+      "original/debian/local/**",
+      "original/debian/script.in/**",
+      "original/debian/rules.d/debhelper.mk",
+      "original/debian/sysdeps/linux.mk"
+    ],
+    "package": "libc-devtools",
+    "phase": "impl_01_safe_bootstrap",
+    "scope": "deferred_package"
+  }
+}

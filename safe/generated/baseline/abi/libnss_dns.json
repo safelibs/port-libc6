@@ -1,0 +1,36 @@
+{
+  "dso_id": "libnss_dns",
+  "primary_oracle": "build/resolv/libnss_dns.so",
+  "auxiliary_oracles": [],
+  "installed_paths": [
+    "/usr/lib64/libnss_dns.so.2"
+  ],
+  "build_id": "d76d6905757ab39d98eace2d4e3a8099fc80ff72",
+  "soname": "libnss_dns.so.2",
+  "needed": [
+    "libc.so.6"
+  ],
+  "exported_symbols": [
+    "GLIBC_PRIVATE",
+    "Name"
+  ],
+  "map_files": [
+    {
+      "kind": "version_script",
+      "path": "build/libnss_dns.map",
+      "sha256": "743a20675118d8b8c9be256e10abcc5559ac1af289ed75927a11f5fca2b72cde",
+      "versions": {
+        "GLIBC_PRIVATE": [
+          "__libnss_dns_version_placeholder"
+        ]
+      }
+    }
+  ],
+  "symlist_files": [
+    {
+      "entries": [],
+      "path": "build/resolv/libnss_dns.symlist",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

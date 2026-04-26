@@ -1,0 +1,84 @@
+{
+  "dso_id": "librt",
+  "primary_oracle": "build/rt/librt.so",
+  "auxiliary_oracles": [],
+  "installed_paths": [
+    "/usr/lib64/librt.so.1"
+  ],
+  "build_id": "f65315db278c14ab6593054dccbcb1a1253c9d14",
+  "soname": "librt.so.1",
+  "needed": [
+    "libc.so.6"
+  ],
+  "exported_symbols": [
+    "GLIBC_2.2.5",
+    "GLIBC_2.3.3",
+    "GLIBC_2.3.4",
+    "GLIBC_2.4",
+    "GLIBC_2.7",
+    "Name",
+    "__librt_version_placeholder@GLIBC_2.2.5",
+    "__librt_version_placeholder@GLIBC_2.3.3",
+    "__librt_version_placeholder@GLIBC_2.3.4",
+    "__librt_version_placeholder@GLIBC_2.4",
+    "__librt_version_placeholder@GLIBC_2.7"
+  ],
+  "map_files": [
+    {
+      "kind": "version_script",
+      "path": "build/librt.map",
+      "sha256": "2433b17b610f47eeff493adf5f8b6252c796300a92e101940f74b1f7b6ac90c1",
+      "versions": {
+        "GLIBC_2.2.5": [
+          "__librt_version_placeholder",
+          "__librt_version_placeholder"
+        ],
+        "GLIBC_2.3.3": [
+          "__librt_version_placeholder"
+        ],
+        "GLIBC_2.3.4": [
+          "__librt_version_placeholder"
+        ],
+        "GLIBC_2.4": [
+          "__librt_version_placeholder"
+        ],
+        "GLIBC_2.7": [
+          "__librt_version_placeholder"
+        ]
+      }
+    }
+  ],
+  "symlist_files": [
+    {
+      "entries": [
+        {
+          "kind": "F",
+          "symbol": "__librt_version_placeholder",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "__librt_version_placeholder",
+          "version": "GLIBC_2.3.3"
+        },
+        {
+          "kind": "F",
+          "symbol": "__librt_version_placeholder",
+          "version": "GLIBC_2.3.4"
+        },
+        {
+          "kind": "F",
+          "symbol": "__librt_version_placeholder",
+          "version": "GLIBC_2.4"
+        },
+        {
+          "kind": "F",
+          "symbol": "__librt_version_placeholder",
+          "version": "GLIBC_2.7"
+        }
+      ],
+      "path": "build/rt/librt.symlist",
+      "sha256": "a904db2c753d768c64dc3907f7637667a0240616b27094fb24e381fe02d04824"
+    }
+  ]
+}

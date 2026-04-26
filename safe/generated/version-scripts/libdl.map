@@ -1,0 +1,19 @@
+/* Generated from safe/generated/baseline/abi/libdl.json */
+
+GLIBC_2.2.5 {
+  global:
+    __libdl_version_placeholder;
+    __libdl_version_placeholder;
+};
+
+GLIBC_2.3.3 {
+  global:
+    __libdl_version_placeholder;
+};
+
+GLIBC_2.3.4 {
+  global:
+    __libdl_version_placeholder;
+  local:
+    *;
+};

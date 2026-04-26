@@ -1,0 +1,44 @@
+{
+  "dso_id": "libBrokenLocale",
+  "primary_oracle": "build/locale/libBrokenLocale.so",
+  "auxiliary_oracles": [],
+  "installed_paths": [
+    "/usr/lib64/libBrokenLocale.so",
+    "/usr/lib64/libBrokenLocale.so.1"
+  ],
+  "build_id": "352772ee028899694b6da075c19b8a2893a24c13",
+  "soname": "libBrokenLocale.so.1",
+  "needed": [
+    "libc.so.6"
+  ],
+  "exported_symbols": [
+    "GLIBC_2.2.5",
+    "Name",
+    "__ctype_get_mb_cur_max@@GLIBC_2.2.5"
+  ],
+  "map_files": [
+    {
+      "kind": "version_script",
+      "path": "build/libBrokenLocale.map",
+      "sha256": "c389358c55b9c469d2e90e9af1357618b8145f8824d2dc54a0408d6c9af9565a",
+      "versions": {
+        "GLIBC_2.2.5": [
+          "__ctype_get_mb_cur_max"
+        ]
+      }
+    }
+  ],
+  "symlist_files": [
+    {
+      "entries": [
+        {
+          "kind": "F",
+          "symbol": "__ctype_get_mb_cur_max",
+          "version": "GLIBC_2.2.5"
+        }
+      ],
+      "path": "build/locale/libBrokenLocale.symlist",
+      "sha256": "7928c2676f37ed27800ceb4a237a89d548ef3576c05f153047bafe8adc37bfb2"
+    }
+  ]
+}

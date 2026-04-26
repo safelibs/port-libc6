@@ -1,0 +1,4 @@
+etc/ld.so.conf.d
+lib64/ld*.so* usr/lib64
+lib64/*.so* usr/lib64
+usr/lib/*/gconv

@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+include debian/rules.d/info.mk
+include debian/rules.d/control.mk
+include debian/rules.d/build.mk
+include debian/rules.d/quilt.mk
+include debian/rules.d/debhelper.mk
+include debian/rules.d/tarball.mk
+
+.PHONY: binary build clean
+
+build:
+	@printf 'safe packaging scaffolding only; use cargo run -p xtask -- package-deb\n'
+
+binary:
+	@cargo run -p xtask -- package-deb --out work/debs
+
+clean:
+	@rm -rf work/debs work/package-deb

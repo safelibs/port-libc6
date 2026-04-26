@@ -1,0 +1,8 @@
+/* Generated from safe/generated/baseline/abi/libnss_files.json */
+
+GLIBC_PRIVATE {
+  global:
+    __libnss_files_version_placeholder;
+  local:
+    *;
+};

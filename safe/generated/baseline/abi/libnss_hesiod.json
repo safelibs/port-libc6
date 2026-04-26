@@ -1,0 +1,71 @@
+{
+  "dso_id": "libnss_hesiod",
+  "primary_oracle": "build/hesiod/libnss_hesiod.so",
+  "auxiliary_oracles": [],
+  "installed_paths": [
+    "/usr/lib64/libnss_hesiod.so",
+    "/usr/lib64/libnss_hesiod.so.2"
+  ],
+  "build_id": "5e5603ff0114657c6bfeb3d9b51ad2c18790758e",
+  "soname": "libnss_hesiod.so.2",
+  "needed": [
+    "libresolv.so.2",
+    "libc.so.6"
+  ],
+  "exported_symbols": [
+    "GLIBC_PRIVATE",
+    "Name",
+    "_nss_hesiod_endgrent@@GLIBC_PRIVATE",
+    "_nss_hesiod_endprotoent@@GLIBC_PRIVATE",
+    "_nss_hesiod_endpwent@@GLIBC_PRIVATE",
+    "_nss_hesiod_endservent@@GLIBC_PRIVATE",
+    "_nss_hesiod_getgrgid_r@@GLIBC_PRIVATE",
+    "_nss_hesiod_getgrnam_r@@GLIBC_PRIVATE",
+    "_nss_hesiod_getprotobyname_r@@GLIBC_PRIVATE",
+    "_nss_hesiod_getprotobynumber_r@@GLIBC_PRIVATE",
+    "_nss_hesiod_getpwnam_r@@GLIBC_PRIVATE",
+    "_nss_hesiod_getpwuid_r@@GLIBC_PRIVATE",
+    "_nss_hesiod_getservbyname_r@@GLIBC_PRIVATE",
+    "_nss_hesiod_getservbyport_r@@GLIBC_PRIVATE",
+    "_nss_hesiod_initgroups_dyn@@GLIBC_PRIVATE",
+    "_nss_hesiod_setgrent@@GLIBC_PRIVATE",
+    "_nss_hesiod_setprotoent@@GLIBC_PRIVATE",
+    "_nss_hesiod_setpwent@@GLIBC_PRIVATE",
+    "_nss_hesiod_setservent@@GLIBC_PRIVATE"
+  ],
+  "map_files": [
+    {
+      "kind": "version_script",
+      "path": "build/libnss_hesiod.map",
+      "sha256": "fe68aeddb0e7184860f1d91b68dc1dfa863f5a244f0a88b1c1c1565127da5489",
+      "versions": {
+        "GLIBC_PRIVATE": [
+          "_nss_hesiod_getgrnam_r",
+          "_nss_hesiod_getgrgid_r",
+          "_nss_hesiod_getprotobyname_r",
+          "_nss_hesiod_getprotobynumber_r",
+          "_nss_hesiod_getpwnam_r",
+          "_nss_hesiod_getpwuid_r",
+          "_nss_hesiod_getservbyname_r",
+          "_nss_hesiod_getservbyport_r",
+          "_nss_hesiod_initgroups_dyn",
+          "_nss_hesiod_setgrent",
+          "_nss_hesiod_endgrent",
+          "_nss_hesiod_setprotoent",
+          "_nss_hesiod_endprotoent",
+          "_nss_hesiod_setpwent",
+          "_nss_hesiod_endpwent",
+          "_nss_hesiod_setservent",
+          "_nss_hesiod_endservent"
+        ]
+      }
+    }
+  ],
+  "symlist_files": [
+    {
+      "entries": [],
+      "path": "build/hesiod/libnss_hesiod.symlist",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

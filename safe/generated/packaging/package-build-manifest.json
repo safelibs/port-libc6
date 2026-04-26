@@ -1,0 +1,159 @@
+{
+  "metadata": {
+    "phase": "impl_03_packaging_and_harness",
+    "notes": [
+      "Committed packaging asset map for the phase-3 required-package surface.",
+      "package-deb must only consume the files enumerated here together with the committed package payload manifests."
+    ]
+  },
+  "safe_package_version": "2.39-0ubuntu8.7+safelibs03",
+  "control": "safe/debian/control",
+  "copyright": "safe/debian/copyright",
+  "common_files": [
+    "safe/debian/control",
+    "safe/debian/copyright",
+    "safe/debian/generate-supported.mk",
+    "safe/debian/rules",
+    "safe/debian/rules.d/info.mk",
+    "safe/debian/rules.d/control.mk",
+    "safe/debian/rules.d/build.mk",
+    "safe/debian/rules.d/quilt.mk",
+    "safe/debian/rules.d/debhelper.mk",
+    "safe/debian/rules.d/tarball.mk"
+  ],
+  "packages": [
+    {
+      "name": "libc6",
+      "architecture": "amd64",
+      "package_manifest": "safe/generated/baseline/package-files/libc6.json",
+      "debhelper_files": [
+        "safe/debian/libc.install",
+        "safe/debian/libc.dirs",
+        "safe/debian/libc.README.Debian",
+        "safe/debian/libc.NEWS",
+        "safe/debian/libc.lintian-overrides",
+        "safe/debian/libc6.symbols.amd64"
+      ],
+      "local_files": [],
+      "helper_files": [
+        "safe/debian/libc.preinst",
+        "safe/debian/libc.postinst",
+        "safe/debian/libc.postrm",
+        "safe/debian/libc.templates",
+        "safe/debian/script.in/nsscheck.sh"
+      ]
+    },
+    {
+      "name": "libc-bin",
+      "architecture": "amd64",
+      "package_manifest": "safe/generated/baseline/package-files/libc-bin.json",
+      "debhelper_files": [
+        "safe/debian/libc-bin.install",
+        "safe/debian/libc-bin.dirs",
+        "safe/debian/libc-bin.manpages",
+        "safe/debian/libc-bin.lintian-overrides"
+      ],
+      "local_files": [
+        "safe/debian/local/etc/bindresvport.blacklist",
+        "safe/debian/local/etc/ld.so.conf",
+        "safe/debian/local/etc/ld.so.conf.d/libc.conf",
+        "safe/debian/local/etc/nsswitch.conf",
+        "safe/debian/local/manpages/getconf.1",
+        "safe/debian/local/manpages/tzselect.1",
+        "safe/debian/local/sbin/ldconfig"
+      ],
+      "helper_files": [
+        "safe/debian/libc-bin.postinst",
+        "safe/debian/libc-bin.triggers"
+      ]
+    },
+    {
+      "name": "libc6-dev",
+      "architecture": "amd64",
+      "package_manifest": "safe/generated/baseline/package-files/libc6-dev.json",
+      "debhelper_files": [
+        "safe/debian/libc-dev.install",
+        "safe/debian/libc-dev.lintian-overrides",
+        "safe/debian/libc-dev.NEWS"
+      ],
+      "local_files": [],
+      "helper_files": []
+    },
+    {
+      "name": "libc-dev-bin",
+      "architecture": "amd64",
+      "package_manifest": "safe/generated/baseline/package-files/libc-dev-bin.json",
+      "debhelper_files": [
+        "safe/debian/libc-dev-bin.install",
+        "safe/debian/libc-dev-bin.manpages"
+      ],
+      "local_files": [
+        "safe/debian/local/manpages/gencat.1"
+      ],
+      "helper_files": []
+    },
+    {
+      "name": "locales",
+      "architecture": "all",
+      "package_manifest": "safe/generated/baseline/package-files/locales.json",
+      "debhelper_files": [
+        "safe/debian/locales.install",
+        "safe/debian/locales.dirs",
+        "safe/debian/locales.links",
+        "safe/debian/locales.manpages",
+        "safe/debian/locales.README.Debian",
+        "safe/debian/locales.NEWS"
+      ],
+      "local_files": [
+        "safe/debian/local/usr_sbin/locale-gen",
+        "safe/debian/local/usr_sbin/update-locale",
+        "safe/debian/local/usr_sbin/validlocale",
+        "safe/debian/local/usr_share_locales/install-language-pack",
+        "safe/debian/local/usr_share_locales/remove-language-pack",
+        "safe/debian/local/manpages/locale-gen.8",
+        "safe/debian/local/manpages/locale.gen.5",
+        "safe/debian/local/manpages/update-locale.8",
+        "safe/debian/local/manpages/validlocale.8",
+        "safe/debian/local/manpages/de/validlocale.de.8",
+        "safe/debian/local/manpages/es/validlocale.es.8",
+        "safe/debian/local/manpages/fr/validlocale.fr.8",
+        "safe/debian/local/manpages/pl/validlocale.pl.8"
+      ],
+      "helper_files": [
+        "safe/debian/locales.config",
+        "safe/debian/locales.templates",
+        "safe/debian/locales.postinst",
+        "safe/debian/locales.postrm",
+        "safe/debian/locales.prerm"
+      ]
+    },
+    {
+      "name": "nscd",
+      "architecture": "amd64",
+      "package_manifest": "safe/generated/baseline/package-files/nscd.json",
+      "debhelper_files": [
+        "safe/debian/nscd.install",
+        "safe/debian/nscd.dirs",
+        "safe/debian/nscd.manpages"
+      ],
+      "local_files": [
+        "safe/debian/local/manpages/nscd.8",
+        "safe/debian/local/manpages/nscd.conf.5"
+      ],
+      "helper_files": [
+        "safe/debian/nscd.init",
+        "safe/debian/nscd.postrm",
+        "safe/debian/nscd.service",
+        "safe/debian/nscd.tmpfiles"
+      ]
+    },
+    {
+      "name": "libc6-dbg",
+      "architecture": "amd64",
+      "package_manifest": "safe/generated/baseline/package-files/libc6-dbg.json",
+      "debhelper_files": [],
+      "local_files": [],
+      "helper_files": []
+    }
+  ]
+}

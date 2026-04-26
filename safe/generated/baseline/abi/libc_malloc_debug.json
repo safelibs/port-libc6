@@ -1,0 +1,242 @@
+{
+  "dso_id": "libc_malloc_debug",
+  "primary_oracle": "build/malloc/libc_malloc_debug.so.0",
+  "auxiliary_oracles": [],
+  "installed_paths": [
+    "/usr/lib64/libc_malloc_debug.so.0"
+  ],
+  "build_id": "bb3141ef3575a2f9bae3967e8dc13c94e2954064",
+  "soname": "libc_malloc_debug.so.0",
+  "needed": [
+    "libc.so.6",
+    "ld-linux-x86-64.so.2"
+  ],
+  "exported_symbols": [
+    "GLIBC_2.10",
+    "GLIBC_2.16",
+    "GLIBC_2.2.5",
+    "GLIBC_2.33",
+    "Name",
+    "__free_hook@GLIBC_2.2.5",
+    "__malloc_hook@GLIBC_2.2.5",
+    "__memalign_hook@GLIBC_2.2.5",
+    "__realloc_hook@GLIBC_2.2.5",
+    "aligned_alloc@GLIBC_2.16",
+    "calloc@GLIBC_2.2.5",
+    "free@GLIBC_2.2.5",
+    "mallinfo2@GLIBC_2.33",
+    "mallinfo@GLIBC_2.2.5",
+    "malloc@GLIBC_2.2.5",
+    "malloc_get_state@GLIBC_2.2.5",
+    "malloc_info@GLIBC_2.10",
+    "malloc_set_state@GLIBC_2.2.5",
+    "malloc_stats@GLIBC_2.2.5",
+    "malloc_trim@GLIBC_2.2.5",
+    "malloc_usable_size@GLIBC_2.2.5",
+    "mallopt@GLIBC_2.2.5",
+    "mcheck@GLIBC_2.2.5",
+    "mcheck_check_all@GLIBC_2.2.5",
+    "mcheck_pedantic@GLIBC_2.2.5",
+    "memalign@GLIBC_2.2.5",
+    "mprobe@GLIBC_2.2.5",
+    "mtrace@GLIBC_2.2.5",
+    "muntrace@GLIBC_2.2.5",
+    "posix_memalign@GLIBC_2.2.5",
+    "pvalloc@GLIBC_2.2.5",
+    "realloc@GLIBC_2.2.5",
+    "valloc@GLIBC_2.2.5"
+  ],
+  "map_files": [
+    {
+      "kind": "version_script",
+      "path": "build/libc_malloc_debug.map",
+      "sha256": "15f5f4a44ece0fe02166e6297e0f65846b44a5ddeb19fd081eb401abb72596c9",
+      "versions": {
+        "GLIBC_2.10": [
+          "malloc_info"
+        ],
+        "GLIBC_2.16": [
+          "aligned_alloc"
+        ],
+        "GLIBC_2.2.5": [
+          "__free_hook",
+          "__malloc_hook",
+          "__memalign_hook",
+          "__realloc_hook",
+          "calloc",
+          "free",
+          "mallinfo",
+          "malloc",
+          "malloc_get_state",
+          "malloc_set_state",
+          "malloc_stats",
+          "malloc_trim",
+          "malloc_usable_size",
+          "mallopt",
+          "mcheck",
+          "mcheck_check_all",
+          "mcheck_pedantic",
+          "memalign",
+          "mprobe",
+          "mtrace",
+          "muntrace",
+          "posix_memalign",
+          "pvalloc",
+          "realloc",
+          "valloc"
+        ],
+        "GLIBC_2.33": [
+          "mallinfo2"
+        ]
+      }
+    }
+  ],
+  "symlist_files": [
+    {
+      "entries": [
+        {
+          "kind": "F",
+          "symbol": "malloc_info",
+          "version": "GLIBC_2.10"
+        },
+        {
+          "kind": "F",
+          "symbol": "aligned_alloc",
+          "version": "GLIBC_2.16"
+        },
+        {
+          "kind": "D",
+          "symbol": "__free_hook",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "D",
+          "symbol": "__malloc_hook",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "D",
+          "symbol": "__memalign_hook",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "D",
+          "symbol": "__realloc_hook",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "calloc",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "free",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "mallinfo",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "malloc",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "malloc_get_state",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "malloc_set_state",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "malloc_stats",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "malloc_trim",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "malloc_usable_size",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "mallopt",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "mcheck",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "mcheck_check_all",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "mcheck_pedantic",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "memalign",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "mprobe",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "mtrace",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "muntrace",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "posix_memalign",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "pvalloc",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "realloc",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "valloc",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "mallinfo2",
+          "version": "GLIBC_2.33"
+        }
+      ],
+      "path": "build/malloc/libc_malloc_debug.symlist",
+      "sha256": "7adadc0cac03f3a8ac484f6acaa092cab4f9328ffb16e353034719efce93359c"
+    }
+  ]
+}

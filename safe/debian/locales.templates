@@ -1,0 +1,14 @@
+Template: locales/locales_to_be_generated
+Type: multiselect
+Choices: All locales, ${locales}
+Description: Locales to be generated:
+ Choose which locales this system should generate. UTF-8 locales are usually
+ the right default for new installations.
+
+Template: locales/default_environment_locale
+Type: select
+Choices: None, C.UTF-8, ${locales}
+Default: None
+Description: Default locale for the system environment:
+ Choose the default locale exported for system-wide services and login
+ sessions.

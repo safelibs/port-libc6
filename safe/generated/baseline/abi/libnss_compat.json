@@ -1,0 +1,66 @@
+{
+  "dso_id": "libnss_compat",
+  "primary_oracle": "build/nss/libnss_compat.so",
+  "auxiliary_oracles": [],
+  "installed_paths": [
+    "/usr/lib64/libnss_compat.so",
+    "/usr/lib64/libnss_compat.so.2"
+  ],
+  "build_id": "47bce3630e2abd8c5f73495ab4d7ebf531787e37",
+  "soname": "libnss_compat.so.2",
+  "needed": [
+    "libc.so.6"
+  ],
+  "exported_symbols": [
+    "GLIBC_PRIVATE",
+    "Name",
+    "_nss_compat_endgrent@@GLIBC_PRIVATE",
+    "_nss_compat_endpwent@@GLIBC_PRIVATE",
+    "_nss_compat_endspent@@GLIBC_PRIVATE",
+    "_nss_compat_getgrent_r@@GLIBC_PRIVATE",
+    "_nss_compat_getgrgid_r@@GLIBC_PRIVATE",
+    "_nss_compat_getgrnam_r@@GLIBC_PRIVATE",
+    "_nss_compat_getpwent_r@@GLIBC_PRIVATE",
+    "_nss_compat_getpwnam_r@@GLIBC_PRIVATE",
+    "_nss_compat_getpwuid_r@@GLIBC_PRIVATE",
+    "_nss_compat_getspent_r@@GLIBC_PRIVATE",
+    "_nss_compat_getspnam_r@@GLIBC_PRIVATE",
+    "_nss_compat_initgroups_dyn@@GLIBC_PRIVATE",
+    "_nss_compat_setgrent@@GLIBC_PRIVATE",
+    "_nss_compat_setpwent@@GLIBC_PRIVATE",
+    "_nss_compat_setspent@@GLIBC_PRIVATE"
+  ],
+  "map_files": [
+    {
+      "kind": "version_script",
+      "path": "build/libnss_compat.map",
+      "sha256": "85852246ab4a94982e472bc845c86593457f0ec250a9e6743abda5db5faed6ac",
+      "versions": {
+        "GLIBC_PRIVATE": [
+          "_nss_compat_endgrent",
+          "_nss_compat_endpwent",
+          "_nss_compat_endspent",
+          "_nss_compat_getgrent_r",
+          "_nss_compat_getgrgid_r",
+          "_nss_compat_getgrnam_r",
+          "_nss_compat_getpwent_r",
+          "_nss_compat_getpwnam_r",
+          "_nss_compat_getpwuid_r",
+          "_nss_compat_getspent_r",
+          "_nss_compat_getspnam_r",
+          "_nss_compat_initgroups_dyn",
+          "_nss_compat_setgrent",
+          "_nss_compat_setpwent",
+          "_nss_compat_setspent"
+        ]
+      }
+    }
+  ],
+  "symlist_files": [
+    {
+      "entries": [],
+      "path": "build/nss/libnss_compat.symlist",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

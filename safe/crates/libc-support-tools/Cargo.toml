@@ -1,0 +1,19 @@
+[package]
+name = "libc-support-tools"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+anyhow.workspace = true
+ldso = { path = "../ldso" }
+
+[[bin]]
+name = "safe-loader-tool"
+path = "src/bin/safe-loader-tool.rs"
+
+[[bin]]
+name = "safe-runtime-tool"
+path = "src/bin/safe-runtime-tool.rs"

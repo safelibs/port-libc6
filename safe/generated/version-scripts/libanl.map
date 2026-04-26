@@ -1,0 +1,8 @@
+/* Generated from safe/generated/baseline/abi/libanl.json */
+
+GLIBC_2.2.5 {
+  global:
+    __libanl_version_placeholder;
+  local:
+    *;
+};

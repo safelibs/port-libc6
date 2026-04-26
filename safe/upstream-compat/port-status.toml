@@ -1,0 +1,248 @@
+[metadata]
+phase = "impl_05_core_runtime_threads_entropy"
+notes = [
+    "Status values remain baseline_captured until later implementation phases replace the relevant components under safe/**.",
+    "All check-abi --all-dsos targets are seeded here so later phases consume a single committed status ledger.",
+    "Phase 3 records committed Debian packaging scaffolding, local apt-repository installation, and in-place root-harness provenance verification while later owning phases retain subsystem ownership.",
+    "The upstream-compatible test tree is synced from committed source artifacts instead of being rediscovered from makefiles.",
+    "Phase 4 ports loader control-plane state into Rust while the loader ABI shell remains available for unresolved backend work.",
+    "The safe test tree carries every phase-4-owned loader, startup, and amd64 sysdeps test entry from the committed ownership plan.",
+    "Loader helper entrypoints now ship Rust frontends with any unavoidable backend binaries tracked as explicit fallback exceptions.",
+    "Phase 5 ports core runtime, thread, entropy, and low-level libc bookkeeping into committed Rust crates while the hybrid ABI shells remain the externally linked surface.",
+    "The safe test tree carries every phase-5-owned runtime, thread, malloc, signal, setjmp, misc, and nptl_db entry from the committed ownership plan.",
+    "Runtime helper entrypoints now ship Rust frontends where possible, and audit-safety tracks reviewed unsafe sites plus reviewed fallback inventory coverage.",
+]
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/ld.so.json"
+component = "loader"
+dso_id = "ld.so"
+owner_phase = "impl_04_loader_startup_secure_exec"
+status = "rust_control_plane_ported"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/libBrokenLocale.json"
+component = "locale"
+dso_id = "libBrokenLocale"
+owner_phase = "impl_08_locale_iconv_posix_parsers"
+status = "hybrid_shell_available"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/libanl.json"
+component = "network-identity"
+dso_id = "libanl"
+owner_phase = "impl_07_nss_resolver_nscd"
+status = "hybrid_shell_available"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/libc.json"
+component = "core-libc"
+dso_id = "libc"
+owner_phase = "impl_05_core_runtime_threads_entropy"
+status = "rust_runtime_boundary_ported"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/libc_malloc_debug.json"
+component = "malloc-debug"
+dso_id = "libc_malloc_debug"
+owner_phase = "impl_05_core_runtime_threads_entropy"
+status = "rust_runtime_boundary_ported"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/libdl.json"
+component = "dlfcn"
+dso_id = "libdl"
+owner_phase = "impl_09_math_and_aux_dsos"
+status = "hybrid_shell_available"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/libm.json"
+component = "math"
+dso_id = "libm"
+owner_phase = "impl_09_math_and_aux_dsos"
+status = "hybrid_shell_available"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/libmemusage.json"
+component = "malloc-debug"
+dso_id = "libmemusage"
+owner_phase = "impl_05_core_runtime_threads_entropy"
+status = "rust_runtime_boundary_ported"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/libmvec.json"
+component = "math"
+dso_id = "libmvec"
+owner_phase = "impl_09_math_and_aux_dsos"
+status = "hybrid_shell_available"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/libnsl.json"
+component = "network-identity"
+dso_id = "libnsl"
+owner_phase = "impl_07_nss_resolver_nscd"
+status = "hybrid_shell_available"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/libnss_compat.json"
+component = "network-identity"
+dso_id = "libnss_compat"
+owner_phase = "impl_07_nss_resolver_nscd"
+status = "hybrid_shell_available"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/libnss_dns.json"
+component = "network-identity"
+dso_id = "libnss_dns"
+owner_phase = "impl_07_nss_resolver_nscd"
+status = "hybrid_shell_available"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/libnss_files.json"
+component = "network-identity"
+dso_id = "libnss_files"
+owner_phase = "impl_07_nss_resolver_nscd"
+status = "hybrid_shell_available"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/libnss_hesiod.json"
+component = "network-identity"
+dso_id = "libnss_hesiod"
+owner_phase = "impl_07_nss_resolver_nscd"
+status = "hybrid_shell_available"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/libpcprofile.json"
+component = "debug"
+dso_id = "libpcprofile"
+owner_phase = "impl_09_math_and_aux_dsos"
+status = "hybrid_shell_available"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/libpthread.json"
+component = "threads"
+dso_id = "libpthread"
+owner_phase = "impl_05_core_runtime_threads_entropy"
+status = "rust_runtime_boundary_ported"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/libresolv.json"
+component = "network-identity"
+dso_id = "libresolv"
+owner_phase = "impl_07_nss_resolver_nscd"
+status = "hybrid_shell_available"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/librt.json"
+component = "rt"
+dso_id = "librt"
+owner_phase = "impl_09_math_and_aux_dsos"
+status = "hybrid_shell_available"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/libthread_db.json"
+component = "threads"
+dso_id = "libthread_db"
+owner_phase = "impl_05_core_runtime_threads_entropy"
+status = "rust_runtime_boundary_ported"
+
+[[dso_targets]]
+abi_baseline = "safe/generated/baseline/abi/libutil.json"
+component = "login"
+dso_id = "libutil"
+owner_phase = "impl_09_math_and_aux_dsos"
+status = "hybrid_shell_available"
+
+[[subsystems]]
+name = "support"
+owner_phase = "impl_02_hybrid_abi_shell"
+status = "ported"
+
+[[subsystems]]
+name = "packaging"
+owner_phase = "impl_03_packaging_and_harness"
+status = "package_deb_and_harness_verified"
+
+[[subsystems]]
+name = "elf"
+owner_phase = "impl_04_loader_startup_secure_exec"
+status = "rust_control_plane_ported"
+
+[[subsystems]]
+name = "csu"
+owner_phase = "impl_04_loader_startup_secure_exec"
+status = "rust_control_plane_ported"
+
+[[subsystems]]
+name = "sysdeps-x86_64"
+owner_phase = "impl_04_loader_startup_secure_exec"
+status = "rust_control_plane_ported"
+
+[[subsystems]]
+name = "runtime"
+owner_phase = "impl_05_core_runtime_threads_entropy"
+status = "rust_runtime_boundary_ported"
+
+[[subsystems]]
+name = "threads"
+owner_phase = "impl_05_core_runtime_threads_entropy"
+status = "rust_runtime_boundary_ported"
+
+[[subsystems]]
+name = "entropy"
+owner_phase = "impl_05_core_runtime_threads_entropy"
+status = "rust_runtime_boundary_ported"
+
+[[subsystems]]
+name = "io-string-stdio"
+owner_phase = "impl_06_io_stdio_string_path"
+status = "baseline_captured"
+
+[[subsystems]]
+name = "nss-resolver-nscd"
+owner_phase = "impl_07_nss_resolver_nscd"
+status = "baseline_captured"
+
+[[subsystems]]
+name = "locale-iconv-posix"
+owner_phase = "impl_08_locale_iconv_posix_parsers"
+status = "baseline_captured"
+
+[[subsystems]]
+name = "math-aux-dsos"
+owner_phase = "impl_09_math_and_aux_dsos"
+status = "baseline_captured"
+
+[[subsystems]]
+name = "final-audit"
+owner_phase = "impl_10_final_fixup_and_audit"
+status = "baseline_captured"
+
+[[package_components]]
+package = "libc6"
+status = "deb_packaging_verified"
+
+[[package_components]]
+package = "libc-bin"
+status = "loader_and_runtime_tools_rust_frontends_ported"
+
+[[package_components]]
+package = "libc6-dev"
+status = "deb_packaging_verified"
+
+[[package_components]]
+package = "libc-dev-bin"
+status = "deb_packaging_verified"
+
+[[package_components]]
+package = "locales"
+status = "deb_packaging_verified"
+
+[[package_components]]
+package = "nscd"
+status = "deb_packaging_verified"
+
+[[package_components]]
+package = "libc6-dbg"
+status = "deb_packaging_verified"
+

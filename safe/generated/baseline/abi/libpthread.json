@@ -1,0 +1,158 @@
+{
+  "dso_id": "libpthread",
+  "primary_oracle": "build/nptl/libpthread.so",
+  "auxiliary_oracles": [],
+  "installed_paths": [
+    "/usr/lib64/libpthread.so.0"
+  ],
+  "build_id": "5b1c290ebb2bf809edf4432cf4915bfcdd78e213",
+  "soname": "libpthread.so.0",
+  "needed": [
+    "libc.so.6"
+  ],
+  "exported_symbols": [
+    "GLIBC_2.11",
+    "GLIBC_2.12",
+    "GLIBC_2.18",
+    "GLIBC_2.2.5",
+    "GLIBC_2.2.6",
+    "GLIBC_2.28",
+    "GLIBC_2.3.2",
+    "GLIBC_2.3.3",
+    "GLIBC_2.3.4",
+    "GLIBC_2.30",
+    "GLIBC_2.31",
+    "GLIBC_2.4",
+    "Name",
+    "__libpthread_version_placeholder@GLIBC_2.11",
+    "__libpthread_version_placeholder@GLIBC_2.12",
+    "__libpthread_version_placeholder@GLIBC_2.18",
+    "__libpthread_version_placeholder@GLIBC_2.2.5",
+    "__libpthread_version_placeholder@GLIBC_2.2.6",
+    "__libpthread_version_placeholder@GLIBC_2.28",
+    "__libpthread_version_placeholder@GLIBC_2.3.2",
+    "__libpthread_version_placeholder@GLIBC_2.3.3",
+    "__libpthread_version_placeholder@GLIBC_2.3.4",
+    "__libpthread_version_placeholder@GLIBC_2.30",
+    "__libpthread_version_placeholder@GLIBC_2.31",
+    "__libpthread_version_placeholder@GLIBC_2.4"
+  ],
+  "map_files": [
+    {
+      "kind": "version_script",
+      "path": "build/libpthread.map",
+      "sha256": "972f9f9123011ea2153a0211470f813d082d9bbc7abed4ead9b91098b1771fba",
+      "versions": {
+        "GLIBC_2.11": [
+          "__libpthread_version_placeholder"
+        ],
+        "GLIBC_2.12": [
+          "__libpthread_version_placeholder"
+        ],
+        "GLIBC_2.18": [
+          "__libpthread_version_placeholder"
+        ],
+        "GLIBC_2.2.5": [
+          "__libpthread_version_placeholder",
+          "__libpthread_version_placeholder",
+          "__libpthread_version_placeholder",
+          "__libpthread_version_placeholder",
+          "__libpthread_version_placeholder",
+          "__libpthread_version_placeholder"
+        ],
+        "GLIBC_2.2.6": [
+          "__libpthread_version_placeholder"
+        ],
+        "GLIBC_2.28": [
+          "__libpthread_version_placeholder"
+        ],
+        "GLIBC_2.3.2": [
+          "__libpthread_version_placeholder"
+        ],
+        "GLIBC_2.3.3": [
+          "__libpthread_version_placeholder"
+        ],
+        "GLIBC_2.3.4": [
+          "__libpthread_version_placeholder"
+        ],
+        "GLIBC_2.30": [
+          "__libpthread_version_placeholder"
+        ],
+        "GLIBC_2.31": [
+          "__libpthread_version_placeholder"
+        ],
+        "GLIBC_2.4": [
+          "__libpthread_version_placeholder"
+        ]
+      }
+    }
+  ],
+  "symlist_files": [
+    {
+      "entries": [
+        {
+          "kind": "F",
+          "symbol": "__libpthread_version_placeholder",
+          "version": "GLIBC_2.11"
+        },
+        {
+          "kind": "F",
+          "symbol": "__libpthread_version_placeholder",
+          "version": "GLIBC_2.12"
+        },
+        {
+          "kind": "F",
+          "symbol": "__libpthread_version_placeholder",
+          "version": "GLIBC_2.18"
+        },
+        {
+          "kind": "F",
+          "symbol": "__libpthread_version_placeholder",
+          "version": "GLIBC_2.2.5"
+        },
+        {
+          "kind": "F",
+          "symbol": "__libpthread_version_placeholder",
+          "version": "GLIBC_2.2.6"
+        },
+        {
+          "kind": "F",
+          "symbol": "__libpthread_version_placeholder",
+          "version": "GLIBC_2.28"
+        },
+        {
+          "kind": "F",
+          "symbol": "__libpthread_version_placeholder",
+          "version": "GLIBC_2.3.2"
+        },
+        {
+          "kind": "F",
+          "symbol": "__libpthread_version_placeholder",
+          "version": "GLIBC_2.3.3"
+        },
+        {
+          "kind": "F",
+          "symbol": "__libpthread_version_placeholder",
+          "version": "GLIBC_2.3.4"
+        },
+        {
+          "kind": "F",
+          "symbol": "__libpthread_version_placeholder",
+          "version": "GLIBC_2.30"
+        },
+        {
+          "kind": "F",
+          "symbol": "__libpthread_version_placeholder",
+          "version": "GLIBC_2.31"
+        },
+        {
+          "kind": "F",
+          "symbol": "__libpthread_version_placeholder",
+          "version": "GLIBC_2.4"
+        }
+      ],
+      "path": "build/nptl/libpthread.symlist",
+      "sha256": "f1d8ebf57471cb7f67e99c0d03447b92f15ca965b1a9ea86cdd517b55f95b26a"
+    }
+  ]
+}

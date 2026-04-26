@@ -1,0 +1,43 @@
+{
+  "dso_id": "libutil",
+  "primary_oracle": "build/login/libutil.so",
+  "auxiliary_oracles": [],
+  "installed_paths": [
+    "/usr/lib64/libutil.so.1"
+  ],
+  "build_id": "60b50b9a870f132d28d8fbbe31de7e7e90f2527b",
+  "soname": "libutil.so.1",
+  "needed": [
+    "libc.so.6"
+  ],
+  "exported_symbols": [
+    "GLIBC_2.2.5",
+    "Name",
+    "__libutil_version_placeholder@GLIBC_2.2.5"
+  ],
+  "map_files": [
+    {
+      "kind": "version_script",
+      "path": "build/libutil.map",
+      "sha256": "b0fc342dab355f0f11705d178ab7b218eec9305271babffa43c560920644f0ab",
+      "versions": {
+        "GLIBC_2.2.5": [
+          "__libutil_version_placeholder"
+        ]
+      }
+    }
+  ],
+  "symlist_files": [
+    {
+      "entries": [
+        {
+          "kind": "F",
+          "symbol": "__libutil_version_placeholder",
+          "version": "GLIBC_2.2.5"
+        }
+      ],
+      "path": "build/login/libutil.symlist",
+      "sha256": "ac357b8ae937d07ac6c7bad6cedb561b633e8bddcb54ffe54440143fd352ff7e"
+    }
+  ]
+}
