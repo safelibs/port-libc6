@@ -17,3 +17,7 @@ path = "src/bin/safe-loader-tool.rs"
 [[bin]]
 name = "safe-runtime-tool"
 path = "src/bin/safe-runtime-tool.rs"
+
+[[bin]]
+name = "safe-network-tool"
+path = "src/bin/safe-network-tool.rs"

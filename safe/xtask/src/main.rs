@@ -43,6 +43,14 @@ enum Command {
     Check06IoStdioPackages(commands::check_06_io_stdio_packages::Args),
     #[command(name = "check_06_io_stdio_safety")]
     Check06IoStdioSafety(commands::check_06_io_stdio_safety::Args),
+    #[command(name = "check_07_network_tests")]
+    Check07NetworkTests(commands::check_07_network_tests::Args),
+    #[command(name = "check_07_network_abi")]
+    Check07NetworkAbi(commands::check_07_network_abi::Args),
+    #[command(name = "check_07_network_packages")]
+    Check07NetworkPackages(commands::check_07_network_packages::Args),
+    #[command(name = "check_07_network_safety")]
+    Check07NetworkSafety(commands::check_07_network_safety::Args),
     RunOriginalTests(commands::run_original_tests::Args),
     CheckAbi(commands::check_abi::Args),
     InstallRoot(commands::install_root::Args),
@@ -76,6 +84,10 @@ fn main() -> Result<()> {
         Command::Check06IoStdioAbi(args) => commands::check_06_io_stdio_abi::run(args),
         Command::Check06IoStdioPackages(args) => commands::check_06_io_stdio_packages::run(args),
         Command::Check06IoStdioSafety(args) => commands::check_06_io_stdio_safety::run(args),
+        Command::Check07NetworkTests(args) => commands::check_07_network_tests::run(args),
+        Command::Check07NetworkAbi(args) => commands::check_07_network_abi::run(args),
+        Command::Check07NetworkPackages(args) => commands::check_07_network_packages::run(args),
+        Command::Check07NetworkSafety(args) => commands::check_07_network_safety::run(args),
         Command::RunOriginalTests(args) => commands::run_original_tests::run(args),
         Command::CheckAbi(args) => commands::check_abi::run(args),
         Command::InstallRoot(args) => commands::install_root::run(args),

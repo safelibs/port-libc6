@@ -16,9 +16,10 @@ notes = [
     "Committed Debian maintainer scripts, debconf templates, helper shell fragments, and harness glue under safe/debian/**, safe/scripts/install-safe-repo.sh, and test-original.sh remain tracked policy exceptions for this phase.",
     "Phase 5 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed runtime crates and fallback inventory.",
     "Phase 6 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope tracks any remaining private baseline backend DSOs.",
+    "Phase 7 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope tracks the copied upstream network backends explicitly.",
 ]
-phase = "impl_06_io_stdio_string_path"
-phase_note = "Phase 6 keeps the reviewed unsafe and fallback policy entries in sync while the first libc-family public DSO payloads and public libc6-dev link names move to the safe build path."
+phase = "impl_07_nss_resolver_nscd"
+phase_note = "Phase 7 keeps the reviewed unsafe and fallback policy entries in sync while the network-facing libc-family DSOs and tool entrypoints move off temporary wrappers and onto the safe build path."
 purpose = "Authoritative policy schema for unsafe Rust reviews, tracked non-Rust fallbacks, and cross-manifest safety validation."
 
 [phase_modes.impl_01_safe_bootstrap]
@@ -90,14 +91,6 @@ audit_notes = "Phase-3 fallback-backed entrypoint shipped through safe/crates/li
 classification = "temporary_fallback_binary"
 owning_phase = "impl_09_math_and_aux_dsos"
 path = "/usr/bin/getconf"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains network-tools."
-classification = "temporary_fallback_binary"
-owning_phase = "impl_07_nss_resolver_nscd"
-path = "/usr/bin/getent"
 reviewer = "phase-5-auto-review"
 shipped = true
 
@@ -215,22 +208,6 @@ shipped = true
 
 [[reviewed_fallback_entries]]
 audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-classification = "hybrid_dso_shell"
-owning_phase = "impl_02_hybrid_abi_shell"
-path = "/usr/lib64/libanl.so"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-classification = "hybrid_dso_shell"
-owning_phase = "impl_02_hybrid_abi_shell"
-path = "/usr/lib64/libanl.so.1"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
 classification = "fallback_static_archive"
 owning_phase = "impl_02_hybrid_abi_shell"
 path = "/usr/lib64/libc_nonshared.a"
@@ -289,63 +266,7 @@ shipped = true
 audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
 classification = "hybrid_dso_shell"
 owning_phase = "impl_02_hybrid_abi_shell"
-path = "/usr/lib64/libnsl.so.1"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-classification = "hybrid_dso_shell"
-owning_phase = "impl_02_hybrid_abi_shell"
-path = "/usr/lib64/libnss_compat.so.2"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-classification = "hybrid_dso_shell"
-owning_phase = "impl_02_hybrid_abi_shell"
-path = "/usr/lib64/libnss_dns.so.2"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-classification = "hybrid_dso_shell"
-owning_phase = "impl_02_hybrid_abi_shell"
-path = "/usr/lib64/libnss_files.so.2"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-classification = "hybrid_dso_shell"
-owning_phase = "impl_02_hybrid_abi_shell"
-path = "/usr/lib64/libnss_hesiod.so.2"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-classification = "hybrid_dso_shell"
-owning_phase = "impl_02_hybrid_abi_shell"
 path = "/usr/lib64/libpcprofile.so"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-classification = "hybrid_dso_shell"
-owning_phase = "impl_02_hybrid_abi_shell"
-path = "/usr/lib64/libresolv.so"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-classification = "hybrid_dso_shell"
-owning_phase = "impl_02_hybrid_abi_shell"
-path = "/usr/lib64/libresolv.so.2"
 reviewer = "phase-5-auto-review"
 shipped = true
 
@@ -376,15 +297,23 @@ shipped = true
 [[reviewed_fallback_entries]]
 audit_notes = "Private baseline loader copy retained only as an explicitly inventoried backend payload while the public loader path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_06_io_stdio_string_path"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
+audit_notes = "Private copied upstream libanl payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
+classification = "private_baseline_backend_dso"
+owning_phase = "impl_07_nss_resolver_nscd"
+path = "/usr/libexec/safelibs/backends/libanl.so.1"
 reviewer = "phase-5-auto-review"
 shipped = true
 
 [[reviewed_fallback_entries]]
 audit_notes = "Private baseline libc copy retained only as an explicitly inventoried backend payload while the public libc path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_06_io_stdio_string_path"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "/usr/libexec/safelibs/backends/libc.so.6"
 reviewer = "phase-5-auto-review"
 shipped = true
@@ -392,7 +321,7 @@ shipped = true
 [[reviewed_fallback_entries]]
 audit_notes = "Private baseline libc_malloc_debug copy retained only as an explicitly inventoried backend payload while the public malloc-debug path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_06_io_stdio_string_path"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0"
 reviewer = "phase-5-auto-review"
 shipped = true
@@ -400,23 +329,71 @@ shipped = true
 [[reviewed_fallback_entries]]
 audit_notes = "Private baseline libmemusage copy retained only as an explicitly inventoried backend payload while the public memusage path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_06_io_stdio_string_path"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "/usr/libexec/safelibs/backends/libmemusage.so"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
+audit_notes = "Private copied upstream libnsl payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
+classification = "private_baseline_backend_dso"
+owning_phase = "impl_07_nss_resolver_nscd"
+path = "/usr/libexec/safelibs/backends/libnsl.so.1"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
+audit_notes = "Private copied upstream libnss_compat payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
+classification = "private_baseline_backend_dso"
+owning_phase = "impl_07_nss_resolver_nscd"
+path = "/usr/libexec/safelibs/backends/libnss_compat.so.2"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
+audit_notes = "Private copied upstream libnss_dns payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
+classification = "private_baseline_backend_dso"
+owning_phase = "impl_07_nss_resolver_nscd"
+path = "/usr/libexec/safelibs/backends/libnss_dns.so.2"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
+audit_notes = "Private copied upstream libnss_files payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
+classification = "private_baseline_backend_dso"
+owning_phase = "impl_07_nss_resolver_nscd"
+path = "/usr/libexec/safelibs/backends/libnss_files.so.2"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
+audit_notes = "Private copied upstream libnss_hesiod payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
+classification = "private_baseline_backend_dso"
+owning_phase = "impl_07_nss_resolver_nscd"
+path = "/usr/libexec/safelibs/backends/libnss_hesiod.so.2"
 reviewer = "phase-5-auto-review"
 shipped = true
 
 [[reviewed_fallback_entries]]
 audit_notes = "Private baseline libpthread copy retained only as an explicitly inventoried backend payload while the public libpthread path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_06_io_stdio_string_path"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "/usr/libexec/safelibs/backends/libpthread.so.0"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
+audit_notes = "Private copied upstream libresolv payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
+classification = "private_baseline_backend_dso"
+owning_phase = "impl_07_nss_resolver_nscd"
+path = "/usr/libexec/safelibs/backends/libresolv.so.2"
 reviewer = "phase-5-auto-review"
 shipped = true
 
 [[reviewed_fallback_entries]]
 audit_notes = "Private baseline libthread_db copy retained only as an explicitly inventoried backend payload while the public libthread_db path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_06_io_stdio_string_path"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "/usr/libexec/safelibs/backends/libthread_db.so.1"
 reviewer = "phase-5-auto-review"
 shipped = true
@@ -458,14 +435,6 @@ audit_notes = "Phase-3 fallback-backed entrypoint shipped through safe/crates/li
 classification = "temporary_fallback_binary"
 owning_phase = "impl_08_locale_iconv_posix_parsers"
 path = "/usr/sbin/locale-gen"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains network-tools."
-classification = "temporary_fallback_binary"
-owning_phase = "impl_07_nss_resolver_nscd"
-path = "/usr/sbin/nscd"
 reviewer = "phase-5-auto-review"
 shipped = true
 

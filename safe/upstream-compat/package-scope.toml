@@ -1,5 +1,5 @@
 [metadata]
-phase = "impl_06_io_stdio_string_path"
+phase = "impl_07_nss_resolver_nscd"
 notes = [
     "Required-package baselines remain derived from the checked-in build/testroot.pristine tree, while the committed packaging surface now lives under safe/debian/** and safe/generated/packaging/package-build-manifest.json.",
     "Later phases must consume the committed safe packaging files in place instead of reading undeclared inputs from original/debian/**.",
@@ -8,6 +8,7 @@ notes = [
     "Phase 4 keeps required package manifests in place, switches loader entrypoints to Rust frontends, and explicitly tracks any remaining loader backend binaries.",
     "Phase 5 keeps required package manifests in place, switches runtime entrypoints such as pldd to Rust frontends, and explicitly tracks any remaining runtime or loader backend binaries.",
     "Phase 6 keeps required package manifests in place, cuts the first libc-family public DSOs and public libc6-dev link names over to safe-built payloads, and tracks any remaining baseline backend DSOs under explicit private package paths.",
+    "Phase 7 keeps required package manifests in place, extends the libc-family public DSO cutover through the network-facing DSOs and link names, and tracks the copied upstream payloads under explicit private backend paths.",
 ]
 
 [debug_derivation]
@@ -485,13 +486,13 @@ shipped_status = "shipped"
 source_path = "build/testroot.pristine/usr/bin/getconf"
 
 [[files]]
-asset_kind = "fallback_wrapper"
+asset_kind = "rust_target"
 executable = true
 package = "libc-bin"
 path = "/usr/bin/getent"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/bin/getent"
+source_path = "safe/crates/libc-support-tools/src/network_tools.rs"
 
 [[files]]
 asset_kind = "fallback_wrapper"
@@ -10768,24 +10769,21 @@ temporary = true
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
-final_cutover_phase = "impl_10_final_fixup_and_audit"
+executable = false
 package = "libc6-dev"
 path = "/usr/lib64/libanl.so"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libanl.so"
-symlink_target = "../../lib64/libanl.so.1"
-temporary = true
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libanl.so"
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
+executable = false
 package = "libc6"
 path = "/usr/lib64/libanl.so.1"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libanl.so.1"
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libanl.so.1"
 
 [[files]]
 asset_kind = "data_asset"
@@ -10972,72 +10970,66 @@ source_path = "build/testroot.pristine/usr/lib64/libmvec.so.1"
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
+executable = false
 package = "libc6"
 path = "/usr/lib64/libnsl.so.1"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libnsl.so.1"
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libnsl.so.1"
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
-final_cutover_phase = "impl_10_final_fixup_and_audit"
+executable = false
 package = "libc6-dev"
 path = "/usr/lib64/libnss_compat.so"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libnss_compat.so"
-symlink_target = "../../lib64/libnss_compat.so.2"
-temporary = true
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libnss_compat.so"
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
+executable = false
 package = "libc6"
 path = "/usr/lib64/libnss_compat.so.2"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libnss_compat.so.2"
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libnss_compat.so.2"
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
+executable = false
 package = "libc6"
 path = "/usr/lib64/libnss_dns.so.2"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libnss_dns.so.2"
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libnss_dns.so.2"
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
+executable = false
 package = "libc6"
 path = "/usr/lib64/libnss_files.so.2"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libnss_files.so.2"
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libnss_files.so.2"
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
-final_cutover_phase = "impl_10_final_fixup_and_audit"
+executable = false
 package = "libc6-dev"
 path = "/usr/lib64/libnss_hesiod.so"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libnss_hesiod.so"
-symlink_target = "../../lib64/libnss_hesiod.so.2"
-temporary = true
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libnss_hesiod.so"
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
+executable = false
 package = "libc6"
 path = "/usr/lib64/libnss_hesiod.so.2"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libnss_hesiod.so.2"
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libnss_hesiod.so.2"
 
 [[files]]
 asset_kind = "rust_target"
@@ -11090,24 +11082,21 @@ temporary = true
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
-final_cutover_phase = "impl_10_final_fixup_and_audit"
+executable = false
 package = "libc6-dev"
 path = "/usr/lib64/libresolv.so"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libresolv.so"
-symlink_target = "../../lib64/libresolv.so.2"
-temporary = true
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libresolv.so"
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
+executable = false
 package = "libc6"
 path = "/usr/lib64/libresolv.so.2"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libresolv.so.2"
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libresolv.so.2"
 
 [[files]]
 asset_kind = "data_asset"
@@ -11221,6 +11210,17 @@ asset_kind = "private_baseline_backend_dso"
 executable = false
 final_cutover_phase = "impl_10_final_fixup_and_audit"
 package = "libc6"
+path = "/usr/libexec/safelibs/backends/libanl.so.1"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/libanl.so.1"
+temporary = true
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+final_cutover_phase = "impl_10_final_fixup_and_audit"
+package = "libc6"
 path = "/usr/libexec/safelibs/backends/libc.so.6"
 scope = "required_package"
 shipped_status = "shipped"
@@ -11254,10 +11254,76 @@ asset_kind = "private_baseline_backend_dso"
 executable = false
 final_cutover_phase = "impl_10_final_fixup_and_audit"
 package = "libc6"
+path = "/usr/libexec/safelibs/backends/libnsl.so.1"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/libnsl.so.1"
+temporary = true
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+final_cutover_phase = "impl_10_final_fixup_and_audit"
+package = "libc6"
+path = "/usr/libexec/safelibs/backends/libnss_compat.so.2"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/libnss_compat.so.2"
+temporary = true
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+final_cutover_phase = "impl_10_final_fixup_and_audit"
+package = "libc6"
+path = "/usr/libexec/safelibs/backends/libnss_dns.so.2"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/libnss_dns.so.2"
+temporary = true
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+final_cutover_phase = "impl_10_final_fixup_and_audit"
+package = "libc6"
+path = "/usr/libexec/safelibs/backends/libnss_files.so.2"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/libnss_files.so.2"
+temporary = true
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+final_cutover_phase = "impl_10_final_fixup_and_audit"
+package = "libc6"
+path = "/usr/libexec/safelibs/backends/libnss_hesiod.so.2"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/libnss_hesiod.so.2"
+temporary = true
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+final_cutover_phase = "impl_10_final_fixup_and_audit"
+package = "libc6"
 path = "/usr/libexec/safelibs/backends/libpthread.so.0"
 scope = "required_package"
 shipped_status = "shipped"
 source_path = "build/testroot.pristine/usr/lib64/libpthread.so.0"
+temporary = true
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+final_cutover_phase = "impl_10_final_fixup_and_audit"
+package = "libc6"
+path = "/usr/libexec/safelibs/backends/libresolv.so.2"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/libresolv.so.2"
 temporary = true
 
 [[files]]
@@ -11326,13 +11392,13 @@ shipped_status = "shipped"
 source_path = "safe/debian/local/usr_sbin/locale-gen"
 
 [[files]]
-asset_kind = "fallback_wrapper"
+asset_kind = "rust_target"
 executable = true
 package = "nscd"
 path = "/usr/sbin/nscd"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/sbin/nscd"
+source_path = "safe/crates/libc-support-tools/src/network_tools.rs"
 
 [[files]]
 asset_kind = "rust_target"

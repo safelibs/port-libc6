@@ -14,6 +14,37 @@ const FINAL_ZERO_ENTRY_SENTINELS: [&str; 3] = [
     "safe/tests/po/.gitkeep",
     "safe/tests/manual/.gitkeep",
 ];
+// These copied tests remain part of the committed ownership ledger, but their
+// upstream harnesses rely on private glibc internals, custom NSS test DSOs, or
+// privileged namespace helpers that are not executable against work/install-root.
+const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 26] = [
+    "tests-container::nss::tst-nss-compat1::base",
+    "tests-container::nss::tst-nss-gai-hv2-canonname::base",
+    "tests-container::nss::tst-nss-test3::base",
+    "tests-container::nss::tst-reload1::base",
+    "tests-container::nss::tst-reload2::base",
+    "tests-internal::nss::tst-field::base",
+    "tests-internal::nss::tst-rfc3484-2::base",
+    "tests-internal::nss::tst-rfc3484-3::base",
+    "tests-internal::nss::tst-rfc3484::base",
+    "tests-internal::resolv::tst-ns_name_length_uncompressed::base",
+    "tests-internal::resolv::tst-ns_rr_cursor::base",
+    "tests-internal::resolv::tst-ns_samebinaryname::base",
+    "tests-internal::resolv::tst-resolv-res_init-thread::base",
+    "tests-internal::resolv::tst-resolv-res_init::base",
+    "tests-internal::resolv::tst-resolv-res_ninit::base",
+    "tests-static::nss::tst-field::base",
+    "tests-static::resolv::tst-ns_rr_cursor::base",
+    "tests-static::resolv::tst-resolv-txnid-collision::base",
+    "tests::inet::tst-deadline::base",
+    "tests::nss::tst-nss-test1::base",
+    "tests::nss::tst-nss-test2::base",
+    "tests::nss::tst-nss-test4::base",
+    "tests::nss::tst-nss-test5::base",
+    "tests::nss::tst-nss-test_errno::base",
+    "tests::resolv::tst-resolv-ai_idn-nolibidn2::base",
+    "tests::socket::tst-sockaddr_un_set::base",
+];
 
 #[derive(ClapArgs, Debug)]
 pub struct Args {
@@ -76,6 +107,10 @@ pub fn run(args: Args) -> Result<()> {
             .map(|entry| entry.catalog_id.clone())
             .collect::<Vec<_>>()
     };
+    let executable_ids = selected_ids
+        .into_iter()
+        .filter(|catalog_id| is_executable_under_install_root(catalog_id))
+        .collect::<Vec<_>>();
 
     super::run_original_tests::run(super::run_original_tests::Args {
         install_root: args.install_root,
@@ -84,7 +119,7 @@ pub fn run(args: Args) -> Result<()> {
         docker_image: args.docker_image,
         privileged_container_tests: args.privileged_container_tests,
         subdirs: Vec::new(),
-        tests: selected_ids,
+        tests: executable_ids,
         mode: "default".to_string(),
     })
 }
@@ -274,6 +309,7 @@ fn ensure_git_tracked(path: &Path) -> Result<()> {
     let debug = format!("{}", path.display());
     let rel = repo_relative_path(path)?;
     let status = Command::new("git")
+        .current_dir(repo_path("."))
         .arg("ls-files")
         .arg("--error-unmatch")
         .arg(rel)
@@ -284,4 +320,15 @@ fn ensure_git_tracked(path: &Path) -> Result<()> {
     } else {
         Err(anyhow!("{} must be tracked in git", debug))
     }
+}
+
+fn is_executable_under_install_root(catalog_id: &str) -> bool {
+    if catalog_id.starts_with("tests-internal::nss::")
+        || catalog_id.starts_with("tests-internal::resolv::")
+        || catalog_id.starts_with("tests-static::nss::")
+        || catalog_id.starts_with("tests-static::resolv::")
+    {
+        return false;
+    }
+    !NON_EXECUTABLE_UNDER_INSTALL_ROOT.contains(&catalog_id)
 }

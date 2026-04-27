@@ -70,8 +70,8 @@
     {
       "package": "libc-bin",
       "path": "/usr/bin/getent",
-      "source_path": "build/testroot.pristine/usr/bin/getent",
-      "source_origin": "build_testroot",
+      "source_path": "safe/crates/libc-support-tools/src/network_tools.rs",
+      "source_origin": "safe_rust",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",

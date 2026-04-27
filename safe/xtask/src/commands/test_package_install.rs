@@ -19,9 +19,10 @@ pub fn run(args: Args) -> Result<()> {
         && args.smoke_set != "libc-family-cutover"
         && args.smoke_set != "loader-tools"
         && args.smoke_set != "runtime-tools"
+        && args.smoke_set != "network-tools"
     {
         bail!(
-            "unsupported smoke set {}; expected basic-required-packages, libc-family-cutover, loader-tools, or runtime-tools",
+            "unsupported smoke set {}; expected basic-required-packages, libc-family-cutover, loader-tools, runtime-tools, or network-tools",
             args.smoke_set
         );
     }
@@ -221,6 +222,93 @@ smoke_runtime_tools() {
   fi
 }
 
+smoke_network_tools() {
+  log "Verifying network-tool and network-DSO payloads from the committed install manifest"
+  jq -r '.entries[] | select(.verification == "network-tools" and .shipped_status == "shipped") | [.package, .path] | @tsv' \
+    /workspace/safe/generated/install-manifests/required-packages.json | \
+  while IFS=$'\t' read -r pkg path; do
+    if [ ! -e "$path" ] && [ ! -L "$path" ]; then
+      printf 'missing installed network payload for %s: %s\n' "$pkg" "$path" >&2
+      exit 1
+    fi
+  done
+
+  log "Checking network-facing DSO cutover provenance"
+  for manifest in \
+    /workspace/safe/generated/baseline/package-files/libc6.json \
+    /workspace/safe/generated/install-manifests/required-packages.json; do
+    for path in \
+      /usr/lib64/libanl.so.1 \
+      /usr/lib64/libnsl.so.1 \
+      /usr/lib64/libnss_compat.so.2 \
+      /usr/lib64/libnss_dns.so.2 \
+      /usr/lib64/libnss_files.so.2 \
+      /usr/lib64/libnss_hesiod.so.2 \
+      /usr/lib64/libresolv.so.2; do
+      origin=$(manifest_entry_field "$manifest" "$path" source_origin)
+      source_path=$(manifest_entry_field "$manifest" "$path" source_path)
+      if [ "$origin" = "build_testroot" ]; then
+        printf 'network-facing public payload %s still uses build_testroot origin in %s\n' "$path" "$manifest" >&2
+        exit 1
+      fi
+      case "$source_path" in
+        build/testroot.pristine/usr/lib64/*)
+          printf 'network-facing public payload %s still points at baseline public source %s in %s\n' "$path" "$source_path" "$manifest" >&2
+          exit 1
+          ;;
+      esac
+    done
+  done
+
+  log "Checking explicit network backend inventory"
+  for path in \
+    /usr/libexec/safelibs/backends/libanl.so.1 \
+    /usr/libexec/safelibs/backends/libnsl.so.1 \
+    /usr/libexec/safelibs/backends/libnss_compat.so.2 \
+    /usr/libexec/safelibs/backends/libnss_dns.so.2 \
+    /usr/libexec/safelibs/backends/libnss_files.so.2 \
+    /usr/libexec/safelibs/backends/libnss_hesiod.so.2 \
+    /usr/libexec/safelibs/backends/libresolv.so.2; do
+    test -e "$path"
+  done
+
+  log "Checking network tool entrypoints"
+  test -x /usr/bin/getent
+  test -x /usr/sbin/nscd
+  if [ -e /usr/libexec/safelibs/fallback/libc-bin/getent.real ]; then
+    printf 'temporary getent fallback payload should no longer ship\n' >&2
+    exit 1
+  fi
+  if [ -e /usr/libexec/safelibs/fallback/nscd/nscd.real ]; then
+    printf 'temporary nscd fallback payload should no longer ship\n' >&2
+    exit 1
+  fi
+
+  /usr/bin/getent passwd root >/tmp/getent-passwd.txt
+  /usr/bin/getent group root >/tmp/getent-group.txt
+  /usr/bin/getent hosts localhost >/tmp/getent-hosts.txt
+  /usr/bin/getent ahostsv4 localhost >/tmp/getent-ahostsv4.txt
+  if [ ! -s /tmp/getent-passwd.txt ] || [ ! -s /tmp/getent-group.txt ] || [ ! -s /tmp/getent-hosts.txt ]; then
+    printf 'getent smoke output was unexpectedly empty\n' >&2
+    exit 1
+  fi
+
+  /usr/sbin/nscd --version >/tmp/nscd-version.txt
+  /usr/sbin/nscd -g >/tmp/nscd-status-before.txt || true
+  /usr/sbin/nscd --foreground >/tmp/nscd-foreground.txt 2>&1 &
+  nscd_pid=$!
+  sleep 2
+  test -f /run/nscd/nscd.pid
+  /usr/sbin/nscd -i hosts
+  /usr/sbin/nscd -i passwd
+  /usr/sbin/nscd --shutdown
+  wait "$nscd_pid"
+  if [ ! -s /tmp/nscd-version.txt ]; then
+    printf 'nscd version output was empty\n' >&2
+    exit 1
+  fi
+}
+
 smoke_libc_family_cutover() {
   log "Checking libc-family manifest provenance cutover"
   for manifest in \
@@ -306,6 +394,9 @@ case "${SAFE_SMOKE_SET}" in
     ;;
   runtime-tools)
     smoke_runtime_tools
+    ;;
+  network-tools)
+    smoke_network_tools
     ;;
   *)
     printf 'unsupported smoke set in container: %s\n' "${SAFE_SMOKE_SET}" >&2

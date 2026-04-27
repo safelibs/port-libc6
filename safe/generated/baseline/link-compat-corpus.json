@@ -1,9 +1,10 @@
 {
   "metadata": {
-    "phase": "impl_06_io_stdio_string_path",
+    "phase": "impl_07_nss_resolver_nscd",
     "notes": [
       "This corpus is the authoritative relink-compatibility case list for original-object verification.",
       "Phase 6 seeds startup-object, ordinary dynamic, PIE, static, static-PIE, and GLIBC_PRIVATE coverage.",
+      "Phase 7 extends the corpus with network-facing libanl, libresolv, and libnss module coverage while keeping the preserved original-object workflow intact.",
       "Later phases must extend this file in place instead of rediscovering cases from work/original-build ad hoc."
     ]
   },
@@ -123,6 +124,63 @@
       "exercised_dsos": [
         "ld.so",
         "libc"
+      ],
+      "run_mode": "safe-loader"
+    },
+    {
+      "case_id": "network-libanl",
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "coverage_class": "network-libanl",
+      "object_source_kind": "original_sysroot_fixture",
+      "fixture_source_path": "safe/tests/resolv/link-compat-libanl.c",
+      "upstream_object_path": null,
+      "original_object_relpath": "network-libanl/main.o",
+      "compile_args": [],
+      "link_args": [
+        "-lanl"
+      ],
+      "required_startfiles": [],
+      "exercised_dsos": [
+        "libanl"
+      ],
+      "run_mode": "safe-loader"
+    },
+    {
+      "case_id": "network-libresolv",
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "coverage_class": "network-libresolv",
+      "object_source_kind": "original_sysroot_fixture",
+      "fixture_source_path": "safe/tests/resolv/link-compat-libresolv.c",
+      "upstream_object_path": null,
+      "original_object_relpath": "network-libresolv/main.o",
+      "compile_args": [],
+      "link_args": [
+        "-lresolv"
+      ],
+      "required_startfiles": [],
+      "exercised_dsos": [
+        "libresolv"
+      ],
+      "run_mode": "safe-loader"
+    },
+    {
+      "case_id": "network-libnss-modules",
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "coverage_class": "network-libnss-modules",
+      "object_source_kind": "original_sysroot_fixture",
+      "fixture_source_path": "safe/tests/nss/link-compat-libnss-modules.c",
+      "upstream_object_path": null,
+      "original_object_relpath": "network-libnss-modules/main.o",
+      "compile_args": [],
+      "link_args": [
+        "-ldl"
+      ],
+      "required_startfiles": [],
+      "exercised_dsos": [
+        "libnss_compat",
+        "libnss_dns",
+        "libnss_files",
+        "libnss_hesiod"
       ],
       "run_mode": "safe-loader"
     }

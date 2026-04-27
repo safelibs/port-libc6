@@ -1,32 +1,4 @@
 {
-  "entries": [
-    {
-      "asset_kind": "data_asset",
-      "executable": false,
-      "owner_phase": null,
-      "package": "nscd",
-      "path": "/etc/nscd.conf",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "source_origin": "source_tree",
-      "source_path": "original/nscd/nscd.conf",
-      "symlink_target": null,
-      "verification": null
-    },
-    {
-      "asset_kind": "rust_target",
-      "executable": true,
-      "owner_phase": "impl_07_nss_resolver_nscd",
-      "package": "nscd",
-      "path": "/usr/sbin/nscd",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "source_origin": "build_testroot",
-      "source_path": "build/testroot.pristine/usr/sbin/nscd",
-      "symlink_target": null,
-      "verification": "network-tools"
-    }
-  ],
   "metadata": {
     "generated_from": [
       "build/testroot.pristine",
@@ -41,5 +13,33 @@
     "package": "nscd",
     "phase": "impl_01_safe_bootstrap",
     "scope": "required_package"
-  }
+  },
+  "entries": [
+    {
+      "package": "nscd",
+      "path": "/etc/nscd.conf",
+      "source_path": "original/nscd/nscd.conf",
+      "source_origin": "source_tree",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "data_asset",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": null,
+      "verification": null
+    },
+    {
+      "package": "nscd",
+      "path": "/usr/sbin/nscd",
+      "source_path": "safe/crates/libc-support-tools/src/network_tools.rs",
+      "source_origin": "safe_rust",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "rust_target",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
+    }
+  ]
 }

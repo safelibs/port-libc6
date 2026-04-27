@@ -1,6 +1,9 @@
 use crate::loader_tools::{
     LDCONFIG_BACKEND_INSTALL_PATH, LDSO_BACKEND_INSTALL_PATH, LOADER_TOOL_BINARY_NAME,
 };
+use crate::network_tools::{
+    GETENT_SOURCE_PATH, NETWORK_TOOL_BINARY_NAME, NSCD_SOURCE_PATH,
+};
 use crate::runtime_tools::{PLDD_BACKEND_INSTALL_PATH, RUNTIME_TOOL_BINARY_NAME};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -45,6 +48,8 @@ const PLDD_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
     source_path: "build/testroot.pristine/usr/bin/pldd",
 }];
 
+const NO_BACKEND_ASSETS: &[BackendAsset] = &[];
+
 const REQUIRED_TOOLS: &[RequiredTool] = &[
     RequiredTool {
         package: "libc-dev-bin",
@@ -69,8 +74,10 @@ const REQUIRED_TOOLS: &[RequiredTool] = &[
         entrypoint: "/usr/bin/getent",
         owner_phase: "impl_07_nss_resolver_nscd",
         verification: "network-tools",
-        kind: RequiredToolKind::FallbackWrapper {
-            fallback_source_path: "build/testroot.pristine/usr/bin/getent",
+        kind: RequiredToolKind::RustEntrypoint {
+            binary_name: NETWORK_TOOL_BINARY_NAME,
+            public_source_path: GETENT_SOURCE_PATH,
+            backend_assets: NO_BACKEND_ASSETS,
         },
     },
     RequiredTool {
@@ -230,8 +237,10 @@ const REQUIRED_TOOLS: &[RequiredTool] = &[
         entrypoint: "/usr/sbin/nscd",
         owner_phase: "impl_07_nss_resolver_nscd",
         verification: "network-tools",
-        kind: RequiredToolKind::FallbackWrapper {
-            fallback_source_path: "build/testroot.pristine/usr/sbin/nscd",
+        kind: RequiredToolKind::RustEntrypoint {
+            binary_name: NETWORK_TOOL_BINARY_NAME,
+            public_source_path: NSCD_SOURCE_PATH,
+            backend_assets: NO_BACKEND_ASSETS,
         },
     },
 ];

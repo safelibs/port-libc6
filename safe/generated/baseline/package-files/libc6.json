@@ -3340,7 +3340,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
+      "owner_phase": "impl_07_nss_resolver_nscd",
       "verification": "libc-family-cutover"
     },
     {
@@ -3359,15 +3359,15 @@
     {
       "package": "libc6",
       "path": "/usr/lib64/libanl.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libanl.so.1",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libanl.so.1",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
-      "executable": true,
+      "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
     },
     {
       "package": "libc6",
@@ -3379,7 +3379,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
+      "owner_phase": "impl_07_nss_resolver_nscd",
       "verification": "libc-family-cutover"
     },
     {
@@ -3392,7 +3392,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
+      "owner_phase": "impl_07_nss_resolver_nscd",
       "verification": "libc-family-cutover"
     },
     {
@@ -3431,7 +3431,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
+      "owner_phase": "impl_07_nss_resolver_nscd",
       "verification": "libc-family-cutover"
     },
     {
@@ -3450,67 +3450,67 @@
     {
       "package": "libc6",
       "path": "/usr/lib64/libnsl.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libnsl.so.1",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libnsl.so.1",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
-      "executable": true,
+      "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
     },
     {
       "package": "libc6",
       "path": "/usr/lib64/libnss_compat.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libnss_compat.so.2",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libnss_compat.so.2",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
-      "executable": true,
+      "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
     },
     {
       "package": "libc6",
       "path": "/usr/lib64/libnss_dns.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libnss_dns.so.2",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libnss_dns.so.2",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
-      "executable": true,
+      "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
     },
     {
       "package": "libc6",
       "path": "/usr/lib64/libnss_files.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libnss_files.so.2",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libnss_files.so.2",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
-      "executable": true,
+      "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
     },
     {
       "package": "libc6",
       "path": "/usr/lib64/libnss_hesiod.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libnss_hesiod.so.2",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libnss_hesiod.so.2",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
-      "executable": true,
+      "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
     },
     {
       "package": "libc6",
@@ -3535,21 +3535,21 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
+      "owner_phase": "impl_07_nss_resolver_nscd",
       "verification": "libc-family-cutover"
     },
     {
       "package": "libc6",
       "path": "/usr/lib64/libresolv.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libresolv.so.2",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libresolv.so.2",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
-      "executable": true,
+      "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
     },
     {
       "package": "libc6",
@@ -3574,7 +3574,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
+      "owner_phase": "impl_07_nss_resolver_nscd",
       "verification": "libc-family-cutover"
     },
     {
@@ -3600,8 +3600,21 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
+      "owner_phase": "impl_07_nss_resolver_nscd",
       "verification": "libc-family-cutover"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/libanl.so.1",
+      "source_path": "build/testroot.pristine/usr/lib64/libanl.so.1",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
     },
     {
       "package": "libc6",
@@ -3613,7 +3626,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
+      "owner_phase": "impl_07_nss_resolver_nscd",
       "verification": "libc-family-cutover"
     },
     {
@@ -3626,7 +3639,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
+      "owner_phase": "impl_07_nss_resolver_nscd",
       "verification": "libc-family-cutover"
     },
     {
@@ -3639,8 +3652,73 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
+      "owner_phase": "impl_07_nss_resolver_nscd",
       "verification": "libc-family-cutover"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/libnsl.so.1",
+      "source_path": "build/testroot.pristine/usr/lib64/libnsl.so.1",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/libnss_compat.so.2",
+      "source_path": "build/testroot.pristine/usr/lib64/libnss_compat.so.2",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/libnss_dns.so.2",
+      "source_path": "build/testroot.pristine/usr/lib64/libnss_dns.so.2",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/libnss_files.so.2",
+      "source_path": "build/testroot.pristine/usr/lib64/libnss_files.so.2",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/libnss_hesiod.so.2",
+      "source_path": "build/testroot.pristine/usr/lib64/libnss_hesiod.so.2",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
     },
     {
       "package": "libc6",
@@ -3652,8 +3730,21 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
+      "owner_phase": "impl_07_nss_resolver_nscd",
       "verification": "libc-family-cutover"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/libresolv.so.2",
+      "source_path": "build/testroot.pristine/usr/lib64/libresolv.so.2",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
     },
     {
       "package": "libc6",
@@ -3665,7 +3756,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
+      "owner_phase": "impl_07_nss_resolver_nscd",
       "verification": "libc-family-cutover"
     }
   ]

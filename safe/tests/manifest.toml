@@ -1,5 +1,5 @@
 [metadata]
-phase = "impl_06_io_stdio_string_path"
+phase = "impl_07_nss_resolver_nscd"
 notes = [
     "Every entry from test-port-plan.json is represented exactly once.",
     "Entries keep any already-committed later-phase port status in place while completed phases are refreshed from the ownership plan.",
@@ -229,7 +229,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-initgroups1.c"
 subdir = "nss"
 family = "tests-container"
@@ -242,7 +242,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-initgroups2.c"
 subdir = "nss"
 family = "tests-container"
@@ -256,7 +256,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-compat1.c"
 subdir = "nss"
 family = "tests-container"
@@ -269,7 +269,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-db-endgrent.c"
 subdir = "nss"
 family = "tests-container"
@@ -282,7 +282,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-db-endpwent.c"
 subdir = "nss"
 family = "tests-container"
@@ -295,7 +295,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-files-hosts-long.c"
 subdir = "nss"
 family = "tests-container"
@@ -308,7 +308,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-files-hosts-v4mapped.c"
 subdir = "nss"
 family = "tests-container"
@@ -321,7 +321,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-gai-actions.c"
 subdir = "nss"
 family = "tests-container"
@@ -336,7 +336,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-gai-hv2-canonname.c"
 subdir = "nss"
 family = "tests-container"
@@ -350,7 +350,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-test3.c"
 subdir = "nss"
 family = "tests-container"
@@ -364,7 +364,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-reload1.c"
 subdir = "nss"
 family = "tests-container"
@@ -378,7 +378,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-reload2.c"
 subdir = "nss"
 family = "tests-container"
@@ -417,7 +417,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-leaks2.c"
 subdir = "resolv"
 family = "tests-container"
@@ -2013,7 +2013,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-field.c"
 subdir = "nss"
 family = "tests-internal"
@@ -2026,7 +2026,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-rfc3484-2.c"
 subdir = "nss"
 family = "tests-internal"
@@ -2039,7 +2039,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-rfc3484-3.c"
 subdir = "nss"
 family = "tests-internal"
@@ -2052,7 +2052,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-rfc3484.c"
 subdir = "nss"
 family = "tests-internal"
@@ -2104,7 +2104,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-inet_aton_exact.c"
 subdir = "resolv"
 family = "tests-internal"
@@ -2117,7 +2117,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-inet_pton.c"
 subdir = "resolv"
 family = "tests-internal"
@@ -2130,7 +2130,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-ns_name_length_uncompressed.c"
 subdir = "resolv"
 family = "tests-internal"
@@ -2143,7 +2143,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-ns_rr_cursor.c"
 subdir = "resolv"
 family = "tests-internal"
@@ -2156,7 +2156,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-ns_samebinaryname.c"
 subdir = "resolv"
 family = "tests-internal"
@@ -2169,7 +2169,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-res_init-thread.c"
 subdir = "resolv"
 family = "tests-internal"
@@ -2182,7 +2182,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-res_init.c"
 subdir = "resolv"
 family = "tests-internal"
@@ -2195,7 +2195,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-res_ninit.c"
 subdir = "resolv"
 family = "tests-internal"
@@ -2208,7 +2208,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-threads.c"
 subdir = "resolv"
 family = "tests-internal"
@@ -2221,7 +2221,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-txnid-collision.c"
 subdir = "resolv"
 family = "tests-internal"
@@ -15033,7 +15033,7 @@ catalog_id = "tests-special::hesiod::check-abi-libnss_hesiod::base"
 safe_path = "safe/tests/hesiod/check-abi-libnss_hesiod"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "hesiod"
 family = "tests-special"
 
@@ -15118,7 +15118,7 @@ catalog_id = "tests-special::inet::check-installed-headers-c::base"
 safe_path = "safe/tests/inet/check-installed-headers-c"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "inet"
 family = "tests-special"
 
@@ -15127,7 +15127,7 @@ catalog_id = "tests-special::inet::check-installed-headers-cxx::base"
 safe_path = "safe/tests/inet/check-installed-headers-cxx"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "inet"
 family = "tests-special"
 
@@ -15136,7 +15136,7 @@ catalog_id = "tests-special::inet::check-obsolete-constructs::base"
 safe_path = "safe/tests/scripts/check-obsolete-constructs.py"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-obsolete-constructs.py"
 subdir = "inet"
 family = "tests-special"
@@ -15146,7 +15146,7 @@ catalog_id = "tests-special::inet::check-wrapper-headers::base"
 safe_path = "safe/tests/scripts/check-wrapper-headers.py"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-wrapper-headers.py"
 subdir = "inet"
 family = "tests-special"
@@ -16044,7 +16044,7 @@ catalog_id = "tests-special::nis::check-abi-libnsl::base"
 safe_path = "safe/tests/nis/check-abi-libnsl"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "nis"
 family = "tests-special"
 
@@ -16198,7 +16198,7 @@ catalog_id = "tests-special::nss::check-abi-libnss_compat::base"
 safe_path = "safe/tests/nss/check-abi-libnss_compat"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "nss"
 family = "tests-special"
 
@@ -16207,7 +16207,7 @@ catalog_id = "tests-special::nss::check-abi-libnss_files::base"
 safe_path = "safe/tests/nss/check-abi-libnss_files"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "nss"
 family = "tests-special"
 
@@ -16216,7 +16216,7 @@ catalog_id = "tests-special::nss::check-installed-headers-c::base"
 safe_path = "safe/tests/nss/check-installed-headers-c"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "nss"
 family = "tests-special"
 
@@ -16225,7 +16225,7 @@ catalog_id = "tests-special::nss::check-installed-headers-cxx::base"
 safe_path = "safe/tests/nss/check-installed-headers-cxx"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "nss"
 family = "tests-special"
 
@@ -16234,7 +16234,7 @@ catalog_id = "tests-special::nss::check-obsolete-constructs::base"
 safe_path = "safe/tests/scripts/check-obsolete-constructs.py"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-obsolete-constructs.py"
 subdir = "nss"
 family = "tests-special"
@@ -16244,7 +16244,7 @@ catalog_id = "tests-special::nss::check-wrapper-headers::base"
 safe_path = "safe/tests/scripts/check-wrapper-headers.py"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-wrapper-headers.py"
 subdir = "nss"
 family = "tests-special"
@@ -16254,7 +16254,7 @@ catalog_id = "tests-special::nss::mtrace-tst-nss-gai-hv2-canonname::base"
 safe_path = "safe/tests/nss/mtrace-tst-nss-gai-hv2-canonname"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "nss"
 family = "tests-special"
 
@@ -16267,7 +16267,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst_fgetgrent.c"
 subdir = "nss"
 family = "tests-special"
@@ -16492,7 +16492,7 @@ catalog_id = "tests-special::resolv::check-abi-libanl::base"
 safe_path = "safe/tests/resolv/check-abi-libanl"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "resolv"
 family = "tests-special"
 
@@ -16501,7 +16501,7 @@ catalog_id = "tests-special::resolv::check-abi-libnss_dns::base"
 safe_path = "safe/tests/resolv/check-abi-libnss_dns"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "resolv"
 family = "tests-special"
 
@@ -16510,7 +16510,7 @@ catalog_id = "tests-special::resolv::check-abi-libresolv::base"
 safe_path = "safe/tests/resolv/check-abi-libresolv"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "resolv"
 family = "tests-special"
 
@@ -16519,7 +16519,7 @@ catalog_id = "tests-special::resolv::check-installed-headers-c::base"
 safe_path = "safe/tests/resolv/check-installed-headers-c"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "resolv"
 family = "tests-special"
 
@@ -16528,7 +16528,7 @@ catalog_id = "tests-special::resolv::check-installed-headers-cxx::base"
 safe_path = "safe/tests/resolv/check-installed-headers-cxx"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "resolv"
 family = "tests-special"
 
@@ -16537,7 +16537,7 @@ catalog_id = "tests-special::resolv::check-obsolete-constructs::base"
 safe_path = "safe/tests/scripts/check-obsolete-constructs.py"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-obsolete-constructs.py"
 subdir = "resolv"
 family = "tests-special"
@@ -16547,7 +16547,7 @@ catalog_id = "tests-special::resolv::check-wrapper-headers::base"
 safe_path = "safe/tests/scripts/check-wrapper-headers.py"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-wrapper-headers.py"
 subdir = "resolv"
 family = "tests-special"
@@ -16557,7 +16557,7 @@ catalog_id = "tests-special::resolv::mtrace-tst-leaks2::base"
 safe_path = "safe/tests/resolv/mtrace-tst-leaks2"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "resolv"
 family = "tests-special"
 
@@ -16566,7 +16566,7 @@ catalog_id = "tests-special::resolv::mtrace-tst-leaks::base"
 safe_path = "safe/tests/resolv/mtrace-tst-leaks"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "resolv"
 family = "tests-special"
 
@@ -16575,7 +16575,7 @@ catalog_id = "tests-special::resolv::mtrace-tst-resolv-res_ninit::base"
 safe_path = "safe/tests/resolv/mtrace-tst-resolv-res_ninit"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "resolv"
 family = "tests-special"
 
@@ -16755,7 +16755,7 @@ catalog_id = "tests-special::socket::check-installed-headers-c::base"
 safe_path = "safe/tests/socket/check-installed-headers-c"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "socket"
 family = "tests-special"
 
@@ -16764,7 +16764,7 @@ catalog_id = "tests-special::socket::check-installed-headers-cxx::base"
 safe_path = "safe/tests/socket/check-installed-headers-cxx"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 subdir = "socket"
 family = "tests-special"
 
@@ -16773,7 +16773,7 @@ catalog_id = "tests-special::socket::check-obsolete-constructs::base"
 safe_path = "safe/tests/scripts/check-obsolete-constructs.py"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-obsolete-constructs.py"
 subdir = "socket"
 family = "tests-special"
@@ -16783,7 +16783,7 @@ catalog_id = "tests-special::socket::check-wrapper-headers::base"
 safe_path = "safe/tests/scripts/check-wrapper-headers.py"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-wrapper-headers.py"
 subdir = "socket"
 family = "tests-special"
@@ -16793,7 +16793,7 @@ catalog_id = "tests-special::socket::tst-socket-consts::base"
 safe_path = "safe/tests/sysdeps/unix/sysv/linux/tst-socket-consts.py"
 support_paths = []
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/unix/sysv/linux/tst-socket-consts.py"
 subdir = "socket"
 family = "tests-special"
@@ -18665,7 +18665,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-field.c"
 subdir = "nss"
 family = "tests-static"
@@ -18730,7 +18730,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-ns_name_length_uncompressed.c"
 subdir = "resolv"
 family = "tests-static"
@@ -18743,7 +18743,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-ns_rr_cursor.c"
 subdir = "resolv"
 family = "tests-static"
@@ -18756,7 +18756,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-ns_samebinaryname.c"
 subdir = "resolv"
 family = "tests-static"
@@ -18769,7 +18769,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-txnid-collision.c"
 subdir = "resolv"
 family = "tests-static"
@@ -19515,7 +19515,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/unix/sysv/linux/tst-socket-timestamp-compat-time64.c"
 subdir = "socket"
 family = "tests-time64"
@@ -19528,7 +19528,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/unix/sysv/linux/tst-socket-timestamp-time64.c"
 subdir = "socket"
 family = "tests-time64"
@@ -19541,7 +19541,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/socket/tst-sockopt-time64.c"
 subdir = "socket"
 family = "tests-time64"
@@ -24742,7 +24742,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/bug-if1.c"
 subdir = "inet"
 family = "tests"
@@ -24755,7 +24755,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/htontest.c"
 subdir = "inet"
 family = "tests"
@@ -24768,7 +24768,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/test-hnto-types.c"
 subdir = "inet"
 family = "tests"
@@ -24781,7 +24781,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/test-ifaddrs.c"
 subdir = "inet"
 family = "tests"
@@ -24794,7 +24794,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/test-inet6_opt.c"
 subdir = "inet"
 family = "tests"
@@ -24807,7 +24807,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/test_ifindex.c"
 subdir = "inet"
 family = "tests"
@@ -24820,7 +24820,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/tst-checks-posix.c"
 subdir = "inet"
 family = "tests"
@@ -24833,7 +24833,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/tst-checks.c"
 subdir = "inet"
 family = "tests"
@@ -24846,7 +24846,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/tst-deadline.c"
 subdir = "inet"
 family = "tests"
@@ -24859,7 +24859,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/tst-ether_aton.c"
 subdir = "inet"
 family = "tests"
@@ -24872,7 +24872,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/tst-ether_line.c"
 subdir = "inet"
 family = "tests"
@@ -24885,7 +24885,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/tst-getni1.c"
 subdir = "inet"
 family = "tests"
@@ -24898,7 +24898,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/tst-getni2.c"
 subdir = "inet"
 family = "tests"
@@ -24911,7 +24911,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/tst-idna_name_classify.c"
 subdir = "inet"
 family = "tests"
@@ -24924,7 +24924,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/tst-if_index-long.c"
 subdir = "inet"
 family = "tests"
@@ -24937,7 +24937,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/tst-inet6_rth.c"
 subdir = "inet"
 family = "tests"
@@ -24950,7 +24950,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/tst-inet6_scopeid_pton.c"
 subdir = "inet"
 family = "tests"
@@ -24963,7 +24963,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/tst-network.c"
 subdir = "inet"
 family = "tests"
@@ -24976,7 +24976,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/tst-ntoa.c"
 subdir = "inet"
 family = "tests"
@@ -24989,7 +24989,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/inet/tst-sockaddr.c"
 subdir = "inet"
 family = "tests"
@@ -50943,7 +50943,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/bug17079.c"
 subdir = "nss"
 family = "tests"
@@ -50956,7 +50956,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/test-digits-dots.c"
 subdir = "nss"
 family = "tests"
@@ -50969,7 +50969,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/test-netdb.c"
 subdir = "nss"
 family = "tests"
@@ -50982,7 +50982,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/test-rpcent.c"
 subdir = "nss"
 family = "tests"
@@ -50995,7 +50995,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/testgrp.c"
 subdir = "nss"
 family = "tests"
@@ -51008,7 +51008,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-cancel-getpwuid_r.c"
 subdir = "nss"
 family = "tests"
@@ -51021,7 +51021,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-fgetsgent_r.c"
 subdir = "nss"
 family = "tests"
@@ -51034,7 +51034,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-getaddrinfo2.c"
 subdir = "nss"
 family = "tests"
@@ -51047,7 +51047,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-getaddrinfo3.c"
 subdir = "nss"
 family = "tests"
@@ -51060,7 +51060,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-getaddrinfo.c"
 subdir = "nss"
 family = "tests"
@@ -51073,7 +51073,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-gethnm.c"
 subdir = "nss"
 family = "tests"
@@ -51086,7 +51086,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-getpw.c"
 subdir = "nss"
 family = "tests"
@@ -51099,7 +51099,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-gshadow.c"
 subdir = "nss"
 family = "tests"
@@ -51112,7 +51112,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-files-alias-leak.c"
 subdir = "nss"
 family = "tests"
@@ -51125,7 +51125,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-files-alias-truncated.c"
 subdir = "nss"
 family = "tests"
@@ -51138,7 +51138,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-files-hosts-erange.c"
 subdir = "nss"
 family = "tests"
@@ -51151,7 +51151,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-files-hosts-getent.c"
 subdir = "nss"
 family = "tests"
@@ -51164,7 +51164,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-files-hosts-multi.c"
 subdir = "nss"
 family = "tests"
@@ -51177,7 +51177,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-getpwent.c"
 subdir = "nss"
 family = "tests"
@@ -51190,7 +51190,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-hash.c"
 subdir = "nss"
 family = "tests"
@@ -51203,7 +51203,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-test1.c"
 subdir = "nss"
 family = "tests"
@@ -51216,7 +51216,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-test2.c"
 subdir = "nss"
 family = "tests"
@@ -51229,7 +51229,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-test4.c"
 subdir = "nss"
 family = "tests"
@@ -51242,7 +51242,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-test5.c"
 subdir = "nss"
 family = "tests"
@@ -51255,7 +51255,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-nss-test_errno.c"
 subdir = "nss"
 family = "tests"
@@ -51268,7 +51268,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-putgrent.c"
 subdir = "nss"
 family = "tests"
@@ -51281,7 +51281,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-putpwent.c"
 subdir = "nss"
 family = "tests"
@@ -51294,7 +51294,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-putsgent.c"
 subdir = "nss"
 family = "tests"
@@ -51307,7 +51307,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-putspent.c"
 subdir = "nss"
 family = "tests"
@@ -51320,7 +51320,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-sgetsgent.c"
 subdir = "nss"
 family = "tests"
@@ -51333,7 +51333,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-shadow.c"
 subdir = "nss"
 family = "tests"
@@ -53379,7 +53379,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-aton.c"
 subdir = "resolv"
 family = "tests"
@@ -53392,7 +53392,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-bug18665-tcp.c"
 subdir = "resolv"
 family = "tests"
@@ -53405,7 +53405,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-bug18665.c"
 subdir = "resolv"
 family = "tests"
@@ -53418,7 +53418,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-inet_addr-binary.c"
 subdir = "resolv"
 family = "tests"
@@ -53431,7 +53431,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-inet_ntop.c"
 subdir = "resolv"
 family = "tests"
@@ -53444,7 +53444,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-leaks.c"
 subdir = "resolv"
 family = "tests"
@@ -53458,7 +53458,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-ns_name.c"
 subdir = "resolv"
 family = "tests"
@@ -53471,7 +53471,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-ns_name_compress.c"
 subdir = "resolv"
 family = "tests"
@@ -53484,7 +53484,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-ns_name_pton.c"
 subdir = "resolv"
 family = "tests"
@@ -53497,7 +53497,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-p_secstodate.c"
 subdir = "resolv"
 family = "tests"
@@ -53510,7 +53510,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-res_hconf_reorder.c"
 subdir = "resolv"
 family = "tests"
@@ -53523,7 +53523,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-res_hnok.c"
 subdir = "resolv"
 family = "tests"
@@ -53536,7 +53536,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-ai_idn-latin1.c"
 subdir = "resolv"
 family = "tests"
@@ -53549,7 +53549,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-ai_idn-nolibidn2.c"
 subdir = "resolv"
 family = "tests"
@@ -53562,7 +53562,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-ai_idn.c"
 subdir = "resolv"
 family = "tests"
@@ -53575,7 +53575,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-aliases.c"
 subdir = "resolv"
 family = "tests"
@@ -53588,7 +53588,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-basic.c"
 subdir = "resolv"
 family = "tests"
@@ -53601,7 +53601,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-binary.c"
 subdir = "resolv"
 family = "tests"
@@ -53614,7 +53614,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-byaddr.c"
 subdir = "resolv"
 family = "tests"
@@ -53627,7 +53627,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-canonname.c"
 subdir = "resolv"
 family = "tests"
@@ -53640,7 +53640,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-edns.c"
 subdir = "resolv"
 family = "tests"
@@ -53653,7 +53653,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-invalid-cname.c"
 subdir = "resolv"
 family = "tests"
@@ -53666,7 +53666,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-network.c"
 subdir = "resolv"
 family = "tests"
@@ -53679,7 +53679,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-noaaaa-vc.c"
 subdir = "resolv"
 family = "tests"
@@ -53692,7 +53692,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-noaaaa.c"
 subdir = "resolv"
 family = "tests"
@@ -53705,7 +53705,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-nondecimal.c"
 subdir = "resolv"
 family = "tests"
@@ -53718,7 +53718,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-res_init-multi.c"
 subdir = "resolv"
 family = "tests"
@@ -53731,7 +53731,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-search.c"
 subdir = "resolv"
 family = "tests"
@@ -53744,7 +53744,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-trailing.c"
 subdir = "resolv"
 family = "tests"
@@ -53757,7 +53757,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-trustad.c"
 subdir = "resolv"
 family = "tests"
@@ -54538,7 +54538,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/socket/tst-accept4.c"
 subdir = "socket"
 family = "tests"
@@ -54551,7 +54551,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/socket/tst-cmsg_cloexec.c"
 subdir = "socket"
 family = "tests"
@@ -54564,7 +54564,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/socket/tst-cmsghdr.c"
 subdir = "socket"
 family = "tests"
@@ -54577,7 +54577,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/socket/tst-sockaddr_un_set.c"
 subdir = "socket"
 family = "tests"
@@ -54590,7 +54590,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/unix/sysv/linux/tst-socket-timestamp-compat.c"
 subdir = "socket"
 family = "tests"
@@ -54603,7 +54603,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/unix/sysv/linux/tst-socket-timestamp.c"
 subdir = "socket"
 family = "tests"
@@ -54616,7 +54616,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/socket/tst-sockopt.c"
 subdir = "socket"
 family = "tests"
@@ -61056,7 +61056,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/bug-erange.c"
 subdir = "nss"
 family = "xtests"
@@ -61069,7 +61069,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-getaddrinfo4.c"
 subdir = "nss"
 family = "xtests"
@@ -61082,7 +61082,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/nss/tst-getaddrinfo5.c"
 subdir = "nss"
 family = "xtests"
@@ -61108,7 +61108,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_07_nss_resolver_nscd"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/resolv/tst-resolv-qtypes.c"
 subdir = "resolv"
 family = "xtests"

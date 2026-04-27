@@ -23,7 +23,7 @@ Multi-Arch: foreign
 Depends: libc6 (= @SAFE_VERSION@)
 Description: GNU C Library: Binaries
  This package contains the committed runtime helper surface for the safe
- libc6 port, including ldconfig, ldd, iconv, locale, and related tools.
+ libc6 port, including ldconfig, ldd, getent, locale, and related tools.
 
 Package: libc-dev-bin
 Architecture: amd64
@@ -52,7 +52,7 @@ Multi-Arch: foreign
 Depends: libc6 (= @SAFE_VERSION@), libc-bin (= @SAFE_VERSION@)
 Pre-Depends: libc6 (= @SAFE_VERSION@)
 Description: GNU C Library: Name Service Cache Daemon
- This package contains the safe packaging wrapper for nscd together with the
+ This package contains the safe phase-07 nscd frontend together with the
  committed init, service, and tmpfiles metadata required by the harness.
 
 Package: libc6

@@ -269,30 +269,27 @@ fn stage_required_tool(package_root: &Path, tool: &RequiredTool) -> Result<()> {
 }
 
 fn ensure_required_tool_binary(tool: &RequiredTool) -> Result<PathBuf> {
-    static BUILT_BINARY: OnceLock<PathBuf> = OnceLock::new();
-    if let Some(path) = BUILT_BINARY.get() {
-        return Ok(path.clone());
+    static BUILT_BINARIES: OnceLock<()> = OnceLock::new();
+    if BUILT_BINARIES.get().is_none() {
+        run_command(
+            Command::new("cargo")
+                .arg("build")
+                .arg("--release")
+                .arg("-p")
+                .arg("libc-support-tools")
+                .arg("--bins")
+                .current_dir(safe_root()),
+        )
+        .with_context(|| format!("failed to build Rust tool binary for {}", tool.entrypoint))?;
+        let _ = BUILT_BINARIES.set(());
     }
 
     let binary_name = tool_binary_name(tool)
         .ok_or_else(|| anyhow!("tool {} does not use a Rust entrypoint", tool.entrypoint))?;
-    run_command(
-        Command::new("cargo")
-            .arg("build")
-            .arg("--release")
-            .arg("-p")
-            .arg("libc-support-tools")
-            .arg("--bin")
-            .arg(binary_name)
-            .current_dir(safe_root()),
-    )
-    .with_context(|| format!("failed to build Rust tool binary for {}", tool.entrypoint))?;
-
     let binary = safe_root().join("target/release").join(binary_name);
     if !binary.exists() {
         bail!("missing built Rust tool binary {}", binary.display());
     }
-    let _ = BUILT_BINARY.set(binary.clone());
     Ok(binary)
 }
 
