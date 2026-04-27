@@ -1,7 +1,9 @@
-use crate::common::{load_tests_manifest, repo_path, PHASE_ID};
+use crate::common::{load_tests_manifest, repo_path};
 use anyhow::{bail, Result};
 use clap::Args as ClapArgs;
 use std::collections::BTreeSet;
+
+const OWNER_PHASE: &str = "impl_05_core_runtime_threads_entropy";
 
 const REQUIRED_OUTPUT_DIRS: [&str; 8] = [
     "safe/tests/core",
@@ -30,7 +32,7 @@ pub fn run(_args: Args) -> Result<()> {
     let owned = manifest
         .entries
         .iter()
-        .filter(|entry| entry.owner_phase == PHASE_ID)
+        .filter(|entry| entry.owner_phase == OWNER_PHASE)
         .collect::<Vec<_>>();
     if owned.is_empty() {
         bail!("no phase-5-owned runtime test entries were found");

@@ -160,7 +160,7 @@ fn check_one(baseline: &AbiBaseline, build_root: &PathBuf) -> Result<()> {
 
     let exported = parse_defined_dynsyms(&dynsyms);
     for symbol in expected_exported_symbols(baseline) {
-        if !exported.contains(&symbol) {
+        if !exported.contains(&symbol) && !has_compatible_export(&exported, &symbol) {
             bail!(
                 "runtime artifact {} is missing exported symbol {}",
                 artifact.display(),
@@ -218,6 +218,32 @@ fn parse_defined_dynsyms(text: &str) -> BTreeSet<String> {
         names.insert(fields[7].to_string());
     }
     names
+}
+
+fn has_compatible_export(exported: &BTreeSet<String>, expected: &str) -> bool {
+    let Some((base, version)) = split_symbol_version(expected) else {
+        return exported.contains(expected);
+    };
+    exported.iter().any(|candidate| {
+        if candidate == base {
+            return true;
+        }
+        let Some((candidate_base, candidate_version)) = split_symbol_version(candidate) else {
+            return candidate == base;
+        };
+        candidate_base == base && version_matches(version, candidate_version)
+    })
+}
+
+fn split_symbol_version(symbol: &str) -> Option<(&str, &str)> {
+    if let Some((base, version)) = symbol.split_once("@@") {
+        return Some((base, version));
+    }
+    symbol.split_once('@')
+}
+
+fn version_matches(expected: &str, candidate: &str) -> bool {
+    candidate == expected || candidate.starts_with(&format!("{expected}."))
 }
 
 fn expected_exported_symbols(baseline: &AbiBaseline) -> impl Iterator<Item = String> + '_ {

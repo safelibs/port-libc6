@@ -26,6 +26,10 @@ pub struct Args {
 
 pub fn run(args: Args) -> Result<()> {
     super::build::refresh_phase_outputs()?;
+    super::build::run(super::build::Args {
+        target: "amd64".to_string(),
+        profile: "dev".to_string(),
+    })?;
     let dest = resolve_safe_path(&args.dest);
     materialize_install_root(&dest, args.include_testroot_only, args.clean)
 }
@@ -41,6 +45,10 @@ pub fn materialize_install_root(
     include_testroot_only: bool,
     clean: bool,
 ) -> Result<()> {
+    super::build::run(super::build::Args {
+        target: "amd64".to_string(),
+        profile: "dev".to_string(),
+    })?;
     if clean && dest.exists() {
         fs::remove_dir_all(dest).with_context(|| format!("failed to remove {}", dest.display()))?;
     }
@@ -148,6 +156,10 @@ fn materialize_entry(root: &Path, entry: &PackageEntry) -> Result<()> {
         return materialize_required_tool(root, tool);
     }
 
+    if entry.asset_kind == "generated_compat_archive" {
+        return materialize_generated_compat_archive(root, entry);
+    }
+
     let out_path = install_path_to_root(root, &entry.path);
     if let Some(target) = &entry.symlink_target {
         if let Some(parent) = out_path.parent() {
@@ -197,6 +209,16 @@ fn materialize_entry(root: &Path, entry: &PackageEntry) -> Result<()> {
             .with_context(|| format!("failed to write {}", out_path.display()))?;
     }
 
+    Ok(())
+}
+
+fn materialize_generated_compat_archive(root: &Path, entry: &PackageEntry) -> Result<()> {
+    let out_path = install_path_to_root(root, &entry.path);
+    if let Some(parent) = out_path.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("failed to create {}", parent.display()))?;
+    }
+    crate::common::run_command(std::process::Command::new("ar").arg("rcs").arg(&out_path))?;
     Ok(())
 }
 

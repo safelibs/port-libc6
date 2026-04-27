@@ -1,6 +1,6 @@
 # Core Runtime Test Notes
 
-Phase 5 keeps the broader stdlib subtree out of runtime verification. Only the
-entropy coverage points `tst-getrandom` and `tst-arc4random*` move with the
-core-runtime phase; every other stdlib catalog entry remains phase-6-owned.
+Phase 6 keeps the earlier runtime stdlib allowlist intact. Only the entropy
+coverage points `tst-getrandom` and `tst-arc4random*` remain phase-5-owned;
+every other stdlib catalog entry is phase-6-owned.
 

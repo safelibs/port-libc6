@@ -2,7 +2,12 @@
 set -euo pipefail
 
 ROOT_DIR=${ROOT_DIR:-/workspace}
-SAFE_VERSION=${SAFE_VERSION:-2.39-0ubuntu8.7+safelibs03}
+if [[ -n ${SAFE_VERSION:-} ]]; then
+  SAFE_VERSION=$SAFE_VERSION
+else
+  SAFE_VERSION=$(jq -r '.safe_package_version' \
+    "$ROOT_DIR/safe/generated/packaging/package-build-manifest.json")
+fi
 REPO_NAME=safelibs
 SCRATCH_REPO=/tmp/safelibs-apt-repo
 PACKAGES=(libc6 libc6-dev libc6-dbg libc-bin libc-dev-bin locales nscd)

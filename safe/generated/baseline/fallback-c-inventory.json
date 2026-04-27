@@ -3,9 +3,9 @@
     "notes": [
       "This inventory is the single committed ledger of non-Rust source, script, assembly, template, and fallback assets planned under safe/**.",
       "Later phases must update this file in place instead of maintaining ad hoc fallback lists.",
-      "Phase 5 removes pldd from the public temporary-fallback set and replaces it with a Rust frontend, leaving only explicitly tracked backend exceptions and the recorded pt_chown omission."
+      "Phase 6 keeps the public libc-family DSOs on the safe build path and limits any remaining build_testroot runtime payloads to explicitly tracked private backend DSOs plus later-phase libc6-dev obligations."
     ],
-    "phase": "impl_05_core_runtime_threads_entropy"
+    "phase": "impl_06_io_stdio_string_path"
   },
   "entries": [
     {
@@ -185,17 +185,6 @@
       "audit_notes": "Required-package startup or assembly shim carried by the safe port surface."
     },
     {
-      "path": "/usr/lib64/ld-linux-x86-64.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/ld-linux-x86-64.so.2",
-      "classification": "hybrid_dso_shell",
-      "owning_phase": "impl_02_hybrid_abi_shell",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/lib64/ld-linux-x86-64.so.2"
-      ],
-      "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-    },
-    {
       "path": "/usr/lib64/libBrokenLocale.so.1",
       "source_path": "build/testroot.pristine/usr/lib64/libBrokenLocale.so.1",
       "classification": "hybrid_dso_shell",
@@ -225,39 +214,6 @@
       "shipped": true,
       "package_scope_refs": [
         "/usr/lib64/libanl.so.1"
-      ],
-      "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-    },
-    {
-      "path": "/usr/lib64/libc.so",
-      "source_path": "build/testroot.pristine/usr/lib64/libc.so",
-      "classification": "hybrid_dso_shell",
-      "owning_phase": "impl_02_hybrid_abi_shell",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/lib64/libc.so"
-      ],
-      "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-    },
-    {
-      "path": "/usr/lib64/libc.so.6",
-      "source_path": "build/testroot.pristine/usr/lib64/libc.so.6",
-      "classification": "hybrid_dso_shell",
-      "owning_phase": "impl_02_hybrid_abi_shell",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/lib64/libc.so.6"
-      ],
-      "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-    },
-    {
-      "path": "/usr/lib64/libc_malloc_debug.so.0",
-      "source_path": "build/testroot.pristine/usr/lib64/libc_malloc_debug.so.0",
-      "classification": "hybrid_dso_shell",
-      "owning_phase": "impl_02_hybrid_abi_shell",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/lib64/libc_malloc_debug.so.0"
       ],
       "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
     },
@@ -313,17 +269,6 @@
       "shipped": true,
       "package_scope_refs": [
         "/usr/lib64/libmcheck.a"
-      ],
-      "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-    },
-    {
-      "path": "/usr/lib64/libmemusage.so",
-      "source_path": "build/testroot.pristine/usr/lib64/libmemusage.so",
-      "classification": "hybrid_dso_shell",
-      "owning_phase": "impl_02_hybrid_abi_shell",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/lib64/libmemusage.so"
       ],
       "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
     },
@@ -416,17 +361,6 @@
       "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
     },
     {
-      "path": "/usr/lib64/libpthread.so.0",
-      "source_path": "build/testroot.pristine/usr/lib64/libpthread.so.0",
-      "classification": "hybrid_dso_shell",
-      "owning_phase": "impl_02_hybrid_abi_shell",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/lib64/libpthread.so.0"
-      ],
-      "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-    },
-    {
       "path": "/usr/lib64/libresolv.so",
       "source_path": "build/testroot.pristine/usr/lib64/libresolv.so",
       "classification": "hybrid_dso_shell",
@@ -460,28 +394,6 @@
       "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
     },
     {
-      "path": "/usr/lib64/libthread_db.so",
-      "source_path": "build/testroot.pristine/usr/lib64/libthread_db.so",
-      "classification": "hybrid_dso_shell",
-      "owning_phase": "impl_02_hybrid_abi_shell",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/lib64/libthread_db.so"
-      ],
-      "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-    },
-    {
-      "path": "/usr/lib64/libthread_db.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libthread_db.so.1",
-      "classification": "hybrid_dso_shell",
-      "owning_phase": "impl_02_hybrid_abi_shell",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/lib64/libthread_db.so.1"
-      ],
-      "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-    },
-    {
       "path": "/usr/lib64/libutil.so.1",
       "source_path": "build/testroot.pristine/usr/lib64/libutil.so.1",
       "classification": "hybrid_dso_shell",
@@ -504,9 +416,75 @@
       "audit_notes": "Required-package startup or assembly shim carried by the safe port surface."
     },
     {
+      "path": "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2",
+      "source_path": "build/testroot.pristine/usr/lib64/ld-linux-x86-64.so.2",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_06_io_stdio_string_path",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2"
+      ],
+      "audit_notes": "Private baseline loader copy retained only as an explicitly inventoried backend payload while the public loader path comes from the safe build root."
+    },
+    {
+      "path": "/usr/libexec/safelibs/backends/libc.so.6",
+      "source_path": "build/testroot.pristine/usr/lib64/libc.so.6",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_06_io_stdio_string_path",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/libc.so.6"
+      ],
+      "audit_notes": "Private baseline libc copy retained only as an explicitly inventoried backend payload while the public libc path comes from the safe build root."
+    },
+    {
+      "path": "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0",
+      "source_path": "build/testroot.pristine/usr/lib64/libc_malloc_debug.so.0",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_06_io_stdio_string_path",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0"
+      ],
+      "audit_notes": "Private baseline libc_malloc_debug copy retained only as an explicitly inventoried backend payload while the public malloc-debug path comes from the safe build root."
+    },
+    {
+      "path": "/usr/libexec/safelibs/backends/libmemusage.so",
+      "source_path": "build/testroot.pristine/usr/lib64/libmemusage.so",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_06_io_stdio_string_path",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/libmemusage.so"
+      ],
+      "audit_notes": "Private baseline libmemusage copy retained only as an explicitly inventoried backend payload while the public memusage path comes from the safe build root."
+    },
+    {
+      "path": "/usr/libexec/safelibs/backends/libpthread.so.0",
+      "source_path": "build/testroot.pristine/usr/lib64/libpthread.so.0",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_06_io_stdio_string_path",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/libpthread.so.0"
+      ],
+      "audit_notes": "Private baseline libpthread copy retained only as an explicitly inventoried backend payload while the public libpthread path comes from the safe build root."
+    },
+    {
+      "path": "/usr/libexec/safelibs/backends/libthread_db.so.1",
+      "source_path": "build/testroot.pristine/usr/lib64/libthread_db.so.1",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_06_io_stdio_string_path",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/libthread_db.so.1"
+      ],
+      "audit_notes": "Private baseline libthread_db copy retained only as an explicitly inventoried backend payload while the public libthread_db path comes from the safe build root."
+    },
+    {
       "path": "/usr/libexec/safelibs/loader-tools/ld.so.backend",
       "source_path": "build/testroot.pristine/usr/lib64/ld-linux-x86-64.so.2",
-      "classification": "temporary_fallback_binary",
+      "classification": "tracked_backend_binary",
       "owning_phase": "impl_04_loader_startup_secure_exec",
       "shipped": true,
       "package_scope_refs": [
@@ -517,7 +495,7 @@
     {
       "path": "/usr/libexec/safelibs/loader-tools/ldconfig.backend",
       "source_path": "build/testroot.pristine/usr/sbin/ldconfig",
-      "classification": "temporary_fallback_binary",
+      "classification": "tracked_backend_binary",
       "owning_phase": "impl_04_loader_startup_secure_exec",
       "shipped": true,
       "package_scope_refs": [
@@ -528,7 +506,7 @@
     {
       "path": "/usr/libexec/safelibs/runtime-tools/pldd.backend",
       "source_path": "build/testroot.pristine/usr/bin/pldd",
-      "classification": "temporary_fallback_binary",
+      "classification": "tracked_backend_binary",
       "owning_phase": "impl_05_core_runtime_threads_entropy",
       "shipped": true,
       "package_scope_refs": [

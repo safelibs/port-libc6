@@ -1,6 +1,8 @@
-use crate::common::{load_tests_manifest, PHASE_ID};
+use crate::common::load_tests_manifest;
 use anyhow::{bail, Result};
 use clap::Args as ClapArgs;
+
+const OWNER_PHASE: &str = "impl_04_loader_startup_secure_exec";
 
 const REQUIRED_OUTPUT_DIRS: [&str; 2] = [
     "safe/tests/sysdeps-x86_64",
@@ -16,7 +18,7 @@ pub fn run(_args: Args) -> Result<()> {
     let owned = manifest
         .entries
         .iter()
-        .filter(|entry| entry.owner_phase == PHASE_ID)
+        .filter(|entry| entry.owner_phase == OWNER_PHASE)
         .collect::<Vec<_>>();
     if owned.is_empty() {
         bail!("no phase-4-owned loader test entries were found");

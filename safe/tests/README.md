@@ -6,8 +6,7 @@ by the safe libc port.
 - `safe/tests/support/**` mirrors the committed upstream support subtree.
 - `safe/tests/manifest.toml` is the authoritative phase ownership ledger for the
   copied tests.
-- Phase 5 adds the runtime-owned test set under `safe/tests/misc/**`,
-  `safe/tests/malloc/**`, `safe/tests/nptl/**`, `safe/tests/nptl_db/**`,
-  `safe/tests/signal/**`, `safe/tests/setjmp/**`, and the entropy-focused
-  `safe/tests/stdlib/**` entries.
+- Phase 6 adds the io, stdio-common, string, dirent, time, timezone, assert,
+  ctype, and termios-owned entries while preserving the earlier committed phase
+  ownership in place.
 

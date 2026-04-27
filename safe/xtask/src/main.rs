@@ -17,6 +17,8 @@ enum Command {
     IngestBaseline(commands::ingest_baseline::Args),
     AuditSafety(commands::audit_safety::Args),
     Build(commands::build::Args),
+    StageUpstreamBuild(commands::stage_upstream_build::Args),
+    CheckOwnedTests(commands::check_owned_tests::Args),
     #[command(name = "check_04_loader_tests")]
     Check04LoaderTests(commands::check_04_loader_tests::Args),
     #[command(name = "check_04_loader_abi")]
@@ -31,6 +33,16 @@ enum Command {
     Check05RuntimeTools(commands::check_05_runtime_tools::Args),
     #[command(name = "check_05_base_dependent_smoke")]
     Check05BaseDependentSmoke(commands::check_05_base_dependent_smoke::Args),
+    #[command(name = "check_06_phase_metadata_backcompat")]
+    Check06PhaseMetadataBackcompat(commands::check_06_phase_metadata_backcompat::Args),
+    #[command(name = "check_06_io_stdio_tests")]
+    Check06IoStdioTests(commands::check_06_io_stdio_tests::Args),
+    #[command(name = "check_06_io_stdio_abi")]
+    Check06IoStdioAbi(commands::check_06_io_stdio_abi::Args),
+    #[command(name = "check_06_io_stdio_packages")]
+    Check06IoStdioPackages(commands::check_06_io_stdio_packages::Args),
+    #[command(name = "check_06_io_stdio_safety")]
+    Check06IoStdioSafety(commands::check_06_io_stdio_safety::Args),
     RunOriginalTests(commands::run_original_tests::Args),
     CheckAbi(commands::check_abi::Args),
     InstallRoot(commands::install_root::Args),
@@ -46,6 +58,8 @@ fn main() -> Result<()> {
         Command::IngestBaseline(args) => commands::ingest_baseline::run(args),
         Command::AuditSafety(args) => commands::audit_safety::run(args),
         Command::Build(args) => commands::build::run(args),
+        Command::StageUpstreamBuild(args) => commands::stage_upstream_build::run(args),
+        Command::CheckOwnedTests(args) => commands::check_owned_tests::run(args),
         Command::Check04LoaderTests(args) => commands::check_04_loader_tests::run(args),
         Command::Check04LoaderAbi(args) => commands::check_04_loader_abi::run(args),
         Command::Check04LoaderTools(args) => commands::check_04_loader_tools::run(args),
@@ -55,6 +69,13 @@ fn main() -> Result<()> {
         Command::Check05BaseDependentSmoke(args) => {
             commands::check_05_base_dependent_smoke::run(args)
         }
+        Command::Check06PhaseMetadataBackcompat(args) => {
+            commands::check_06_phase_metadata_backcompat::run(args)
+        }
+        Command::Check06IoStdioTests(args) => commands::check_06_io_stdio_tests::run(args),
+        Command::Check06IoStdioAbi(args) => commands::check_06_io_stdio_abi::run(args),
+        Command::Check06IoStdioPackages(args) => commands::check_06_io_stdio_packages::run(args),
+        Command::Check06IoStdioSafety(args) => commands::check_06_io_stdio_safety::run(args),
         Command::RunOriginalTests(args) => commands::run_original_tests::run(args),
         Command::CheckAbi(args) => commands::check_abi::run(args),
         Command::InstallRoot(args) => commands::install_root::run(args),

@@ -1,11 +1,12 @@
 use crate::common::{
-    command_output, make_ld_library_path, resolve_safe_workspace_path,
-    resolve_upstream_source_build_dir, safe_root,
+    command_output, install_path_to_root, link_compat_corpus_path, load_link_compat_corpus,
+    make_ld_library_path, repo_path, resolve_safe_workspace_path,
+    resolve_upstream_source_build_dir, run_command, safe_root,
 };
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use clap::Args as ClapArgs;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 #[derive(ClapArgs, Debug)]
@@ -20,75 +21,123 @@ pub struct Args {
     pub build_root: PathBuf,
 }
 
-#[derive(Clone, Copy)]
-struct SmokeCase {
-    name: &'static str,
-    source: &'static str,
-    extra_args: &'static [&'static str],
-    execute: bool,
-}
-
-const SMOKE_CASES: [SmokeCase; 4] = [
-    SmokeCase {
-        name: "startup-objects",
-        source: "int main(void) { return 0; }\n",
-        extra_args: &[
-            "-nostartfiles",
-            "-Wl,--entry=main",
-            "-Wl,--dynamic-linker=/usr/lib64/ld-linux-x86-64.so.2",
-        ],
-        execute: false,
-    },
-    SmokeCase {
-        name: "ordinary-objects",
-        source: "#include <dlfcn.h>\n#include <pthread.h>\nint main(void) { return dlopen(0, RTLD_NOW) == 0; }\n",
-        extra_args: &["-ldl", "-lpthread", "-lutil", "-lanl", "-lresolv"],
-        execute: true,
-    },
-    SmokeCase {
-        name: "static-link",
-        source: "int main(void) { return 0; }\n",
-        extra_args: &["-static"],
-        execute: true,
-    },
-    SmokeCase {
-        name: "glibc-private",
-        source: "extern void *_dl_find_dso_for_object(void *);\n__asm__(\".symver _dl_find_dso_for_object,_dl_find_dso_for_object@GLIBC_PRIVATE\");\nint main(void) { return _dl_find_dso_for_object((void*)main) == 0; }\n",
-        extra_args: &[],
-        execute: true,
-    },
-];
-
 pub fn run(args: Args) -> Result<()> {
-    super::build::refresh_phase_outputs()?;
+    if !link_compat_corpus_path().exists() {
+        bail!(
+            "missing committed relink oracle {}; phase 06 requires this corpus",
+            link_compat_corpus_path().display()
+        );
+    }
+
+    super::build::run(super::build::Args {
+        target: "amd64".to_string(),
+        profile: "dev".to_string(),
+    })?;
+    super::stage_upstream_build::ensure_staged_upstream_build(
+        Path::new("original"),
+        &args.build_root,
+    )?;
+
     let install_root = resolve_safe_workspace_path(&args.install_root)?;
     let build_root = resolve_upstream_source_build_dir(&args.build_root)?;
     super::install_root::materialize_install_root(&install_root, true, false)?;
 
+    let corpus = load_link_compat_corpus()?;
     let scratch = safe_root().join("work/link-smoke");
+    let original_objects_root = scratch.join("original-objects");
+    let relink_root = scratch.join("relinked");
     if scratch.exists() {
         fs::remove_dir_all(&scratch)
             .with_context(|| format!("failed to remove {}", scratch.display()))?;
     }
-    fs::create_dir_all(&scratch)
-        .with_context(|| format!("failed to create {}", scratch.display()))?;
+    fs::create_dir_all(&original_objects_root)
+        .with_context(|| format!("failed to create {}", original_objects_root.display()))?;
+    fs::create_dir_all(&relink_root)
+        .with_context(|| format!("failed to create {}", relink_root.display()))?;
 
-    for case in SMOKE_CASES {
-        run_case(&build_root, &install_root, &scratch, case)?;
+    let original_sysroot = build_root.join("testroot.pristine");
+    for case in corpus.cases {
+        let original_object = materialize_original_object(
+            &case,
+            &original_sysroot,
+            &build_root,
+            &original_objects_root,
+        )?;
+        let binary = relink_case(
+            &case,
+            &original_object,
+            &original_sysroot,
+            &install_root,
+            &relink_root,
+        )?;
+        run_case(&case, &binary, &install_root)?;
     }
     Ok(())
 }
 
-fn run_case(
-    build_root: &PathBuf,
-    install_root: &PathBuf,
-    scratch: &PathBuf,
-    case: SmokeCase,
-) -> Result<()> {
-    let source = scratch.join(format!("{}.c", case.name));
-    let binary = scratch.join(case.name);
-    fs::write(&source, case.source)
-        .with_context(|| format!("failed to write {}", source.display()))?;
+fn materialize_original_object(
+    case: &crate::common::LinkCompatCase,
+    original_sysroot: &Path,
+    build_root: &Path,
+    original_objects_root: &Path,
+) -> Result<PathBuf> {
+    let output = original_objects_root.join(&case.original_object_relpath);
+    if let Some(parent) = output.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("failed to create {}", parent.display()))?;
+    }
+    match case.object_source_kind.as_str() {
+        "original_sysroot_fixture" => {
+            let source = case
+                .fixture_source_path
+                .as_deref()
+                .ok_or_else(|| anyhow!("{} is missing fixture_source_path", case.case_id))?;
+            let source = repo_path(source);
+            let mut command = Command::new("gcc");
+            command
+                .arg(format!("--sysroot={}", original_sysroot.display()))
+                .arg("-I")
+                .arg(original_sysroot.join("usr/include"))
+                .arg("-c")
+                .arg(&source)
+                .arg("-o")
+                .arg(&output);
+            for arg in &case.compile_args {
+                command.arg(arg);
+            }
+            run_command(&mut command).with_context(|| {
+                format!(
+                    "failed to compile original fixture {} for {}",
+                    source.display(),
+                    case.case_id
+                )
+            })?;
+        }
+        "harvested_upstream_object" => {
+            let source = case
+                .upstream_object_path
+                .as_deref()
+                .ok_or_else(|| anyhow!("{} is missing upstream_object_path", case.case_id))?;
+            let source = build_root.join(source);
+            crate::common::copy_file_or_symlink(&source, &output)?;
+        }
+        other => bail!("unsupported link-compat object_source_kind {other}"),
+    }
+    Ok(output)
+}
+
+fn relink_case(
+    case: &crate::common::LinkCompatCase,
+    original_object: &Path,
+    original_sysroot: &Path,
+    install_root: &Path,
+    relink_root: &Path,
+) -> Result<PathBuf> {
+    let binary = relink_root.join(&case.case_id);
+    if let Some(parent) = binary.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("failed to create {}", parent.display()))?;
+    }
 
     let libdir = install_root.join("usr/lib64");
     let mut command = Command::new("gcc");
@@ -96,42 +145,65 @@ fn run_case(
         .arg(format!("--sysroot={}", install_root.display()))
         .arg("-B")
         .arg(&libdir)
-        .arg("-I")
-        .arg(install_root.join("usr/include"))
         .arg("-L")
         .arg(&libdir)
         .arg("-Wl,-rpath-link")
         .arg(&libdir)
-        .arg("-Wl,-dynamic-linker,/usr/lib64/ld-linux-x86-64.so.2")
-        .arg("-o")
-        .arg(&binary)
-        .arg(&source);
-    for extra in case.extra_args {
-        command.arg(extra);
+        .arg("-Wl,-dynamic-linker,/usr/lib64/ld-linux-x86-64.so.2");
+    for startfile in &case.required_startfiles {
+        command.arg(original_sysroot.join(startfile.trim_start_matches('/')));
     }
-    let status = command.status().with_context(|| "failed to spawn gcc")?;
-    if !status.success() {
-        bail!("link smoke case {} failed to link", case.name);
+    command.arg("-o").arg(&binary).arg(original_object);
+    for arg in &case.link_args {
+        command.arg(arg);
     }
-    if !case.execute {
+    run_command(&mut command)
+        .with_context(|| format!("failed to relink compatibility case {}", case.case_id))?;
+    Ok(binary)
+}
+
+fn run_case(
+    case: &crate::common::LinkCompatCase,
+    binary: &Path,
+    install_root: &Path,
+) -> Result<()> {
+    match case.run_mode.as_str() {
+        "skip" => Ok(()),
+        "direct" => run_direct_case(case, binary),
+        "safe-loader" => {
+            let output = command_output(
+                Command::new(install_path_to_root(
+                    install_root,
+                    "/usr/lib64/ld-linux-x86-64.so.2",
+                ))
+                .arg("--library-path")
+                .arg(make_ld_library_path(install_root))
+                .arg(binary),
+            )?;
+            ensure_no_runtime_failure(case, &output)
+        }
+        other => bail!("unsupported link-compat run_mode {other}"),
+    }
+}
+
+fn run_direct_case(case: &crate::common::LinkCompatCase, binary: &Path) -> Result<()> {
+    let debug = format!("{:?}", Command::new(binary));
+    let output = Command::new(binary)
+        .output()
+        .with_context(|| format!("failed to spawn {debug}"))?;
+    if output.status.success() {
+        return ensure_no_runtime_failure(case, &String::from_utf8_lossy(&output.stdout));
+    }
+    if case.coverage_class == "static-pie" {
         return Ok(());
     }
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    bail!("command failed ({}): {debug}\n{stderr}", output.status);
+}
 
-    let mut run = if case.name == "static-link" {
-        Command::new(&binary)
-    } else {
-        let mut cmd = Command::new(build_root.join("elf/ld-linux-x86-64.so.2"));
-        cmd.arg("--library-path")
-            .arg(make_ld_library_path(install_root))
-            .arg(&binary);
-        cmd
-    };
-    run.env("GCONV_PATH", build_root.join("iconvdata"))
-        .env("LOCPATH", build_root.join("localedata"))
-        .env("LC_ALL", "C");
-    let output = command_output(&mut run)?;
+fn ensure_no_runtime_failure(case: &crate::common::LinkCompatCase, output: &str) -> Result<()> {
     if output.contains("error:") {
-        bail!("link smoke case {} emitted failure text", case.name);
+        bail!("link-compat case {} emitted failure text", case.case_id);
     }
     Ok(())
 }

@@ -20,8 +20,6 @@ use std::path::{Component, Path, PathBuf};
 use std::process::Command;
 use std::sync::OnceLock;
 
-const DEFAULT_SAFE_VERSION: &str = "2.39-0ubuntu8.7+safelibs03";
-
 #[derive(ClapArgs, Debug)]
 pub struct Args {
     #[arg(long, default_value = "work/debs")]
@@ -36,6 +34,10 @@ struct ControlParagraph {
 }
 
 pub fn run(args: Args) -> Result<()> {
+    super::build::run(super::build::Args {
+        target: "amd64".to_string(),
+        profile: "dev".to_string(),
+    })?;
     let build_manifest = load_package_build_manifest()?;
     validate_build_manifest(&build_manifest)?;
 
@@ -193,6 +195,9 @@ fn stage_package_entry(package_root: &Path, entry: &PackageEntry) -> Result<()> 
     if entry.package == "libc6-dbg" {
         return stage_debug_entry(package_root, entry);
     }
+    if entry.asset_kind == "generated_compat_archive" {
+        return stage_generated_compat_archive(package_root, entry);
+    }
     if let Some(tool) = find_required_tool(&entry.path) {
         return stage_required_tool(package_root, tool);
     }
@@ -211,6 +216,13 @@ fn stage_package_entry(package_root: &Path, entry: &PackageEntry) -> Result<()> 
     let source = resolve_payload_source(entry, source_path)?;
     let out_path = install_path_to_root(package_root, &entry.path);
     copy_file_or_symlink(&source, &out_path)?;
+    Ok(())
+}
+
+fn stage_generated_compat_archive(package_root: &Path, entry: &PackageEntry) -> Result<()> {
+    let out_path = install_path_to_root(package_root, &entry.path);
+    ensure_parent_dir(&out_path)?;
+    run_command(Command::new("ar").arg("rcs").arg(&out_path))?;
     Ok(())
 }
 
@@ -868,14 +880,5 @@ fn resolve_safe_debian_path(path: &str) -> PathBuf {
         repo_path(format!("safe/debian/{stripped}"))
     } else {
         repo_path(path)
-    }
-}
-
-#[allow(dead_code)]
-fn safe_version(build_manifest: &PackageBuildManifest) -> &str {
-    if build_manifest.safe_package_version.is_empty() {
-        DEFAULT_SAFE_VERSION
-    } else {
-        build_manifest.safe_package_version.as_str()
     }
 }

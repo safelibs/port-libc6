@@ -8,7 +8,7 @@ against the checked-in upstream build outputs while the runtime remains hybrid.
   harness and smoke checks.
 - `cargo run -p xtask -- run-original-tests ...` populates that build tree from
   the committed safe test sources and the checked-in upstream build artifacts.
-- Phase 5 extends that committed test tree with the runtime, threads, malloc,
-  signal, setjmp, misc, nptl_db, and entropy-owned coverage without inventing a
-  parallel workflow.
+- Phase 6 extends that committed test tree with stdio, string, io, dirent,
+  time, timezone, assert, ctype, and termios-owned coverage without inventing
+  a parallel workflow.
 

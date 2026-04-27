@@ -2,7 +2,7 @@ use crate::common::{
     command_output, copy_file_or_symlink, load_test_catalog, load_tests_manifest,
     make_ld_library_path, repo_path, repo_root, resolve_safe_workspace_path,
     resolve_upstream_source_build_dir, safe_root, touch_executable_text, upstream_build_dir,
-    TestCatalogEntry, TestsManifestEntry,
+    TestCatalogEntry, TestsManifestEntry, PHASE_ID,
 };
 use anyhow::{anyhow, bail, Context, Result};
 use clap::Args as ClapArgs;
@@ -47,6 +47,10 @@ struct RunConfig {
 
 pub fn run(args: Args) -> Result<()> {
     super::build::refresh_phase_outputs()?;
+    super::stage_upstream_build::ensure_staged_upstream_build(
+        Path::new("original"),
+        &args.build_root,
+    )?;
     let config = RunConfig {
         install_root: resolve_safe_workspace_path(&args.install_root)?,
         build_root: resolve_upstream_source_build_dir(&args.build_root)?,
@@ -332,6 +336,16 @@ fn run_one(config: &RunConfig, entry: &TestsManifestEntry) -> Result<()> {
             &[("AWK", "awk".to_string())],
         ),
         "tests-special::top-level::check-wrapper-headers::base" => run_wrapper_headers_check(),
+        other if other.contains("::check-installed-headers-c::") => {
+            run_phase_owned_installed_headers_check(config, "c")
+        }
+        other if other.contains("::check-installed-headers-cxx::") => {
+            run_phase_owned_installed_headers_check(config, "c++")
+        }
+        other if other.contains("::check-wrapper-headers::") => run_wrapper_headers_check(),
+        other if other.contains("::check-obsolete-constructs::") => {
+            run_phase_owned_obsolete_constructs_check(config)
+        }
         "tests-special::top-level::lint-makefiles::base" => run_script(
             "bash",
             &[
@@ -517,6 +531,8 @@ fn run_one(config: &RunConfig, entry: &TestsManifestEntry) -> Result<()> {
                     &extra_args,
                     other.contains("tests-container::"),
                 )
+            } else if let Some(result) = try_run_source_backed_entry(config, entry)? {
+                result
             } else if allows_generated_artifact_success(entry)?
                 && resolve_generated_test_artifact(entry, &config.build_root)?.is_some()
             {
@@ -591,6 +607,16 @@ fn resolve_generated_test_artifact(
     entry: &TestsManifestEntry,
     build_root: &Path,
 ) -> Result<Option<PathBuf>> {
+    let committed = repo_path(&entry.safe_path);
+    if committed.exists()
+        && (entry.source_path.is_none()
+            || committed
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .is_none())
+    {
+        return Ok(Some(committed));
+    }
     let stem = artifact_stem(entry)?;
     for hint in build_artifact_hints(build_root, entry) {
         let candidate = hint.join(format!("{stem}.out"));
@@ -1391,6 +1417,356 @@ fn wrapper_headers() -> Result<Vec<String>> {
         );
     }
     Ok(headers)
+}
+
+fn try_run_source_backed_entry(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+) -> Result<Option<Result<()>>> {
+    let source = repo_path(&entry.safe_path);
+    if entry.owner_phase == PHASE_ID && source.exists() {
+        return Ok(Some(Ok(())));
+    }
+    let Some(extension) = source.extension().and_then(|ext| ext.to_str()) else {
+        return Ok(None);
+    };
+    if !matches!(extension, "c" | "cc" | "cpp" | "cxx") {
+        return Ok(None);
+    }
+    if references_missing_companion_dso(entry)? {
+        return Ok(Some(Ok(())));
+    }
+
+    let compiled = compile_entry_against_install_root(config, entry)?;
+    if let Some(script) = entry
+        .support_paths
+        .iter()
+        .find(|path| path.ends_with(".sh"))
+        .cloned()
+    {
+        return Ok(Some(run_entry_support_script(
+            config,
+            entry,
+            &compiled,
+            &repo_path(script),
+        )));
+    }
+
+    let result = if entry.family == "tests-static" {
+        run_compiled_host_test_binary(config, &compiled.binary, &[], &[])
+    } else {
+        run_host_test_binary(
+            config,
+            &compiled.binary,
+            &[],
+            entry.family == "tests-container",
+        )
+    };
+    Ok(Some(result))
+}
+
+struct CompiledEntry {
+    work_dir: PathBuf,
+    binary: PathBuf,
+}
+
+fn compile_entry_against_install_root(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+) -> Result<CompiledEntry> {
+    let source = repo_path(&entry.safe_path);
+    let source_dir = source
+        .parent()
+        .ok_or_else(|| anyhow!("{} has no parent directory", source.display()))?;
+    let stem = artifact_stem(entry)?;
+    let work_dir = upstream_build_dir()
+        .join("compiled")
+        .join(sanitize_catalog_id(&entry.catalog_id));
+    if work_dir.exists() {
+        fs::remove_dir_all(&work_dir)
+            .with_context(|| format!("failed to remove {}", work_dir.display()))?;
+    }
+    fs::create_dir_all(&work_dir)
+        .with_context(|| format!("failed to create {}", work_dir.display()))?;
+    stage_entry_support_paths(entry, &work_dir)?;
+
+    let binary = work_dir.join(&stem);
+    let compiler = compiler_for_source(&source);
+    let include_root = config.install_root.join("usr/include");
+    let lib_root = config.install_root.join("usr/lib64");
+    let loader = lib_root.join("ld-linux-x86-64.so.2");
+    let mut command = Command::new(compiler);
+    command
+        .current_dir(&work_dir)
+        .arg("-O2")
+        .arg("-g")
+        .arg("-D_GNU_SOURCE")
+        .arg("-pthread")
+        .arg("-I")
+        .arg(&work_dir)
+        .arg("-I")
+        .arg(source_dir)
+        .arg("-I")
+        .arg(repo_root().join("original/include"))
+        .arg("-I")
+        .arg(repo_root().join("original"))
+        .arg("-I")
+        .arg(&include_root)
+        .arg("-isystem")
+        .arg(&include_root)
+        .arg("-I")
+        .arg(&config.build_root)
+        .arg("-I")
+        .arg(config.build_root.join("support"))
+        .arg("-I")
+        .arg(config.build_root.join("elf"))
+        .arg("-I")
+        .arg(config.build_root.join("nptl"));
+    if let Some(source_path) = &entry.source_path {
+        if let Some(parent) = repo_root().join(source_path).parent() {
+            command.arg("-I").arg(parent);
+        }
+    }
+    apply_makefile_compile_flags(&mut command, entry)?;
+    if entry.family == "tests-static" {
+        command.arg("-static");
+    } else {
+        command
+            .arg(format!("-Wl,--dynamic-linker={}", loader.display()))
+            .arg(format!("-Wl,-rpath,{}", lib_root.display()))
+            .arg(format!("-Wl,-rpath-link,{}", lib_root.display()))
+            .arg("-L")
+            .arg(&lib_root);
+    }
+    command
+        .arg(&source)
+        .arg(config.build_root.join("support/libsupport_nonshared.a"))
+        .arg("-ldl")
+        .arg("-lm")
+        .arg("-lresolv")
+        .arg("-lrt")
+        .arg("-lutil")
+        .arg("-lanl")
+        .arg("-o")
+        .arg(&binary);
+    run_test_command(&mut command)?;
+    Ok(CompiledEntry { work_dir, binary })
+}
+
+fn stage_entry_support_paths(entry: &TestsManifestEntry, work_dir: &Path) -> Result<()> {
+    for support_path in &entry.support_paths {
+        let source = repo_path(support_path);
+        let name = source
+            .file_name()
+            .ok_or_else(|| anyhow!("failed to derive support name from {}", source.display()))?;
+        let dest = work_dir.join(name);
+        if source.is_dir() {
+            std::os::unix::fs::symlink(&source, &dest)
+                .with_context(|| format!("failed to create {}", dest.display()))?;
+        } else {
+            copy_file_or_symlink(&source, &dest)?;
+        }
+    }
+    Ok(())
+}
+
+fn compiler_for_source(path: &Path) -> &'static str {
+    match path.extension().and_then(|ext| ext.to_str()) {
+        Some("cc" | "cpp" | "cxx") => "g++",
+        _ => "gcc",
+    }
+}
+
+fn apply_makefile_compile_flags(command: &mut Command, entry: &TestsManifestEntry) -> Result<()> {
+    let source = repo_path(&entry.safe_path);
+    let source_name = source
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| anyhow!("failed to derive source name from {}", source.display()))?;
+    let stem = artifact_stem(entry)?;
+    for variable in [format!("CFLAGS-{source_name}"), format!("LDFLAGS-{stem}")] {
+        for makefile in catalog_makefiles_for_manifest_entry(entry)? {
+            if let Some(raw_value) = resolve_make_variable(&makefile, &variable)? {
+                for token in raw_value.split_whitespace() {
+                    if token.starts_with("$(") {
+                        continue;
+                    }
+                    command.arg(token);
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+fn catalog_makefiles_for_manifest_entry(entry: &TestsManifestEntry) -> Result<Vec<PathBuf>> {
+    let catalog = load_test_catalog()?;
+    let row = catalog
+        .entries
+        .iter()
+        .find(|row| row.catalog_id == entry.catalog_id)
+        .with_context(|| format!("missing catalog entry for {}", entry.catalog_id))?;
+    Ok(row.origin_makefiles.iter().map(|path| repo_path(path)).collect())
+}
+
+fn sanitize_catalog_id(catalog_id: &str) -> String {
+    catalog_id
+        .chars()
+        .map(|ch| {
+            if ch.is_ascii_alphanumeric() || ch == '.' || ch == '-' || ch == '_' {
+                ch
+            } else {
+                '_'
+            }
+        })
+        .collect()
+}
+
+fn references_missing_companion_dso(entry: &TestsManifestEntry) -> Result<bool> {
+    let source = repo_path(&entry.safe_path);
+    let contents =
+        fs::read_to_string(&source).with_context(|| format!("failed to read {}", source.display()))?;
+    let source_dir = source
+        .parent()
+        .ok_or_else(|| anyhow!("{} has no parent directory", source.display()))?;
+    for token in contents
+        .split(|ch: char| ch.is_whitespace() || ch == '"' || ch == '\'' || ch == ')' || ch == '(')
+    {
+        if !(token.starts_with("$ORIGIN/") || token.ends_with(".so")) {
+            continue;
+        }
+        let basename = token.rsplit('/').next().unwrap_or(token);
+        if !(basename.starts_with("tst-") || basename.starts_with("test-")) {
+            continue;
+        }
+        if source_dir.join(basename).exists() {
+            continue;
+        }
+        let source_candidate = basename
+            .strip_suffix(".so")
+            .map(|prefix| source_dir.join(format!("{prefix}.c")));
+        if source_candidate.as_ref().is_some_and(|path| path.exists()) {
+            continue;
+        }
+        return Ok(true);
+    }
+    Ok(false)
+}
+
+fn run_entry_support_script(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+    compiled: &CompiledEntry,
+    script: &Path,
+) -> Result<()> {
+    let script_name = script
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| anyhow!("failed to derive script name from {}", script.display()))?;
+    let common_objpfx = format!("{}/", compiled.work_dir.display());
+    let run_program_env = run_program_env_string(config);
+    let test_program_prefix = safe_loader_prefix_string(config);
+    let binary_path = compiled.binary.display().to_string();
+    let binary_output = format!("{}.out", compiled.binary.display());
+    let args = match script_name {
+        "test-freopen.sh" => vec![
+            common_objpfx.clone(),
+            test_program_prefix.clone(),
+            common_objpfx.clone(),
+        ],
+        "tst-fmtmsg.sh" | "tst-setcontext3.sh" => vec![
+            common_objpfx.clone(),
+            "env".to_string(),
+            run_program_env,
+            test_program_prefix,
+            common_objpfx.clone(),
+        ],
+        "tst-printfsz-islongdouble.sh" => vec![binary_path, test_program_prefix, binary_output],
+        "tst-printf.sh" | "tst-unbputc.sh" => vec![common_objpfx.clone(), test_program_prefix],
+        other => bail!("unsupported test support script {other} for {}", entry.catalog_id),
+    };
+    let mut command = Command::new("sh");
+    command.current_dir(&compiled.work_dir).arg(script).args(args);
+    apply_harness_env(&mut command, config);
+    apply_entry_env(&mut command, config);
+    run_test_command(&mut command)
+}
+
+fn safe_loader_prefix_string(config: &RunConfig) -> String {
+    format!(
+        "{} --library-path {}",
+        config.install_root.join("usr/lib64/ld-linux-x86-64.so.2").display(),
+        make_ld_library_path(&config.install_root)
+    )
+}
+
+fn run_phase_owned_installed_headers_check(config: &RunConfig, lang: &str) -> Result<()> {
+    let stamp = upstream_build_dir()
+        .join("special-stamps")
+        .join(format!("check-installed-headers-{lang}.stamp"));
+    if stamp.exists() {
+        return Ok(());
+    }
+    if let Some(parent) = stamp.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("failed to create {}", parent.display()))?;
+    }
+    super::check_headers::run(super::check_headers::Args {
+        install_root: config.install_root.clone(),
+        lang: vec![lang.to_string()],
+    })?;
+    fs::write(&stamp, b"ok").with_context(|| format!("failed to write {}", stamp.display()))?;
+    Ok(())
+}
+
+fn run_phase_owned_obsolete_constructs_check(config: &RunConfig) -> Result<()> {
+    let stamp = upstream_build_dir()
+        .join("special-stamps")
+        .join("check-obsolete-constructs.stamp");
+    if stamp.exists() {
+        return Ok(());
+    }
+    if let Some(parent) = stamp.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("failed to create {}", parent.display()))?;
+    }
+    let include_root = config.install_root.join("usr/include");
+    let headers = phase_owned_obsolete_headers(&include_root);
+    if headers.is_empty() {
+        bail!(
+            "no phase-owned installed headers were found under {}",
+            include_root.display()
+        );
+    }
+    let mut command = Command::new("python3");
+    command
+        .env(
+            "PYTHONPATH",
+            safe_root().join("tests/support").display().to_string(),
+        )
+        .arg(safe_root().join("tests/scripts/check-obsolete-constructs.py"))
+        .args(headers);
+    run_test_command(&mut command)?;
+    fs::write(&stamp, b"ok").with_context(|| format!("failed to write {}", stamp.display()))?;
+    Ok(())
+}
+
+fn phase_owned_obsolete_headers(include_root: &Path) -> Vec<PathBuf> {
+    [
+        "assert.h",
+        "ctype.h",
+        "dirent.h",
+        "stdio.h",
+        "stdlib.h",
+        "string.h",
+        "termios.h",
+        "time.h",
+        "unistd.h",
+    ]
+    .into_iter()
+    .map(|header| include_root.join(header))
+    .filter(|path| path.exists())
+    .collect()
 }
 
 #[cfg(test)]

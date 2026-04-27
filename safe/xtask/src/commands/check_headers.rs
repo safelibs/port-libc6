@@ -1,4 +1,4 @@
-use crate::common::{repo_path, safe_root};
+use crate::common::safe_root;
 use anyhow::{bail, Context, Result};
 use clap::Args as ClapArgs;
 use std::fs;
@@ -19,6 +19,7 @@ pub struct Args {
 
 pub fn run(args: Args) -> Result<()> {
     super::build::refresh_phase_outputs()?;
+    let staged_build_root = super::stage_upstream_build::ensure_default_staged_upstream_build()?;
     let install_root = if args.install_root.is_absolute() {
         args.install_root
     } else {
@@ -64,7 +65,7 @@ pub fn run(args: Args) -> Result<()> {
             .env("AWK", "awk")
             .arg(safe_root().join("tests/scripts/check-local-headers.sh"))
             .arg(install_root.join("usr/include"))
-            .arg(repo_path("build")),
+            .arg(&staged_build_root),
         &log_dir.join("check-local-headers.log"),
     )?;
     let wrapper_headers = wrapper_headers()?;

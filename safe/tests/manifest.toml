@@ -1,8 +1,8 @@
 [metadata]
-phase = "impl_05_core_runtime_threads_entropy"
+phase = "impl_06_io_stdio_string_path"
 notes = [
     "Every entry from test-port-plan.json is represented exactly once.",
-    "Phase-2, phase-3, phase-4, and phase-5 owned entries are committed under safe/tests/** and marked ported in place.",
+    "Entries keep any already-committed later-phase port status in place while completed phases are refreshed from the ownership plan.",
 ]
 source_plan = "safe/generated/baseline/test-port-plan.json"
 
@@ -430,7 +430,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-popen3.c"
 subdir = "stdio-common"
 family = "tests-container"
@@ -443,7 +443,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-system.c"
 subdir = "stdlib"
 family = "tests-container"
@@ -456,7 +456,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-strerror.c"
 subdir = "string"
 family = "tests-container"
@@ -469,7 +469,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-strsignal.c"
 subdir = "string"
 family = "tests-container"
@@ -1448,7 +1448,7 @@ catalog_id = "tests-internal::libio::test-as-const-libio-macros::base"
 safe_path = "safe/tests/libio/test-as-const-libio-macros"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "libio"
 family = "tests-internal"
 
@@ -1460,7 +1460,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-vtables-interposed.c"
 subdir = "libio"
 family = "tests-internal"
@@ -1473,7 +1473,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-vtables.c"
 subdir = "libio"
 family = "tests-internal"
@@ -2265,7 +2265,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-grouping_iterator.c"
 subdir = "stdio-common"
 family = "tests-internal"
@@ -2278,7 +2278,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-qsort4.c"
 subdir = "stdlib"
 family = "tests-internal"
@@ -2291,7 +2291,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtod1i.c"
 subdir = "stdlib"
 family = "tests-internal"
@@ -2304,7 +2304,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtod3.c"
 subdir = "stdlib"
 family = "tests-internal"
@@ -2317,7 +2317,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtod4.c"
 subdir = "stdlib"
 family = "tests-internal"
@@ -2330,7 +2330,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtod5i.c"
 subdir = "stdlib"
 family = "tests-internal"
@@ -2343,7 +2343,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-tls-atexit-nodelete.c"
 subdir = "stdlib"
 family = "tests-internal"
@@ -2356,7 +2356,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-tls-atexit.c"
 subdir = "stdlib"
 family = "tests-internal"
@@ -2366,7 +2366,7 @@ catalog_id = "tests-internal::string::test-as-const-locale-defines::base"
 safe_path = "safe/tests/string/test-as-const-locale-defines"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "string"
 family = "tests-internal"
 
@@ -2378,7 +2378,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-memswap.c"
 subdir = "string"
 family = "tests-internal"
@@ -4473,7 +4473,7 @@ catalog_id = "tests-special::assert::check-installed-headers-c::base"
 safe_path = "safe/tests/assert/check-installed-headers-c"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "assert"
 family = "tests-special"
 
@@ -4482,7 +4482,7 @@ catalog_id = "tests-special::assert::check-installed-headers-cxx::base"
 safe_path = "safe/tests/assert/check-installed-headers-cxx"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "assert"
 family = "tests-special"
 
@@ -4491,7 +4491,7 @@ catalog_id = "tests-special::assert::check-obsolete-constructs::base"
 safe_path = "safe/tests/scripts/check-obsolete-constructs.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-obsolete-constructs.py"
 subdir = "assert"
 family = "tests-special"
@@ -4501,7 +4501,7 @@ catalog_id = "tests-special::assert::check-wrapper-headers::base"
 safe_path = "safe/tests/scripts/check-wrapper-headers.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-wrapper-headers.py"
 subdir = "assert"
 family = "tests-special"
@@ -14130,7 +14130,7 @@ catalog_id = "tests-special::ctype::check-installed-headers-c::base"
 safe_path = "safe/tests/ctype/check-installed-headers-c"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "ctype"
 family = "tests-special"
 
@@ -14139,7 +14139,7 @@ catalog_id = "tests-special::ctype::check-installed-headers-cxx::base"
 safe_path = "safe/tests/ctype/check-installed-headers-cxx"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "ctype"
 family = "tests-special"
 
@@ -14148,7 +14148,7 @@ catalog_id = "tests-special::ctype::check-obsolete-constructs::base"
 safe_path = "safe/tests/scripts/check-obsolete-constructs.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-obsolete-constructs.py"
 subdir = "ctype"
 family = "tests-special"
@@ -14158,7 +14158,7 @@ catalog_id = "tests-special::ctype::check-wrapper-headers::base"
 safe_path = "safe/tests/scripts/check-wrapper-headers.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-wrapper-headers.py"
 subdir = "ctype"
 family = "tests-special"
@@ -14206,7 +14206,7 @@ catalog_id = "tests-special::dirent::check-installed-headers-c::base"
 safe_path = "safe/tests/dirent/check-installed-headers-c"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "dirent"
 family = "tests-special"
 
@@ -14215,7 +14215,7 @@ catalog_id = "tests-special::dirent::check-installed-headers-cxx::base"
 safe_path = "safe/tests/dirent/check-installed-headers-cxx"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "dirent"
 family = "tests-special"
 
@@ -14224,7 +14224,7 @@ catalog_id = "tests-special::dirent::check-obsolete-constructs::base"
 safe_path = "safe/tests/scripts/check-obsolete-constructs.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-obsolete-constructs.py"
 subdir = "dirent"
 family = "tests-special"
@@ -14234,7 +14234,7 @@ catalog_id = "tests-special::dirent::check-wrapper-headers::base"
 safe_path = "safe/tests/scripts/check-wrapper-headers.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-wrapper-headers.py"
 subdir = "dirent"
 family = "tests-special"
@@ -15312,7 +15312,7 @@ catalog_id = "tests-special::io::check-installed-headers-c::base"
 safe_path = "safe/tests/io/check-installed-headers-c"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "io"
 family = "tests-special"
 
@@ -15321,7 +15321,7 @@ catalog_id = "tests-special::io::check-installed-headers-cxx::base"
 safe_path = "safe/tests/io/check-installed-headers-cxx"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "io"
 family = "tests-special"
 
@@ -15330,7 +15330,7 @@ catalog_id = "tests-special::io::check-obsolete-constructs::base"
 safe_path = "safe/tests/scripts/check-obsolete-constructs.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-obsolete-constructs.py"
 subdir = "io"
 family = "tests-special"
@@ -15340,7 +15340,7 @@ catalog_id = "tests-special::io::check-wrapper-headers::base"
 safe_path = "safe/tests/scripts/check-wrapper-headers.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-wrapper-headers.py"
 subdir = "io"
 family = "tests-special"
@@ -15353,7 +15353,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/ftwtest-time64.c"
 subdir = "io"
 family = "tests-special"
@@ -15366,7 +15366,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/ftwtest.c"
 subdir = "io"
 family = "tests-special"
@@ -15376,7 +15376,7 @@ catalog_id = "tests-special::libio::check-installed-headers-c::base"
 safe_path = "safe/tests/libio/check-installed-headers-c"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "libio"
 family = "tests-special"
 
@@ -15385,7 +15385,7 @@ catalog_id = "tests-special::libio::check-installed-headers-cxx::base"
 safe_path = "safe/tests/libio/check-installed-headers-cxx"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "libio"
 family = "tests-special"
 
@@ -15394,7 +15394,7 @@ catalog_id = "tests-special::libio::check-obsolete-constructs::base"
 safe_path = "safe/tests/scripts/check-obsolete-constructs.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-obsolete-constructs.py"
 subdir = "libio"
 family = "tests-special"
@@ -15404,7 +15404,7 @@ catalog_id = "tests-special::libio::check-wrapper-headers::base"
 safe_path = "safe/tests/scripts/check-wrapper-headers.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-wrapper-headers.py"
 subdir = "libio"
 family = "tests-special"
@@ -15414,7 +15414,7 @@ catalog_id = "tests-special::libio::test-fmemopen-mem::base"
 safe_path = "safe/tests/libio/test-fmemopen-mem"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "libio"
 family = "tests-special"
 
@@ -15427,7 +15427,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/test-freopen.c"
 subdir = "libio"
 family = "tests-special"
@@ -15437,7 +15437,7 @@ catalog_id = "tests-special::libio::tst-bz22415-mem::base"
 safe_path = "safe/tests/libio/tst-bz22415-mem"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "libio"
 family = "tests-special"
 
@@ -15446,7 +15446,7 @@ catalog_id = "tests-special::libio::tst-bz24228-mem::base"
 safe_path = "safe/tests/libio/tst-bz24228-mem"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "libio"
 family = "tests-special"
 
@@ -15455,7 +15455,7 @@ catalog_id = "tests-special::libio::tst-cleanup-default-cmp::base"
 safe_path = "safe/tests/libio/tst-cleanup-default-cmp"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "libio"
 family = "tests-special"
 
@@ -15464,7 +15464,7 @@ catalog_id = "tests-special::libio::tst-cleanup-default-static-cmp::base"
 safe_path = "safe/tests/libio/tst-cleanup-default-static-cmp"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "libio"
 family = "tests-special"
 
@@ -15473,7 +15473,7 @@ catalog_id = "tests-special::libio::tst-cleanup-nostart-stop-gc-cmp::base"
 safe_path = "safe/tests/libio/tst-cleanup-nostart-stop-gc-cmp"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "libio"
 family = "tests-special"
 
@@ -15482,7 +15482,7 @@ catalog_id = "tests-special::libio::tst-cleanup-nostart-stop-gc-static-cmp::base
 safe_path = "safe/tests/libio/tst-cleanup-nostart-stop-gc-static-cmp"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "libio"
 family = "tests-special"
 
@@ -15491,7 +15491,7 @@ catalog_id = "tests-special::libio::tst-cleanup-start-stop-gc-cmp::base"
 safe_path = "safe/tests/libio/tst-cleanup-start-stop-gc-cmp"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "libio"
 family = "tests-special"
 
@@ -15500,7 +15500,7 @@ catalog_id = "tests-special::libio::tst-cleanup-start-stop-gc-static-cmp::base"
 safe_path = "safe/tests/libio/tst-cleanup-start-stop-gc-static-cmp"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "libio"
 family = "tests-special"
 
@@ -15509,7 +15509,7 @@ catalog_id = "tests-special::libio::tst-fopenloc-cmp::base"
 safe_path = "safe/tests/libio/tst-fopenloc-cmp"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "libio"
 family = "tests-special"
 
@@ -15518,7 +15518,7 @@ catalog_id = "tests-special::libio::tst-fopenloc-mem::base"
 safe_path = "safe/tests/libio/tst-fopenloc-mem"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "libio"
 family = "tests-special"
 
@@ -16803,7 +16803,7 @@ catalog_id = "tests-special::stdio-common::check-installed-headers-c::base"
 safe_path = "safe/tests/stdio-common/check-installed-headers-c"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "stdio-common"
 family = "tests-special"
 
@@ -16812,7 +16812,7 @@ catalog_id = "tests-special::stdio-common::check-installed-headers-cxx::base"
 safe_path = "safe/tests/stdio-common/check-installed-headers-cxx"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "stdio-common"
 family = "tests-special"
 
@@ -16821,7 +16821,7 @@ catalog_id = "tests-special::stdio-common::check-obsolete-constructs::base"
 safe_path = "safe/tests/scripts/check-obsolete-constructs.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-obsolete-constructs.py"
 subdir = "stdio-common"
 family = "tests-special"
@@ -16831,7 +16831,7 @@ catalog_id = "tests-special::stdio-common::check-wrapper-headers::base"
 safe_path = "safe/tests/scripts/check-wrapper-headers.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-wrapper-headers.py"
 subdir = "stdio-common"
 family = "tests-special"
@@ -16841,7 +16841,7 @@ catalog_id = "tests-special::stdio-common::tst-printf-bz18872-mem::base"
 safe_path = "safe/tests/stdio-common/tst-printf-bz18872-mem"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "stdio-common"
 family = "tests-special"
 
@@ -16850,7 +16850,7 @@ catalog_id = "tests-special::stdio-common::tst-printf-bz25691-mem::base"
 safe_path = "safe/tests/stdio-common/tst-printf-bz25691-mem"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "stdio-common"
 family = "tests-special"
 
@@ -16859,7 +16859,7 @@ catalog_id = "tests-special::stdio-common::tst-printf-fp-free-mem::base"
 safe_path = "safe/tests/stdio-common/tst-printf-fp-free-mem"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "stdio-common"
 family = "tests-special"
 
@@ -16868,7 +16868,7 @@ catalog_id = "tests-special::stdio-common::tst-printf-fp-leak-mem::base"
 safe_path = "safe/tests/stdio-common/tst-printf-fp-leak-mem"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "stdio-common"
 family = "tests-special"
 
@@ -16881,7 +16881,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-printf.c"
 subdir = "stdio-common"
 family = "tests-special"
@@ -16895,7 +16895,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-printfsz-islongdouble.c"
 subdir = "stdio-common"
 family = "tests-special"
@@ -16905,7 +16905,7 @@ catalog_id = "tests-special::stdio-common::tst-setvbuf1-cmp::base"
 safe_path = "safe/tests/stdio-common/tst-setvbuf1-cmp"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "stdio-common"
 family = "tests-special"
 
@@ -16918,7 +16918,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-unbputc.c"
 subdir = "stdio-common"
 family = "tests-special"
@@ -16928,7 +16928,7 @@ catalog_id = "tests-special::stdio-common::tst-vfprintf-width-prec-mem::base"
 safe_path = "safe/tests/stdio-common/tst-vfprintf-width-prec-mem"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "stdio-common"
 family = "tests-special"
 
@@ -16937,7 +16937,7 @@ catalog_id = "tests-special::stdlib::check-installed-headers-c::base"
 safe_path = "safe/tests/stdlib/check-installed-headers-c"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "stdlib"
 family = "tests-special"
 
@@ -16946,7 +16946,7 @@ catalog_id = "tests-special::stdlib::check-installed-headers-cxx::base"
 safe_path = "safe/tests/stdlib/check-installed-headers-cxx"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "stdlib"
 family = "tests-special"
 
@@ -16955,7 +16955,7 @@ catalog_id = "tests-special::stdlib::check-obsolete-constructs::base"
 safe_path = "safe/tests/scripts/check-obsolete-constructs.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-obsolete-constructs.py"
 subdir = "stdlib"
 family = "tests-special"
@@ -16965,7 +16965,7 @@ catalog_id = "tests-special::stdlib::check-wrapper-headers::base"
 safe_path = "safe/tests/scripts/check-wrapper-headers.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-wrapper-headers.py"
 subdir = "stdlib"
 family = "tests-special"
@@ -16978,7 +16978,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/isomac.c"
 subdir = "stdlib"
 family = "tests-special"
@@ -16992,7 +16992,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-fmtmsg.c"
 subdir = "stdlib"
 family = "tests-special"
@@ -17002,7 +17002,7 @@ catalog_id = "tests-special::string::check-installed-headers-c::base"
 safe_path = "safe/tests/string/check-installed-headers-c"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "string"
 family = "tests-special"
 
@@ -17011,7 +17011,7 @@ catalog_id = "tests-special::string::check-installed-headers-cxx::base"
 safe_path = "safe/tests/string/check-installed-headers-cxx"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "string"
 family = "tests-special"
 
@@ -17020,7 +17020,7 @@ catalog_id = "tests-special::string::check-obsolete-constructs::base"
 safe_path = "safe/tests/scripts/check-obsolete-constructs.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-obsolete-constructs.py"
 subdir = "string"
 family = "tests-special"
@@ -17030,7 +17030,7 @@ catalog_id = "tests-special::string::check-wrapper-headers::base"
 safe_path = "safe/tests/scripts/check-wrapper-headers.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-wrapper-headers.py"
 subdir = "string"
 family = "tests-special"
@@ -17040,7 +17040,7 @@ catalog_id = "tests-special::string::tst-svc-cmp::base"
 safe_path = "safe/tests/string/tst-svc-cmp"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "string"
 family = "tests-special"
 
@@ -17145,7 +17145,7 @@ catalog_id = "tests-special::termios::check-installed-headers-c::base"
 safe_path = "safe/tests/termios/check-installed-headers-c"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "termios"
 family = "tests-special"
 
@@ -17154,7 +17154,7 @@ catalog_id = "tests-special::termios::check-installed-headers-cxx::base"
 safe_path = "safe/tests/termios/check-installed-headers-cxx"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "termios"
 family = "tests-special"
 
@@ -17163,7 +17163,7 @@ catalog_id = "tests-special::termios::check-obsolete-constructs::base"
 safe_path = "safe/tests/scripts/check-obsolete-constructs.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-obsolete-constructs.py"
 subdir = "termios"
 family = "tests-special"
@@ -17173,7 +17173,7 @@ catalog_id = "tests-special::termios::check-wrapper-headers::base"
 safe_path = "safe/tests/scripts/check-wrapper-headers.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-wrapper-headers.py"
 subdir = "termios"
 family = "tests-special"
@@ -17183,7 +17183,7 @@ catalog_id = "tests-special::time::check-installed-headers-c::base"
 safe_path = "safe/tests/time/check-installed-headers-c"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "time"
 family = "tests-special"
 
@@ -17192,7 +17192,7 @@ catalog_id = "tests-special::time::check-installed-headers-cxx::base"
 safe_path = "safe/tests/time/check-installed-headers-cxx"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "time"
 family = "tests-special"
 
@@ -17201,7 +17201,7 @@ catalog_id = "tests-special::time::check-obsolete-constructs::base"
 safe_path = "safe/tests/scripts/check-obsolete-constructs.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-obsolete-constructs.py"
 subdir = "time"
 family = "tests-special"
@@ -17211,7 +17211,7 @@ catalog_id = "tests-special::time::check-wrapper-headers::base"
 safe_path = "safe/tests/scripts/check-wrapper-headers.py"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/scripts/check-wrapper-headers.py"
 subdir = "time"
 family = "tests-special"
@@ -17221,7 +17221,7 @@ catalog_id = "tests-special::timezone::testdata/America/New_York::base"
 safe_path = "safe/tests/timezone/testdata/America/New_York"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "timezone"
 family = "tests-special"
 
@@ -17230,7 +17230,7 @@ catalog_id = "tests-special::timezone::testdata/America/Sao_Paulo::base"
 safe_path = "safe/tests/timezone/testdata/America/Sao_Paulo"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "timezone"
 family = "tests-special"
 
@@ -17239,7 +17239,7 @@ catalog_id = "tests-special::timezone::testdata/Asia/Tokyo::base"
 safe_path = "safe/tests/timezone/testdata/Asia/Tokyo"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "timezone"
 family = "tests-special"
 
@@ -17248,7 +17248,7 @@ catalog_id = "tests-special::timezone::testdata/Australia/Melbourne::base"
 safe_path = "safe/tests/timezone/testdata/Australia/Melbourne"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "timezone"
 family = "tests-special"
 
@@ -17257,7 +17257,7 @@ catalog_id = "tests-special::timezone::testdata/Etc/UTC::base"
 safe_path = "safe/tests/timezone/testdata/Etc/UTC"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "timezone"
 family = "tests-special"
 
@@ -17266,7 +17266,7 @@ catalog_id = "tests-special::timezone::testdata/Europe/Berlin::base"
 safe_path = "safe/tests/timezone/testdata/Europe/Berlin"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "timezone"
 family = "tests-special"
 
@@ -17275,7 +17275,7 @@ catalog_id = "tests-special::timezone::testdata/UTC::base"
 safe_path = "safe/tests/timezone/testdata/UTC"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "timezone"
 family = "tests-special"
 
@@ -17284,7 +17284,7 @@ catalog_id = "tests-special::timezone::testdata/posixrules::base"
 safe_path = "safe/tests/timezone/testdata/posixrules"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 subdir = "timezone"
 family = "tests-special"
 
@@ -18161,7 +18161,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-cleanup-default-static.c"
 subdir = "libio"
 family = "tests-static"
@@ -18174,7 +18174,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-cleanup-nostart-stop-gc-static.c"
 subdir = "libio"
 family = "tests-static"
@@ -18187,7 +18187,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-cleanup-start-stop-gc-static.c"
 subdir = "libio"
 family = "tests-static"
@@ -18796,7 +18796,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-secure-getenv.c"
 subdir = "stdlib"
 family = "tests-static"
@@ -18809,7 +18809,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-memswap.c"
 subdir = "string"
 family = "tests-static"
@@ -18930,7 +18930,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-fcntl-time64.c"
 subdir = "io"
 family = "tests-time64"
@@ -18943,7 +18943,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-fts-time64.c"
 subdir = "io"
 family = "tests-time64"
@@ -18956,7 +18956,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-futimens-time64.c"
 subdir = "io"
 family = "tests-time64"
@@ -18969,7 +18969,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-futimes-time64.c"
 subdir = "io"
 family = "tests-time64"
@@ -18982,7 +18982,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-futimesat-time64.c"
 subdir = "io"
 family = "tests-time64"
@@ -18995,7 +18995,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-lchmod-time64.c"
 subdir = "io"
 family = "tests-time64"
@@ -19008,7 +19008,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-lutimes-time64.c"
 subdir = "io"
 family = "tests-time64"
@@ -19021,7 +19021,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-stat-time64.c"
 subdir = "io"
 family = "tests-time64"
@@ -19034,7 +19034,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-utime-time64.c"
 subdir = "io"
 family = "tests-time64"
@@ -19047,7 +19047,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-utimensat-time64.c"
 subdir = "io"
 family = "tests-time64"
@@ -19060,7 +19060,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-utimes-time64.c"
 subdir = "io"
 family = "tests-time64"
@@ -19593,7 +19593,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-adjtime-time64.c"
 subdir = "time"
 family = "tests-time64"
@@ -19606,7 +19606,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-clock-time64.c"
 subdir = "time"
 family = "tests-time64"
@@ -19619,7 +19619,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-clock2-time64.c"
 subdir = "time"
 family = "tests-time64"
@@ -19632,7 +19632,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-clock_nanosleep-time64.c"
 subdir = "time"
 family = "tests-time64"
@@ -19645,7 +19645,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-clock_settime-time64.c"
 subdir = "time"
 family = "tests-time64"
@@ -19658,7 +19658,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-cpuclock1-time64.c"
 subdir = "time"
 family = "tests-time64"
@@ -19671,7 +19671,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-ctime-time64.c"
 subdir = "time"
 family = "tests-time64"
@@ -19684,7 +19684,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-difftime-time64.c"
 subdir = "time"
 family = "tests-time64"
@@ -19697,7 +19697,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-gmtime-time64.c"
 subdir = "time"
 family = "tests-time64"
@@ -19710,7 +19710,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-itimer-time64.c"
 subdir = "time"
 family = "tests-time64"
@@ -19723,7 +19723,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-mktime4-time64.c"
 subdir = "time"
 family = "tests-time64"
@@ -19736,7 +19736,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-settimeofday-time64.c"
 subdir = "time"
 family = "tests-time64"
@@ -19749,7 +19749,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-strftime4-time64.c"
 subdir = "time"
 family = "tests-time64"
@@ -19762,7 +19762,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-timegm-time64.c"
 subdir = "time"
 family = "tests-time64"
@@ -19775,7 +19775,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-timespec_get-time64.c"
 subdir = "time"
 family = "tests-time64"
@@ -19788,7 +19788,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-timespec_getres-time64.c"
 subdir = "time"
 family = "tests-time64"
@@ -19801,7 +19801,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-y2039-time64.c"
 subdir = "time"
 family = "tests-time64"
@@ -19892,7 +19892,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/assert/test-assert-perr.c"
 subdir = "assert"
 family = "tests"
@@ -19905,7 +19905,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/assert/test-assert.c"
 subdir = "assert"
 family = "tests"
@@ -19915,7 +19915,7 @@ catalog_id = "tests::assert::tst-assert-c++::base"
 safe_path = "safe/tests/assert/tst-assert-c++.cc"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/assert/tst-assert-c++.cc"
 subdir = "assert"
 family = "tests"
@@ -19925,7 +19925,7 @@ catalog_id = "tests::assert::tst-assert-g++::base"
 safe_path = "safe/tests/assert/tst-assert-g++.cc"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/assert/tst-assert-g++.cc"
 subdir = "assert"
 family = "tests"
@@ -19951,7 +19951,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/ctype/test_ctype.c"
 subdir = "ctype"
 family = "tests"
@@ -20347,7 +20347,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/dirent/bug-readdir1.c"
 subdir = "dirent"
 family = "tests"
@@ -20360,7 +20360,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/dirent/list.c"
 subdir = "dirent"
 family = "tests"
@@ -20373,7 +20373,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/dirent/opendir-tst1.c"
 subdir = "dirent"
 family = "tests"
@@ -20386,7 +20386,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/dirent/tst-fdopendir2.c"
 subdir = "dirent"
 family = "tests"
@@ -20399,7 +20399,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/dirent/tst-fdopendir.c"
 subdir = "dirent"
 family = "tests"
@@ -20412,7 +20412,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/unix/sysv/linux/tst-getdents64.c"
 subdir = "dirent"
 family = "tests"
@@ -20425,7 +20425,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/unix/sysv/linux/tst-readdir64-compat.c"
 subdir = "dirent"
 family = "tests"
@@ -20438,7 +20438,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/dirent/tst-scandir64.c"
 subdir = "dirent"
 family = "tests"
@@ -20451,7 +20451,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/dirent/tst-scandir.c"
 subdir = "dirent"
 family = "tests"
@@ -20464,7 +20464,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/dirent/tst-seekdir.c"
 subdir = "dirent"
 family = "tests"
@@ -25028,7 +25028,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/bug-ftw1.c"
 subdir = "io"
 family = "tests"
@@ -25041,7 +25041,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/bug-ftw2.c"
 subdir = "io"
 family = "tests"
@@ -25054,7 +25054,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/bug-ftw3.c"
 subdir = "io"
 family = "tests"
@@ -25067,7 +25067,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/bug-ftw4.c"
 subdir = "io"
 family = "tests"
@@ -25080,7 +25080,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/bug-ftw5.c"
 subdir = "io"
 family = "tests"
@@ -25093,7 +25093,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/test-lfs.c"
 subdir = "io"
 family = "tests"
@@ -25106,7 +25106,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/test-stat2.c"
 subdir = "io"
 family = "tests"
@@ -25119,7 +25119,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/test-stat.c"
 subdir = "io"
 family = "tests"
@@ -25132,7 +25132,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/test-utime.c"
 subdir = "io"
 family = "tests"
@@ -25145,7 +25145,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-close_range.c"
 subdir = "io"
 family = "tests"
@@ -25158,7 +25158,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-closefrom.c"
 subdir = "io"
 family = "tests"
@@ -25171,7 +25171,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-copy_file_range.c"
 subdir = "io"
 family = "tests"
@@ -25184,7 +25184,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-faccessat.c"
 subdir = "io"
 family = "tests"
@@ -25197,7 +25197,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/unix/sysv/linux/tst-fallocate64.c"
 subdir = "io"
 family = "tests"
@@ -25210,7 +25210,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/unix/sysv/linux/tst-fallocate.c"
 subdir = "io"
 family = "tests"
@@ -25223,7 +25223,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-fchmodat.c"
 subdir = "io"
 family = "tests"
@@ -25236,7 +25236,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-fchownat.c"
 subdir = "io"
 family = "tests"
@@ -25249,7 +25249,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-fcntl-lock-lfs.c"
 subdir = "io"
 family = "tests"
@@ -25262,7 +25262,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-fcntl-lock.c"
 subdir = "io"
 family = "tests"
@@ -25275,7 +25275,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-fcntl.c"
 subdir = "io"
 family = "tests"
@@ -25288,7 +25288,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-file_change_detection.c"
 subdir = "io"
 family = "tests"
@@ -25301,7 +25301,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-fstatat.c"
 subdir = "io"
 family = "tests"
@@ -25314,7 +25314,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-fts-lfs.c"
 subdir = "io"
 family = "tests"
@@ -25327,7 +25327,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-fts.c"
 subdir = "io"
 family = "tests"
@@ -25340,7 +25340,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-ftw-bz26353.c"
 subdir = "io"
 family = "tests"
@@ -25353,7 +25353,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-ftw-bz28126.c"
 subdir = "io"
 family = "tests"
@@ -25366,7 +25366,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-ftw-lnk.c"
 subdir = "io"
 family = "tests"
@@ -25379,7 +25379,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-futimens.c"
 subdir = "io"
 family = "tests"
@@ -25392,7 +25392,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-futimes.c"
 subdir = "io"
 family = "tests"
@@ -25405,7 +25405,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-futimesat.c"
 subdir = "io"
 family = "tests"
@@ -25418,7 +25418,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-getcwd-abspath.c"
 subdir = "io"
 family = "tests"
@@ -25431,7 +25431,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/unix/sysv/linux/tst-getcwd-smallbuff.c"
 subdir = "io"
 family = "tests"
@@ -25444,7 +25444,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-getcwd.c"
 subdir = "io"
 family = "tests"
@@ -25457,7 +25457,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-lchmod.c"
 subdir = "io"
 family = "tests"
@@ -25470,7 +25470,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-linkat.c"
 subdir = "io"
 family = "tests"
@@ -25483,7 +25483,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-lockf.c"
 subdir = "io"
 family = "tests"
@@ -25496,7 +25496,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-lutimes.c"
 subdir = "io"
 family = "tests"
@@ -25509,7 +25509,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-mkdirat.c"
 subdir = "io"
 family = "tests"
@@ -25522,7 +25522,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-mkfifoat.c"
 subdir = "io"
 family = "tests"
@@ -25535,7 +25535,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-mknodat.c"
 subdir = "io"
 family = "tests"
@@ -25548,7 +25548,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/unix/sysv/linux/tst-o_path-locks.c"
 subdir = "io"
 family = "tests"
@@ -25561,7 +25561,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-open-tmpfile.c"
 subdir = "io"
 family = "tests"
@@ -25574,7 +25574,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-openat.c"
 subdir = "io"
 family = "tests"
@@ -25587,7 +25587,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-posix_fallocate64.c"
 subdir = "io"
 family = "tests"
@@ -25600,7 +25600,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-posix_fallocate.c"
 subdir = "io"
 family = "tests"
@@ -25613,7 +25613,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-readlinkat.c"
 subdir = "io"
 family = "tests"
@@ -25626,7 +25626,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-renameat.c"
 subdir = "io"
 family = "tests"
@@ -25639,7 +25639,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-stat-lfs.c"
 subdir = "io"
 family = "tests"
@@ -25652,7 +25652,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-stat.c"
 subdir = "io"
 family = "tests"
@@ -25665,7 +25665,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-statvfs.c"
 subdir = "io"
 family = "tests"
@@ -25678,7 +25678,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-statx.c"
 subdir = "io"
 family = "tests"
@@ -25691,7 +25691,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-symlinkat.c"
 subdir = "io"
 family = "tests"
@@ -25704,7 +25704,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-ttyname_r.c"
 subdir = "io"
 family = "tests"
@@ -25717,7 +25717,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-unlinkat.c"
 subdir = "io"
 family = "tests"
@@ -25730,7 +25730,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-utime.c"
 subdir = "io"
 family = "tests"
@@ -25743,7 +25743,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-utimensat.c"
 subdir = "io"
 family = "tests"
@@ -25756,7 +25756,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/io/tst-utimes.c"
 subdir = "io"
 family = "tests"
@@ -25769,7 +25769,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/bug-fopena+.c"
 subdir = "libio"
 family = "tests"
@@ -25782,7 +25782,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/bug-fseek.c"
 subdir = "libio"
 family = "tests"
@@ -25795,7 +25795,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/bug-ftell.c"
 subdir = "libio"
 family = "tests"
@@ -25808,7 +25808,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/bug-memstream1.c"
 subdir = "libio"
 family = "tests"
@@ -25821,7 +25821,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/bug-mmap-fflush.c"
 subdir = "libio"
 family = "tests"
@@ -25834,7 +25834,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/bug-rewind2.c"
 subdir = "libio"
 family = "tests"
@@ -25847,7 +25847,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/bug-rewind.c"
 subdir = "libio"
 family = "tests"
@@ -25860,7 +25860,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/bug-ungetc2.c"
 subdir = "libio"
 family = "tests"
@@ -25873,7 +25873,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/bug-ungetc3.c"
 subdir = "libio"
 family = "tests"
@@ -25886,7 +25886,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/bug-ungetc4.c"
 subdir = "libio"
 family = "tests"
@@ -25899,7 +25899,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/bug-ungetc.c"
 subdir = "libio"
 family = "tests"
@@ -25912,7 +25912,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/bug-ungetwc1.c"
 subdir = "libio"
 family = "tests"
@@ -25925,7 +25925,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/bug-ungetwc2.c"
 subdir = "libio"
 family = "tests"
@@ -25938,7 +25938,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/bug-wfflush.c"
 subdir = "libio"
 family = "tests"
@@ -25951,7 +25951,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/bug-wmemstream1.c"
 subdir = "libio"
 family = "tests"
@@ -25964,7 +25964,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/bug-wsetpos.c"
 subdir = "libio"
 family = "tests"
@@ -25977,7 +25977,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/test-fmemopen.c"
 subdir = "libio"
 family = "tests"
@@ -25990,7 +25990,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-atime.c"
 subdir = "libio"
 family = "tests"
@@ -26003,7 +26003,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-bz22415.c"
 subdir = "libio"
 family = "tests"
@@ -26016,7 +26016,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-bz24051.c"
 subdir = "libio"
 family = "tests"
@@ -26029,7 +26029,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-bz24153.c"
 subdir = "libio"
 family = "tests"
@@ -26043,7 +26043,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-bz24228.c"
 subdir = "libio"
 family = "tests"
@@ -26057,7 +26057,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-bz28828.c"
 subdir = "libio"
 family = "tests"
@@ -26070,7 +26070,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-cleanup-default-static.c"
 subdir = "libio"
 family = "tests"
@@ -26083,7 +26083,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-cleanup-default.c"
 subdir = "libio"
 family = "tests"
@@ -26096,7 +26096,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-cleanup-nostart-stop-gc-static.c"
 subdir = "libio"
 family = "tests"
@@ -26109,7 +26109,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-cleanup-nostart-stop-gc.c"
 subdir = "libio"
 family = "tests"
@@ -26122,7 +26122,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-cleanup-start-stop-gc-static.c"
 subdir = "libio"
 family = "tests"
@@ -26135,7 +26135,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-cleanup-start-stop-gc.c"
 subdir = "libio"
 family = "tests"
@@ -26148,7 +26148,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-eof.c"
 subdir = "libio"
 family = "tests"
@@ -26161,7 +26161,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-ext2.c"
 subdir = "libio"
 family = "tests"
@@ -26174,7 +26174,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-ext.c"
 subdir = "libio"
 family = "tests"
@@ -26187,7 +26187,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-fgetc-after-eof.c"
 subdir = "libio"
 family = "tests"
@@ -26201,7 +26201,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-fgetwc.c"
 subdir = "libio"
 family = "tests"
@@ -26214,7 +26214,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-fgetws.c"
 subdir = "libio"
 family = "tests"
@@ -26227,7 +26227,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-fopenloc2.c"
 subdir = "libio"
 family = "tests"
@@ -26240,7 +26240,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-fopenloc.c"
 subdir = "libio"
 family = "tests"
@@ -26253,7 +26253,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-fputws.c"
 subdir = "libio"
 family = "tests"
@@ -26266,7 +26266,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-freopen.c"
 subdir = "libio"
 family = "tests"
@@ -26279,7 +26279,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-fseek.c"
 subdir = "libio"
 family = "tests"
@@ -26292,7 +26292,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-ftell-active-handler.c"
 subdir = "libio"
 family = "tests"
@@ -26305,7 +26305,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-ftell-append.c"
 subdir = "libio"
 family = "tests"
@@ -26318,7 +26318,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-ftell-partial-wide.c"
 subdir = "libio"
 family = "tests"
@@ -26331,7 +26331,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-fwrite-error.c"
 subdir = "libio"
 family = "tests"
@@ -26344,7 +26344,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-getdelim.c"
 subdir = "libio"
 family = "tests"
@@ -26357,7 +26357,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-memstream1.c"
 subdir = "libio"
 family = "tests"
@@ -26370,7 +26370,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-memstream2.c"
 subdir = "libio"
 family = "tests"
@@ -26383,7 +26383,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-memstream3.c"
 subdir = "libio"
 family = "tests"
@@ -26396,7 +26396,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-memstream4.c"
 subdir = "libio"
 family = "tests"
@@ -26409,7 +26409,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-mmap-eofsync.c"
 subdir = "libio"
 family = "tests"
@@ -26422,7 +26422,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-mmap-fflushsync.c"
 subdir = "libio"
 family = "tests"
@@ -26435,7 +26435,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-mmap-offend.c"
 subdir = "libio"
 family = "tests"
@@ -26448,7 +26448,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-mmap-setvbuf.c"
 subdir = "libio"
 family = "tests"
@@ -26461,7 +26461,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-mmap2-eofsync.c"
 subdir = "libio"
 family = "tests"
@@ -26474,7 +26474,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-popen1.c"
 subdir = "libio"
 family = "tests"
@@ -26487,7 +26487,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-setvbuf1.c"
 subdir = "libio"
 family = "tests"
@@ -26500,7 +26500,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-sprintf-chk-ub.c"
 subdir = "libio"
 family = "tests"
@@ -26513,7 +26513,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-sprintf-ub.c"
 subdir = "libio"
 family = "tests"
@@ -26526,7 +26526,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-sscanf.c"
 subdir = "libio"
 family = "tests"
@@ -26539,7 +26539,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-swscanf.c"
 subdir = "libio"
 family = "tests"
@@ -26552,7 +26552,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-ungetwc1.c"
 subdir = "libio"
 family = "tests"
@@ -26565,7 +26565,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-ungetwc2.c"
 subdir = "libio"
 family = "tests"
@@ -26578,7 +26578,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-wfile-sync.c"
 subdir = "libio"
 family = "tests"
@@ -26592,7 +26592,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-widetext.c"
 subdir = "libio"
 family = "tests"
@@ -26605,7 +26605,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-wmemstream1.c"
 subdir = "libio"
 family = "tests"
@@ -26618,7 +26618,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-wmemstream2.c"
 subdir = "libio"
 family = "tests"
@@ -26631,7 +26631,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-wmemstream3.c"
 subdir = "libio"
 family = "tests"
@@ -26644,7 +26644,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-wmemstream4.c"
 subdir = "libio"
 family = "tests"
@@ -26657,7 +26657,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst-wmemstream5.c"
 subdir = "libio"
 family = "tests"
@@ -26671,7 +26671,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst_getwc.c"
 subdir = "libio"
 family = "tests"
@@ -26684,7 +26684,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst_putwc.c"
 subdir = "libio"
 family = "tests"
@@ -26697,7 +26697,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst_swprintf.c"
 subdir = "libio"
 family = "tests"
@@ -26710,7 +26710,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst_swscanf.c"
 subdir = "libio"
 family = "tests"
@@ -26723,7 +26723,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst_wprintf2.c"
 subdir = "libio"
 family = "tests"
@@ -26736,7 +26736,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst_wprintf.c"
 subdir = "libio"
 family = "tests"
@@ -26750,7 +26750,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/libio/tst_wscanf.c"
 subdir = "libio"
 family = "tests"
@@ -54629,7 +54629,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug-vfprintf-nargs.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54642,7 +54642,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug10.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54655,7 +54655,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug11.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54668,7 +54668,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug12.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54681,7 +54681,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug13.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54694,7 +54694,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug14.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54707,7 +54707,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug16.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54720,7 +54720,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug17.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54733,7 +54733,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug18.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54746,7 +54746,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug18a.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54759,7 +54759,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug19.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54772,7 +54772,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug19a.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54786,7 +54786,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug1.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54799,7 +54799,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug20.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54812,7 +54812,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug21.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54825,7 +54825,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug22.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54838,7 +54838,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug23.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54851,7 +54851,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug24.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54864,7 +54864,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug25.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54877,7 +54877,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug26.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54890,7 +54890,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug27.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54903,7 +54903,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug28.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54916,7 +54916,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug29.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54929,7 +54929,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug2.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54942,7 +54942,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug3.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54955,7 +54955,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug4.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54968,7 +54968,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug5.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54982,7 +54982,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug6.c"
 subdir = "stdio-common"
 family = "tests"
@@ -54995,7 +54995,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug7.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55008,7 +55008,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug8.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55021,7 +55021,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/bug9.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55034,7 +55034,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/errnobug.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55047,7 +55047,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/scanf10.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55060,7 +55060,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/scanf11.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55074,7 +55074,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/scanf12.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55087,7 +55087,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/scanf13.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55100,7 +55100,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/scanf14.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55113,7 +55113,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/scanf15.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55126,7 +55126,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/scanf16.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55139,7 +55139,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/scanf17.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55152,7 +55152,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/scanf18.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55165,7 +55165,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/scanf19.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55178,7 +55178,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/scanf1.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55191,7 +55191,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/scanf2.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55204,7 +55204,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/scanf3.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55217,7 +55217,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/scanf4.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55230,7 +55230,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/scanf5.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55243,7 +55243,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/scanf7.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55256,7 +55256,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/scanf8.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55269,7 +55269,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/scanf9.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55282,7 +55282,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/temptest.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55295,7 +55295,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/test-fseek.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55308,7 +55308,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/test-fwrite.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55321,7 +55321,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/test-popen.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55334,7 +55334,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/test-strerr.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55347,7 +55347,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/test-vfprintf.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55360,7 +55360,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/test_rdwr.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55373,7 +55373,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tfformat.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55386,7 +55386,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tiformat.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55399,7 +55399,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tllformat.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55412,7 +55412,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-bz11319-fortify2.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55425,7 +55425,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-bz11319.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55438,7 +55438,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-cookie.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55451,7 +55451,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-dprintf-length.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55464,7 +55464,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-fdopen.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55478,7 +55478,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-ferror.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55491,7 +55491,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-fgets.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55504,7 +55504,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-fileno.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55517,7 +55517,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-fmemopen2.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55530,7 +55530,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-fmemopen3.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55543,7 +55543,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-fmemopen4.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55556,7 +55556,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-fmemopen.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55569,7 +55569,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-fphex-wide.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55582,7 +55582,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-fphex.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55595,7 +55595,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-fseek.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55608,7 +55608,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-fwrite.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55622,7 +55622,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-gets.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55635,7 +55635,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-grouping2.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55648,7 +55648,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-grouping3.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55661,7 +55661,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-grouping.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55674,7 +55674,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-long-dbl-fphex.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55687,7 +55687,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-memstream-string.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55700,7 +55700,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-obprintf.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55713,7 +55713,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-perror.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55726,7 +55726,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-popen2.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55739,7 +55739,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-popen.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55752,7 +55752,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-printf-binary.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55762,7 +55762,7 @@ catalog_id = "tests::stdio-common::tst-printf-bz18872::base"
 safe_path = "safe/tests/stdio-common/tst-printf-bz18872.sh"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-printf-bz18872.sh"
 subdir = "stdio-common"
 family = "tests"
@@ -55775,7 +55775,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-printf-bz25691.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55788,7 +55788,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-printf-fp-free.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55801,7 +55801,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-printf-fp-leak.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55814,7 +55814,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-printf-intn.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55827,7 +55827,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-printf-oct.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55840,7 +55840,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-printf-round.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55853,7 +55853,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-printfsz.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55866,7 +55866,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-put-error.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55879,7 +55879,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-renameat2.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55892,7 +55892,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-rndseek.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55905,7 +55905,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-scanf-binary-c11.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55918,7 +55918,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-scanf-binary-c2x.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55931,7 +55931,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-scanf-binary-gnu11.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55944,7 +55944,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-scanf-binary-gnu89.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55957,7 +55957,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-scanf-intn.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55970,7 +55970,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-scanf-round.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55983,7 +55983,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-scanf-to_inpunct.c"
 subdir = "stdio-common"
 family = "tests"
@@ -55997,7 +55997,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-setvbuf1.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56010,7 +56010,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-sprintf-errno.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56023,7 +56023,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-sprintf2.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56036,7 +56036,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-sprintf3.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56049,7 +56049,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-sprintf.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56062,7 +56062,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-sscanf.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56075,7 +56075,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-swprintf.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56088,7 +56088,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-swscanf.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56101,7 +56101,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-tmpnam.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56114,7 +56114,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-ungetc.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56127,7 +56127,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-unlockedio.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56140,7 +56140,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-vfprintf-mbs-prec.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56153,7 +56153,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-vfprintf-user-type.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56166,7 +56166,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-vfprintf-width-i18n.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56179,7 +56179,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-vfprintf-width-prec-alloc.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56192,7 +56192,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-vfprintf-width-prec.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56205,7 +56205,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tst-wc-printf.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56218,7 +56218,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tstdiomisc.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56232,7 +56232,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tstgetln.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56246,7 +56246,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/tstscanf.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56259,7 +56259,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdio-common/xbug.c"
 subdir = "stdio-common"
 family = "tests"
@@ -56272,7 +56272,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/bug-fmtmsg1.c"
 subdir = "stdlib"
 family = "tests"
@@ -56285,7 +56285,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/bug-getcontext.c"
 subdir = "stdlib"
 family = "tests"
@@ -56298,7 +56298,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/bug-strtod2.c"
 subdir = "stdlib"
 family = "tests"
@@ -56311,7 +56311,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/bug-strtod.c"
 subdir = "stdlib"
 family = "tests"
@@ -56324,7 +56324,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/test-a64l.c"
 subdir = "stdlib"
 family = "tests"
@@ -56337,7 +56337,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/test-at_quick_exit-race.c"
 subdir = "stdlib"
 family = "tests"
@@ -56350,7 +56350,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/test-atexit-race.c"
 subdir = "stdlib"
 family = "tests"
@@ -56363,7 +56363,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/test-atexit-recursive.c"
 subdir = "stdlib"
 family = "tests"
@@ -56376,7 +56376,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/test-bz22786.c"
 subdir = "stdlib"
 family = "tests"
@@ -56389,7 +56389,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/test-canon2.c"
 subdir = "stdlib"
 family = "tests"
@@ -56402,7 +56402,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/test-canon.c"
 subdir = "stdlib"
 family = "tests"
@@ -56415,7 +56415,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/test-cxa_atexit-race2.c"
 subdir = "stdlib"
 family = "tests"
@@ -56428,7 +56428,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/test-cxa_atexit-race.c"
 subdir = "stdlib"
 family = "tests"
@@ -56441,7 +56441,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/test-dlclose-exit-race.c"
 subdir = "stdlib"
 family = "tests"
@@ -56454,7 +56454,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/test-on_exit-race.c"
 subdir = "stdlib"
 family = "tests"
@@ -56468,7 +56468,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/testdiv.c"
 subdir = "stdlib"
 family = "tests"
@@ -56481,7 +56481,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/testmb2.c"
 subdir = "stdlib"
 family = "tests"
@@ -56494,7 +56494,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/testmb.c"
 subdir = "stdlib"
 family = "tests"
@@ -56507,7 +56507,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/testrand.c"
 subdir = "stdlib"
 family = "tests"
@@ -56520,7 +56520,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/testsort.c"
 subdir = "stdlib"
 family = "tests"
@@ -56533,7 +56533,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-abs.c"
 subdir = "stdlib"
 family = "tests"
@@ -56585,7 +56585,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-at_quick_exit.c"
 subdir = "stdlib"
 family = "tests"
@@ -56598,7 +56598,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-atexit.c"
 subdir = "stdlib"
 family = "tests"
@@ -56611,7 +56611,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-atof1.c"
 subdir = "stdlib"
 family = "tests"
@@ -56624,7 +56624,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-atof2.c"
 subdir = "stdlib"
 family = "tests"
@@ -56637,7 +56637,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-bsearch.c"
 subdir = "stdlib"
 family = "tests"
@@ -56650,7 +56650,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-bz20544.c"
 subdir = "stdlib"
 family = "tests"
@@ -56663,7 +56663,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-canon-bz26341.c"
 subdir = "stdlib"
 family = "tests"
@@ -56676,7 +56676,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/unix/sysv/linux/x86_64/tst-cet-setcontext-1.c"
 subdir = "stdlib"
 family = "tests"
@@ -56689,7 +56689,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-cxa_atexit.c"
 subdir = "stdlib"
 family = "tests"
@@ -56702,7 +56702,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-environ.c"
 subdir = "stdlib"
 family = "tests"
@@ -56728,7 +56728,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-labs.c"
 subdir = "stdlib"
 family = "tests"
@@ -56741,7 +56741,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-limits.c"
 subdir = "stdlib"
 family = "tests"
@@ -56754,7 +56754,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-llabs.c"
 subdir = "stdlib"
 family = "tests"
@@ -56767,7 +56767,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-makecontext-align.c"
 subdir = "stdlib"
 family = "tests"
@@ -56780,7 +56780,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-makecontext2.c"
 subdir = "stdlib"
 family = "tests"
@@ -56793,7 +56793,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-makecontext3.c"
 subdir = "stdlib"
 family = "tests"
@@ -56806,7 +56806,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-makecontext.c"
 subdir = "stdlib"
 family = "tests"
@@ -56819,7 +56819,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-on_exit.c"
 subdir = "stdlib"
 family = "tests"
@@ -56832,7 +56832,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-putenv.c"
 subdir = "stdlib"
 family = "tests"
@@ -56845,7 +56845,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-qsort2.c"
 subdir = "stdlib"
 family = "tests"
@@ -56858,7 +56858,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-qsort3.c"
 subdir = "stdlib"
 family = "tests"
@@ -56871,7 +56871,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-qsort6.c"
 subdir = "stdlib"
 family = "tests"
@@ -56884,7 +56884,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-qsort.c"
 subdir = "stdlib"
 family = "tests"
@@ -56894,7 +56894,7 @@ catalog_id = "tests::stdlib::tst-quick_exit::base"
 safe_path = "safe/tests/stdlib/tst-quick_exit.cc"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-quick_exit.cc"
 subdir = "stdlib"
 family = "tests"
@@ -56907,7 +56907,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-rand48-2.c"
 subdir = "stdlib"
 family = "tests"
@@ -56920,7 +56920,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-rand48.c"
 subdir = "stdlib"
 family = "tests"
@@ -56933,7 +56933,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-random2.c"
 subdir = "stdlib"
 family = "tests"
@@ -56946,7 +56946,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-random.c"
 subdir = "stdlib"
 family = "tests"
@@ -56959,7 +56959,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-realpath-toolong.c"
 subdir = "stdlib"
 family = "tests"
@@ -56972,7 +56972,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-realpath.c"
 subdir = "stdlib"
 family = "tests"
@@ -56985,7 +56985,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-secure-getenv.c"
 subdir = "stdlib"
 family = "tests"
@@ -56998,7 +56998,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-setcontext10.c"
 subdir = "stdlib"
 family = "tests"
@@ -57011,7 +57011,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-setcontext11.c"
 subdir = "stdlib"
 family = "tests"
@@ -57024,7 +57024,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-setcontext2.c"
 subdir = "stdlib"
 family = "tests"
@@ -57038,7 +57038,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-setcontext3.c"
 subdir = "stdlib"
 family = "tests"
@@ -57051,7 +57051,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-setcontext4.c"
 subdir = "stdlib"
 family = "tests"
@@ -57064,7 +57064,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-setcontext5.c"
 subdir = "stdlib"
 family = "tests"
@@ -57077,7 +57077,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-setcontext6.c"
 subdir = "stdlib"
 family = "tests"
@@ -57090,7 +57090,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-setcontext7.c"
 subdir = "stdlib"
 family = "tests"
@@ -57103,7 +57103,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-setcontext8.c"
 subdir = "stdlib"
 family = "tests"
@@ -57116,7 +57116,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-setcontext9.c"
 subdir = "stdlib"
 family = "tests"
@@ -57129,7 +57129,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-setcontext.c"
 subdir = "stdlib"
 family = "tests"
@@ -57142,7 +57142,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-stdbit-Wconversion.c"
 subdir = "stdlib"
 family = "tests"
@@ -57155,7 +57155,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-stdbit-builtins.c"
 subdir = "stdlib"
 family = "tests"
@@ -57168,7 +57168,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-stdc_bit_ceil.c"
 subdir = "stdlib"
 family = "tests"
@@ -57181,7 +57181,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-stdc_bit_floor.c"
 subdir = "stdlib"
 family = "tests"
@@ -57194,7 +57194,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-stdc_bit_width.c"
 subdir = "stdlib"
 family = "tests"
@@ -57207,7 +57207,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-stdc_count_ones.c"
 subdir = "stdlib"
 family = "tests"
@@ -57220,7 +57220,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-stdc_count_zeros.c"
 subdir = "stdlib"
 family = "tests"
@@ -57233,7 +57233,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-stdc_first_leading_one.c"
 subdir = "stdlib"
 family = "tests"
@@ -57246,7 +57246,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-stdc_first_leading_zero.c"
 subdir = "stdlib"
 family = "tests"
@@ -57259,7 +57259,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-stdc_first_trailing_one.c"
 subdir = "stdlib"
 family = "tests"
@@ -57272,7 +57272,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-stdc_first_trailing_zero.c"
 subdir = "stdlib"
 family = "tests"
@@ -57285,7 +57285,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-stdc_has_single_bit.c"
 subdir = "stdlib"
 family = "tests"
@@ -57298,7 +57298,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-stdc_leading_ones.c"
 subdir = "stdlib"
 family = "tests"
@@ -57311,7 +57311,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-stdc_leading_zeros.c"
 subdir = "stdlib"
 family = "tests"
@@ -57324,7 +57324,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-stdc_trailing_ones.c"
 subdir = "stdlib"
 family = "tests"
@@ -57337,7 +57337,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-stdc_trailing_zeros.c"
 subdir = "stdlib"
 family = "tests"
@@ -57350,7 +57350,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strfmon_l.c"
 subdir = "stdlib"
 family = "tests"
@@ -57363,7 +57363,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strfrom-locale.c"
 subdir = "stdlib"
 family = "tests"
@@ -57377,7 +57377,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strfrom.c"
 subdir = "stdlib"
 family = "tests"
@@ -57390,7 +57390,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtod-nan-locale.c"
 subdir = "stdlib"
 family = "tests"
@@ -57403,7 +57403,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtod-nan-sign.c"
 subdir = "stdlib"
 family = "tests"
@@ -57416,7 +57416,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtod-overflow.c"
 subdir = "stdlib"
 family = "tests"
@@ -57429,7 +57429,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtod-round.c"
 subdir = "stdlib"
 family = "tests"
@@ -57442,7 +57442,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtod-underflow.c"
 subdir = "stdlib"
 family = "tests"
@@ -57455,7 +57455,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtod2.c"
 subdir = "stdlib"
 family = "tests"
@@ -57468,7 +57468,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtod5.c"
 subdir = "stdlib"
 family = "tests"
@@ -57481,7 +57481,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtod6.c"
 subdir = "stdlib"
 family = "tests"
@@ -57495,7 +57495,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtod.c"
 subdir = "stdlib"
 family = "tests"
@@ -57508,7 +57508,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtol-binary-c11.c"
 subdir = "stdlib"
 family = "tests"
@@ -57521,7 +57521,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtol-binary-c2x.c"
 subdir = "stdlib"
 family = "tests"
@@ -57534,7 +57534,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtol-binary-gnu11.c"
 subdir = "stdlib"
 family = "tests"
@@ -57547,7 +57547,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtol-binary-gnu2x.c"
 subdir = "stdlib"
 family = "tests"
@@ -57560,7 +57560,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtol-locale.c"
 subdir = "stdlib"
 family = "tests"
@@ -57573,7 +57573,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtol.c"
 subdir = "stdlib"
 family = "tests"
@@ -57586,7 +57586,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-strtoll.c"
 subdir = "stdlib"
 family = "tests"
@@ -57599,7 +57599,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-swapcontext1.c"
 subdir = "stdlib"
 family = "tests"
@@ -57612,7 +57612,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-swapcontext2.c"
 subdir = "stdlib"
 family = "tests"
@@ -57622,7 +57622,7 @@ catalog_id = "tests::stdlib::tst-thread-quick_exit::base"
 safe_path = "safe/tests/stdlib/tst-thread-quick_exit.cc"
 support_paths = []
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-thread-quick_exit.cc"
 subdir = "stdlib"
 family = "tests"
@@ -57635,7 +57635,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-tininess.c"
 subdir = "stdlib"
 family = "tests"
@@ -57648,7 +57648,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-unsetenv1.c"
 subdir = "stdlib"
 family = "tests"
@@ -57661,7 +57661,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-width-stdint.c"
 subdir = "stdlib"
 family = "tests"
@@ -57674,7 +57674,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-width.c"
 subdir = "stdlib"
 family = "tests"
@@ -57687,7 +57687,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/stdlib/tst-xpg-basename.c"
 subdir = "stdlib"
 family = "tests"
@@ -57700,7 +57700,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/bug-envz1.c"
 subdir = "string"
 family = "tests"
@@ -57713,7 +57713,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/bug-strcoll1.c"
 subdir = "string"
 family = "tests"
@@ -57726,7 +57726,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/bug-strcoll2.c"
 subdir = "string"
 family = "tests"
@@ -57739,7 +57739,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/bug-strncat1.c"
 subdir = "string"
 family = "tests"
@@ -57752,7 +57752,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/bug-strpbrk1.c"
 subdir = "string"
 family = "tests"
@@ -57765,7 +57765,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/bug-strspn1.c"
 subdir = "string"
 family = "tests"
@@ -57778,7 +57778,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/bug-strtok1.c"
 subdir = "string"
 family = "tests"
@@ -57791,7 +57791,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/inl-tester.c"
 subdir = "string"
 family = "tests"
@@ -57804,7 +57804,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/noinl-tester.c"
 subdir = "string"
 family = "tests"
@@ -57817,7 +57817,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/stratcliff.c"
 subdir = "string"
 family = "tests"
@@ -57830,7 +57830,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-bcopy.c"
 subdir = "string"
 family = "tests"
@@ -57843,7 +57843,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-bzero.c"
 subdir = "string"
 family = "tests"
@@ -57856,7 +57856,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-endian-file-scope.c"
 subdir = "string"
 family = "tests"
@@ -57869,7 +57869,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-endian-sign-conversion.c"
 subdir = "string"
 family = "tests"
@@ -57882,7 +57882,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-endian-types.c"
 subdir = "string"
 family = "tests"
@@ -57895,7 +57895,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-explicit_bzero.c"
 subdir = "string"
 family = "tests"
@@ -57908,7 +57908,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-ffs.c"
 subdir = "string"
 family = "tests"
@@ -57921,7 +57921,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-memccpy.c"
 subdir = "string"
 family = "tests"
@@ -57934,7 +57934,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-memchr.c"
 subdir = "string"
 family = "tests"
@@ -57947,7 +57947,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-memcmp.c"
 subdir = "string"
 family = "tests"
@@ -57960,7 +57960,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-memcmpeq.c"
 subdir = "string"
 family = "tests"
@@ -57973,7 +57973,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-memcpy-large.c"
 subdir = "string"
 family = "tests"
@@ -57986,7 +57986,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-memcpy.c"
 subdir = "string"
 family = "tests"
@@ -57999,7 +57999,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-memmem.c"
 subdir = "string"
 family = "tests"
@@ -58012,7 +58012,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-memmove.c"
 subdir = "string"
 family = "tests"
@@ -58025,7 +58025,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-mempcpy.c"
 subdir = "string"
 family = "tests"
@@ -58038,7 +58038,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-memrchr.c"
 subdir = "string"
 family = "tests"
@@ -58051,7 +58051,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-memset.c"
 subdir = "string"
 family = "tests"
@@ -58064,7 +58064,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-rawmemchr.c"
 subdir = "string"
 family = "tests"
@@ -58077,7 +58077,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-sig_np.c"
 subdir = "string"
 family = "tests"
@@ -58090,7 +58090,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-stpcpy.c"
 subdir = "string"
 family = "tests"
@@ -58103,7 +58103,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-stpncpy.c"
 subdir = "string"
 family = "tests"
@@ -58116,7 +58116,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strcasecmp.c"
 subdir = "string"
 family = "tests"
@@ -58129,7 +58129,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strcasestr.c"
 subdir = "string"
 family = "tests"
@@ -58142,7 +58142,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strcat.c"
 subdir = "string"
 family = "tests"
@@ -58155,7 +58155,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strchr.c"
 subdir = "string"
 family = "tests"
@@ -58168,7 +58168,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strchrnul.c"
 subdir = "string"
 family = "tests"
@@ -58181,7 +58181,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strcmp.c"
 subdir = "string"
 family = "tests"
@@ -58194,7 +58194,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strcpy.c"
 subdir = "string"
 family = "tests"
@@ -58207,7 +58207,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strcspn.c"
 subdir = "string"
 family = "tests"
@@ -58220,7 +58220,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strdup.c"
 subdir = "string"
 family = "tests"
@@ -58233,7 +58233,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strerror-errno.c"
 subdir = "string"
 family = "tests"
@@ -58246,7 +58246,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strlen.c"
 subdir = "string"
 family = "tests"
@@ -58259,7 +58259,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strncasecmp.c"
 subdir = "string"
 family = "tests"
@@ -58272,7 +58272,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strncat.c"
 subdir = "string"
 family = "tests"
@@ -58285,7 +58285,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strncmp.c"
 subdir = "string"
 family = "tests"
@@ -58298,7 +58298,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strncpy.c"
 subdir = "string"
 family = "tests"
@@ -58311,7 +58311,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strndup.c"
 subdir = "string"
 family = "tests"
@@ -58324,7 +58324,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strnlen.c"
 subdir = "string"
 family = "tests"
@@ -58337,7 +58337,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strpbrk.c"
 subdir = "string"
 family = "tests"
@@ -58350,7 +58350,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strrchr.c"
 subdir = "string"
 family = "tests"
@@ -58363,7 +58363,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strspn.c"
 subdir = "string"
 family = "tests"
@@ -58376,7 +58376,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/test-strstr.c"
 subdir = "string"
 family = "tests"
@@ -58389,7 +58389,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/testcopy.c"
 subdir = "string"
 family = "tests"
@@ -58402,7 +58402,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tester.c"
 subdir = "string"
 family = "tests"
@@ -58415,7 +58415,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-bswap.c"
 subdir = "string"
 family = "tests"
@@ -58428,7 +58428,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-cmp.c"
 subdir = "string"
 family = "tests"
@@ -58441,7 +58441,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-endian.c"
 subdir = "string"
 family = "tests"
@@ -58454,7 +58454,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-inlcall.c"
 subdir = "string"
 family = "tests"
@@ -58467,7 +58467,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86/tst-memchr-rtm.c"
 subdir = "string"
 family = "tests"
@@ -58480,7 +58480,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86/tst-memcmp-rtm.c"
 subdir = "string"
 family = "tests"
@@ -58493,7 +58493,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-memmove-overflow.c"
 subdir = "string"
 family = "tests"
@@ -58506,7 +58506,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86/tst-memmove-rtm.c"
 subdir = "string"
 family = "tests"
@@ -58519,7 +58519,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86/tst-memrchr-rtm.c"
 subdir = "string"
 family = "tests"
@@ -58532,7 +58532,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86/tst-memset-rtm.c"
 subdir = "string"
 family = "tests"
@@ -58545,7 +58545,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86_64/tst-rsi-strlen.c"
 subdir = "string"
 family = "tests"
@@ -58558,7 +58558,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86_64/x32/tst-size_t-memchr.c"
 subdir = "string"
 family = "tests"
@@ -58571,7 +58571,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86_64/x32/tst-size_t-memcmp-2.c"
 subdir = "string"
 family = "tests"
@@ -58584,7 +58584,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86_64/x32/tst-size_t-memcmp.c"
 subdir = "string"
 family = "tests"
@@ -58597,7 +58597,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86_64/x32/tst-size_t-memcpy.c"
 subdir = "string"
 family = "tests"
@@ -58610,7 +58610,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86_64/x32/tst-size_t-memrchr.c"
 subdir = "string"
 family = "tests"
@@ -58623,7 +58623,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86_64/x32/tst-size_t-memset.c"
 subdir = "string"
 family = "tests"
@@ -58636,7 +58636,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86_64/x32/tst-size_t-strncasecmp.c"
 subdir = "string"
 family = "tests"
@@ -58649,7 +58649,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86_64/x32/tst-size_t-strncat.c"
 subdir = "string"
 family = "tests"
@@ -58662,7 +58662,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86_64/x32/tst-size_t-strncmp.c"
 subdir = "string"
 family = "tests"
@@ -58675,7 +58675,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86_64/x32/tst-size_t-strncpy.c"
 subdir = "string"
 family = "tests"
@@ -58688,7 +58688,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86_64/x32/tst-size_t-strnlen.c"
 subdir = "string"
 family = "tests"
@@ -58701,7 +58701,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86/tst-strcasecmp-rtm.c"
 subdir = "string"
 family = "tests"
@@ -58714,7 +58714,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86/tst-strchr-rtm.c"
 subdir = "string"
 family = "tests"
@@ -58727,7 +58727,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86/tst-strcmp-rtm.c"
 subdir = "string"
 family = "tests"
@@ -58740,7 +58740,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86/tst-strcpy-rtm.c"
 subdir = "string"
 family = "tests"
@@ -58753,7 +58753,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-strerror-fail.c"
 subdir = "string"
 family = "tests"
@@ -58766,7 +58766,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-strfry.c"
 subdir = "string"
 family = "tests"
@@ -58779,7 +58779,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-strlcat2.c"
 subdir = "string"
 family = "tests"
@@ -58792,7 +58792,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-strlcat.c"
 subdir = "string"
 family = "tests"
@@ -58805,7 +58805,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-strlcpy2.c"
 subdir = "string"
 family = "tests"
@@ -58818,7 +58818,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-strlcpy.c"
 subdir = "string"
 family = "tests"
@@ -58831,7 +58831,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86/tst-strlen-rtm.c"
 subdir = "string"
 family = "tests"
@@ -58844,7 +58844,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-strlen.c"
 subdir = "string"
 family = "tests"
@@ -58857,7 +58857,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86/tst-strncasecmp-rtm.c"
 subdir = "string"
 family = "tests"
@@ -58870,7 +58870,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86/tst-strncmp-rtm.c"
 subdir = "string"
 family = "tests"
@@ -58883,7 +58883,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86/tst-strrchr-rtm.c"
 subdir = "string"
 family = "tests"
@@ -58896,7 +58896,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-strtok.c"
 subdir = "string"
 family = "tests"
@@ -58909,7 +58909,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-strtok_r.c"
 subdir = "string"
 family = "tests"
@@ -58922,7 +58922,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-strxfrm2.c"
 subdir = "string"
 family = "tests"
@@ -58935,7 +58935,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-strxfrm.c"
 subdir = "string"
 family = "tests"
@@ -58948,7 +58948,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-svc2.c"
 subdir = "string"
 family = "tests"
@@ -58963,7 +58963,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-svc.c"
 subdir = "string"
 family = "tests"
@@ -58976,7 +58976,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86/tst-wcscmp-rtm.c"
 subdir = "string"
 family = "tests"
@@ -58989,7 +58989,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/x86/tst-wcsncmp-rtm.c"
 subdir = "string"
 family = "tests"
@@ -59002,7 +59002,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-xbzero-opt.c"
 subdir = "string"
 family = "tests"
@@ -59361,7 +59361,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/bug-asctime.c"
 subdir = "time"
 family = "tests"
@@ -59374,7 +59374,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/bug-asctime_r.c"
 subdir = "time"
 family = "tests"
@@ -59387,7 +59387,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/bug-getdate1.c"
 subdir = "time"
 family = "tests"
@@ -59400,7 +59400,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/bug-mktime1.c"
 subdir = "time"
 family = "tests"
@@ -59413,7 +59413,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/bug-mktime4.c"
 subdir = "time"
 family = "tests"
@@ -59426,7 +59426,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/clocktest.c"
 subdir = "time"
 family = "tests"
@@ -59439,7 +59439,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/test_time.c"
 subdir = "time"
 family = "tests"
@@ -59452,7 +59452,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-adjtime.c"
 subdir = "time"
 family = "tests"
@@ -59465,7 +59465,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-clock2.c"
 subdir = "time"
 family = "tests"
@@ -59478,7 +59478,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-clock.c"
 subdir = "time"
 family = "tests"
@@ -59491,7 +59491,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/unix/sysv/linux/tst-clock_gettime-clobber.c"
 subdir = "time"
 family = "tests"
@@ -59504,7 +59504,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-clock_nanosleep.c"
 subdir = "time"
 family = "tests"
@@ -59517,7 +59517,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-clock_settime.c"
 subdir = "time"
 family = "tests"
@@ -59530,7 +59530,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-cpuclock1.c"
 subdir = "time"
 family = "tests"
@@ -59543,7 +59543,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-ctime.c"
 subdir = "time"
 family = "tests"
@@ -59556,7 +59556,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-difftime.c"
 subdir = "time"
 family = "tests"
@@ -59569,7 +59569,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-ftime.c"
 subdir = "time"
 family = "tests"
@@ -59582,7 +59582,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-ftime_l.c"
 subdir = "time"
 family = "tests"
@@ -59595,7 +59595,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-getdate.c"
 subdir = "time"
 family = "tests"
@@ -59608,7 +59608,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/unix/sysv/linux/tst-gettimeofday-clobber.c"
 subdir = "time"
 family = "tests"
@@ -59621,7 +59621,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-gmtime.c"
 subdir = "time"
 family = "tests"
@@ -59634,7 +59634,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-itimer.c"
 subdir = "time"
 family = "tests"
@@ -59647,7 +59647,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-mktime2.c"
 subdir = "time"
 family = "tests"
@@ -59660,7 +59660,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-mktime3.c"
 subdir = "time"
 family = "tests"
@@ -59673,7 +59673,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-mktime4.c"
 subdir = "time"
 family = "tests"
@@ -59686,7 +59686,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-mktime.c"
 subdir = "time"
 family = "tests"
@@ -59699,7 +59699,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-posixtz.c"
 subdir = "time"
 family = "tests"
@@ -59712,7 +59712,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-settimeofday.c"
 subdir = "time"
 family = "tests"
@@ -59725,7 +59725,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-strftime2.c"
 subdir = "time"
 family = "tests"
@@ -59738,7 +59738,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-strftime3.c"
 subdir = "time"
 family = "tests"
@@ -59751,7 +59751,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-strftime4.c"
 subdir = "time"
 family = "tests"
@@ -59764,7 +59764,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-strftime.c"
 subdir = "time"
 family = "tests"
@@ -59777,7 +59777,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-strptime-whitespace.c"
 subdir = "time"
 family = "tests"
@@ -59790,7 +59790,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-strptime2.c"
 subdir = "time"
 family = "tests"
@@ -59803,7 +59803,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-strptime3.c"
 subdir = "time"
 family = "tests"
@@ -59816,7 +59816,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-strptime.c"
 subdir = "time"
 family = "tests"
@@ -59829,7 +59829,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/sysdeps/unix/sysv/linux/tst-time-clobber.c"
 subdir = "time"
 family = "tests"
@@ -59842,7 +59842,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-timegm.c"
 subdir = "time"
 family = "tests"
@@ -59855,7 +59855,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-timespec_get.c"
 subdir = "time"
 family = "tests"
@@ -59868,7 +59868,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-timespec_getres.c"
 subdir = "time"
 family = "tests"
@@ -59881,7 +59881,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-tzname.c"
 subdir = "time"
 family = "tests"
@@ -59894,7 +59894,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst-y2039.c"
 subdir = "time"
 family = "tests"
@@ -59907,7 +59907,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/time/tst_wcsftime.c"
 subdir = "time"
 family = "tests"
@@ -59920,7 +59920,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/timezone/test-tz.c"
 subdir = "timezone"
 family = "tests"
@@ -59933,7 +59933,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/timezone/tst-bz28707.c"
 subdir = "timezone"
 family = "tests"
@@ -59946,7 +59946,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/timezone/tst-bz29951.c"
 subdir = "timezone"
 family = "tests"
@@ -59959,7 +59959,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/timezone/tst-timezone.c"
 subdir = "timezone"
 family = "tests"
@@ -59972,7 +59972,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/timezone/tst-tzset.c"
 subdir = "timezone"
 family = "tests"
@@ -61134,7 +61134,7 @@ support_paths = [
     "safe/tests/test-skeleton.c",
 ]
 owner_phase = "impl_06_io_stdio_string_path"
-port_status = "planned"
+port_status = "ported"
 source_path = "original/string/tst-strcoll-overflow.c"
 subdir = "string"
 family = "xtests"

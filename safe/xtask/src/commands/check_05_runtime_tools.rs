@@ -19,7 +19,7 @@ pub fn run(_args: Args) -> Result<()> {
     ensure_package_scope_asset_kind(
         &package_scope,
         "/usr/libexec/safelibs/runtime-tools/pldd.backend",
-        "temporary_fallback_binary",
+        "tracked_backend_binary",
     )?;
     ensure_helper_status(&package_scope, "/usr/lib/pt_chown", "omitted_on_amd64")?;
     ensure_install_manifest_entry(&required_manifest, "/usr/bin/pldd")?;

@@ -873,7 +873,13 @@ fn collect_required_package_fallback_assets(
             .and_then(TomlValue::as_str)
             .ok_or_else(|| anyhow!("package-scope file entry missing asset_kind for {path}"))?;
         if scope != "required_package"
-            || !matches!(asset_kind, "asm_shim" | "temporary_fallback_binary")
+            || !matches!(
+                asset_kind,
+                "asm_shim"
+                    | "temporary_fallback_binary"
+                    | "tracked_backend_binary"
+                    | "private_baseline_backend_dso"
+            )
         {
             continue;
         }

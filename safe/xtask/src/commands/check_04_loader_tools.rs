@@ -22,7 +22,7 @@ pub fn run(_args: Args) -> Result<()> {
         "/usr/libexec/safelibs/loader-tools/ld.so.backend",
         "/usr/libexec/safelibs/loader-tools/ldconfig.backend",
     ] {
-        ensure_package_scope_asset_kind(&package_scope, path, "temporary_fallback_binary")?;
+        ensure_package_scope_asset_kind(&package_scope, path, "tracked_backend_binary")?;
         ensure_install_manifest_entry(&required_manifest, path)?;
         ensure_fallback_inventory_entry(&fallback_inventory, path)?;
     }

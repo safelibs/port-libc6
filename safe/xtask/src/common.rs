@@ -9,12 +9,13 @@ use std::process::{Command, Stdio};
 use toml::Value as TomlValue;
 use walkdir::WalkDir;
 
-pub const PHASE_ID: &str = "impl_05_core_runtime_threads_entropy";
-pub const COMPLETED_PHASES: [&str; 4] = [
+pub const PHASE_ID: &str = "impl_06_io_stdio_string_path";
+pub const COMPLETED_PHASES: [&str; 5] = [
     "impl_02_hybrid_abi_shell",
     "impl_03_packaging_and_harness",
     "impl_04_loader_startup_secure_exec",
     "impl_05_core_runtime_threads_entropy",
+    "impl_06_io_stdio_string_path",
 ];
 pub const REQUIRED_PACKAGES: [&str; 7] = [
     "libc6",
@@ -226,6 +227,32 @@ pub struct PackageBuildSpec {
     pub helper_files: Vec<String>,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct LinkCompatCorpus {
+    pub metadata: serde_json::Value,
+    pub cases: Vec<LinkCompatCase>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct LinkCompatCase {
+    pub case_id: String,
+    pub owner_phase: String,
+    pub coverage_class: String,
+    pub object_source_kind: String,
+    pub fixture_source_path: Option<String>,
+    pub upstream_object_path: Option<String>,
+    pub original_object_relpath: String,
+    #[serde(default)]
+    pub compile_args: Vec<String>,
+    #[serde(default)]
+    pub link_args: Vec<String>,
+    #[serde(default)]
+    pub required_startfiles: Vec<String>,
+    #[serde(default)]
+    pub exercised_dsos: Vec<String>,
+    pub run_mode: String,
+}
+
 pub fn safe_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
@@ -251,6 +278,10 @@ pub fn repo_path(path: impl AsRef<str>) -> PathBuf {
 
 pub fn package_build_manifest_path() -> PathBuf {
     safe_root().join("generated/packaging/package-build-manifest.json")
+}
+
+pub fn link_compat_corpus_path() -> PathBuf {
+    safe_root().join("generated/baseline/link-compat-corpus.json")
 }
 
 pub fn upstream_build_dir() -> PathBuf {
@@ -875,6 +906,34 @@ pub fn load_tests_manifest() -> Result<TestsManifest> {
 
 pub fn load_package_build_manifest() -> Result<PackageBuildManifest> {
     load_json(&package_build_manifest_path())
+}
+
+pub fn load_link_compat_corpus() -> Result<LinkCompatCorpus> {
+    load_json(&link_compat_corpus_path())
+}
+
+pub fn safe_package_version() -> Result<String> {
+    Ok(load_package_build_manifest()?.safe_package_version)
+}
+
+pub fn normalize_test_destination_path(path: &str) -> String {
+    for (prefix, replacement) in [
+        (
+            "safe/tests/sysdeps/unix/sysv/linux/x86_64/",
+            "safe/tests/sysdeps-linux-x86_64/",
+        ),
+        (
+            "safe/tests/sysdeps/unix/sysv/linux/x86/",
+            "safe/tests/sysdeps-linux-x86_64/x86/",
+        ),
+        ("safe/tests/sysdeps/x86_64/", "safe/tests/sysdeps-x86_64/"),
+        ("safe/tests/sysdeps/x86/", "safe/tests/sysdeps-x86_64/x86/"),
+    ] {
+        if let Some(rest) = path.strip_prefix(prefix) {
+            return format!("{replacement}{rest}");
+        }
+    }
+    path.to_string()
 }
 
 pub fn touch_executable_text(path: &Path, contents: &str) -> Result<()> {

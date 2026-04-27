@@ -1,4 +1,4 @@
-use crate::common::{repo_relative_path, repo_root, safe_root};
+use crate::common::{repo_relative_path, repo_root, safe_package_version, safe_root};
 use anyhow::{bail, Context, Result};
 use clap::Args as ClapArgs;
 use std::path::{Path, PathBuf};
@@ -16,11 +16,12 @@ pub struct Args {
 
 pub fn run(args: Args) -> Result<()> {
     if args.smoke_set != "basic-required-packages"
+        && args.smoke_set != "libc-family-cutover"
         && args.smoke_set != "loader-tools"
         && args.smoke_set != "runtime-tools"
     {
         bail!(
-            "unsupported smoke set {}; expected basic-required-packages, loader-tools, or runtime-tools",
+            "unsupported smoke set {}; expected basic-required-packages, libc-family-cutover, loader-tools, or runtime-tools",
             args.smoke_set
         );
     }
@@ -56,6 +57,48 @@ verify_safe_provenance() {
     fi
     printf 'selected %s %s (%s)\n' "$pkg" "$version" "$arch"
   done
+}
+
+manifest_entry_field() {
+  local manifest=$1
+  local path=$2
+  local field=$3
+  jq -r --arg path "$path" --arg field "$field" \
+    '.entries[] | select(.path == $path) | .[$field] // empty' "$manifest"
+}
+
+compare_public_payload() {
+  local manifest=$1
+  local path=$2
+  local source_path backend_path installed_target source_target
+  source_path=$(manifest_entry_field "$manifest" "$path" source_path)
+  if [ -z "$source_path" ]; then
+    printf 'manifest %s is missing source_path for %s\n' "$manifest" "$path" >&2
+    return 1
+  fi
+  if [ -L "$path" ]; then
+    installed_target=$(readlink -f "$path")
+  else
+    installed_target=$path
+  fi
+  if [ -L "$source_path" ]; then
+    source_target=$(readlink -f "$source_path")
+  else
+    source_target=$source_path
+  fi
+  if [ ! -f "$installed_target" ] || [ ! -f "$source_target" ]; then
+    printf 'missing staged payload comparison target for %s\n' "$path" >&2
+    return 1
+  fi
+  if [ "$(sha256sum "$installed_target" | awk '{print $1}')" != "$(sha256sum "$source_target" | awk '{print $1}')" ]; then
+    printf 'installed payload for %s does not match staged source %s\n' "$path" "$source_path" >&2
+    return 1
+  fi
+  backend_path="/usr/libexec/safelibs/backends/$(basename "$path")"
+  if [ -f "$backend_path" ] && [ "$(sha256sum "$installed_target" | awk '{print $1}')" = "$(sha256sum "$backend_path" | awk '{print $1}')" ]; then
+    printf 'installed public payload %s still matches private backend %s\n' "$path" "$backend_path" >&2
+    return 1
+  fi
 }
 
 smoke_basic_required_packages() {
@@ -178,6 +221,65 @@ smoke_runtime_tools() {
   fi
 }
 
+smoke_libc_family_cutover() {
+  log "Checking libc-family manifest provenance cutover"
+  for manifest in \
+    /workspace/safe/generated/baseline/package-files/libc6.json \
+    /workspace/safe/generated/baseline/package-files/libc6-dev.json \
+    /workspace/safe/generated/install-manifests/required-packages.json; do
+    for path in \
+      /usr/lib64/ld-linux-x86-64.so.2 \
+      /usr/lib64/libc.so.6 \
+      /usr/lib64/libpthread.so.0 \
+      /usr/lib64/libthread_db.so.1 \
+      /usr/lib64/libc_malloc_debug.so.0 \
+      /usr/lib64/libmemusage.so \
+      /usr/lib64/libc.so \
+      /usr/lib64/libthread_db.so \
+      /usr/lib64/libc_malloc_debug.so; do
+      if jq -e --arg path "$path" '.entries[] | select(.path == $path)' "$manifest" >/dev/null; then
+        origin=$(manifest_entry_field "$manifest" "$path" source_origin)
+        source_path=$(manifest_entry_field "$manifest" "$path" source_path)
+        if [ "$origin" = "build_testroot" ]; then
+          printf 'public phase-06 payload %s still uses build_testroot origin in %s\n' "$path" "$manifest" >&2
+          exit 1
+        fi
+        case "$source_path" in
+          build/testroot.pristine/usr/lib64/*)
+            printf 'public phase-06 payload %s still points at baseline public source %s in %s\n' "$path" "$source_path" "$manifest" >&2
+            exit 1
+            ;;
+        esac
+      fi
+    done
+  done
+
+  log "Checking explicit private backend inventory"
+  for path in \
+    /usr/libexec/safelibs/backends/ld-linux-x86-64.so.2 \
+    /usr/libexec/safelibs/backends/libc.so.6 \
+    /usr/libexec/safelibs/backends/libpthread.so.0 \
+    /usr/libexec/safelibs/backends/libthread_db.so.1 \
+    /usr/libexec/safelibs/backends/libc_malloc_debug.so.0 \
+    /usr/libexec/safelibs/backends/libmemusage.so; do
+    test -f "$path"
+  done
+
+  log "Comparing installed public payloads with staged safe-build sources"
+  compare_public_payload /workspace/safe/generated/install-manifests/required-packages.json /usr/lib64/ld-linux-x86-64.so.2
+  compare_public_payload /workspace/safe/generated/install-manifests/required-packages.json /usr/lib64/libc.so.6
+  compare_public_payload /workspace/safe/generated/install-manifests/required-packages.json /usr/lib64/libpthread.so.0
+  compare_public_payload /workspace/safe/generated/install-manifests/required-packages.json /usr/lib64/libthread_db.so.1
+  compare_public_payload /workspace/safe/generated/install-manifests/required-packages.json /usr/lib64/libc_malloc_debug.so.0
+  compare_public_payload /workspace/safe/generated/install-manifests/required-packages.json /usr/lib64/libmemusage.so
+  compare_public_payload /workspace/safe/generated/baseline/package-files/libc6-dev.json /usr/lib64/libc.so
+  compare_public_payload /workspace/safe/generated/baseline/package-files/libc6-dev.json /usr/lib64/libthread_db.so
+  compare_public_payload /workspace/safe/generated/baseline/package-files/libc6-dev.json /usr/lib64/libc_malloc_debug.so
+
+  smoke_loader_tools
+  smoke_runtime_tools
+}
+
 log "Updating base package indexes"
 apt-get update
 
@@ -195,6 +297,9 @@ verify_safe_provenance
 case "${SAFE_SMOKE_SET}" in
   basic-required-packages)
     smoke_basic_required_packages
+    ;;
+  libc-family-cutover)
+    smoke_libc_family_cutover
     ;;
   loader-tools)
     smoke_loader_tools
@@ -219,7 +324,7 @@ esac
         .arg("-e")
         .arg(format!("SAFE_DEB_DIR_REL={deb_dir_rel}"))
         .arg("-e")
-        .arg("SAFE_VERSION=2.39-0ubuntu8.7+safelibs03")
+        .arg(format!("SAFE_VERSION={}", safe_package_version()?))
         .arg("-e")
         .arg(format!("SAFE_SMOKE_SET={}", args.smoke_set))
         .arg("-v")

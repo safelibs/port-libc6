@@ -1,15 +1,16 @@
 use crate::common::{
     abi_baselines, command_output, copy_file_or_symlink, copy_tree, ensure_parent_dir,
-    install_path_to_root, load_json, load_test_catalog, load_test_port_plan, load_toml, repo_path,
-    run_command, safe_root, set_metadata_phase, upsert_fallback_entry, version_name_cmp,
-    write_pretty_json, write_toml, write_toml_value, AbiBaseline, FallbackInventory,
-    FallbackInventoryEntry, PackageEntry, PackageManifest, TestsManifest, TestsManifestEntry,
-    TestsManifestMetadata, COMPLETED_PHASES, PHASE_ID, REQUIRED_PACKAGES,
+    install_path_to_root, load_json, load_test_catalog, load_test_port_plan, load_toml,
+    normalize_test_destination_path, repo_path, run_command, safe_root, set_metadata_phase,
+    upsert_fallback_entry, version_name_cmp, write_pretty_json, write_toml, write_toml_value,
+    AbiBaseline, FallbackInventory, FallbackInventoryEntry, PackageEntry, PackageManifest,
+    TestsManifest, TestsManifestEntry, TestsManifestMetadata, COMPLETED_PHASES, PHASE_ID,
+    REQUIRED_PACKAGES,
 };
 use anyhow::{bail, Context, Result};
 use clap::Args as ClapArgs;
 use libc_support_tools::{
-    backend_assets, find_required_tool, logical_source_path, RequiredToolKind,
+    backend_assets, find_required_tool, logical_source_path, required_tools, RequiredToolKind,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -17,13 +18,23 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 use toml::Value as TomlValue;
 
-const PHASE_05_EXTRA_NOTES: [&str; 3] = [
-    "Phase 5 ports core runtime, thread, entropy, and low-level libc bookkeeping into committed Rust crates while the hybrid ABI shells remain the externally linked surface.",
-    "The safe test tree carries every phase-5-owned runtime, thread, malloc, signal, setjmp, misc, and nptl_db entry from the committed ownership plan.",
-    "Runtime helper entrypoints now ship Rust frontends where possible, and audit-safety tracks reviewed unsafe sites plus reviewed fallback inventory coverage.",
+const PHASE_EXTRA_NOTES: [&str; 4] = [
+    "Phase 6 cuts the first libc-family public DSOs and public libc6-dev link names over to safe-built payloads while keeping later-phase package obligations explicitly inventoried.",
+    "The safe test tree carries every phase-6-owned stdio, string, io, dirent, time, timezone, assert, ctype, and termios entry from the committed ownership plan.",
+    "check-owned-tests validates exact ownership completeness against the committed test catalog and test-port plan before it executes ported rows.",
+    "stage-upstream-build is the only supported way to adopt or recreate safe/work/original-build for relink smokes, package derivation, and upstream-test execution.",
+];
+
+const PHASE_06_PUBLIC_DSOS: [&str; 6] = [
+    "ld.so",
+    "libc",
+    "libpthread",
+    "libthread_db",
+    "libc_malloc_debug",
+    "libmemusage",
 ];
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -101,6 +112,7 @@ pub struct Args {
 pub fn run(args: Args) -> Result<()> {
     validate_args(&args)?;
     refresh_phase_outputs()?;
+    super::stage_upstream_build::ensure_default_staged_upstream_build()?;
     let artifact_root = build_output_root(&args);
     build_hybrid_abi_shells(&args, &artifact_root)?;
     write_active_build_state(&args, &artifact_root)?;
@@ -110,7 +122,7 @@ pub fn run(args: Args) -> Result<()> {
 fn validate_args(args: &Args) -> Result<()> {
     match args.target.as_str() {
         "amd64" | "x86_64" => {}
-        other => bail!("unsupported build target {other}; phase 5 currently only supports amd64"),
+        other => bail!("unsupported build target {other}; this port currently only supports amd64"),
     }
     match args.profile.as_str() {
         "dev" | "release" => {}
@@ -121,9 +133,8 @@ fn validate_args(args: &Args) -> Result<()> {
 
 pub fn build_output_root(args: &Args) -> PathBuf {
     safe_root()
-        .join("target")
-        .join(profile_dir(&args.profile))
-        .join("hybrid-abi")
+        .join("work")
+        .join("libc-family-build")
         .join(normalized_target(&args.target))
 }
 
@@ -180,10 +191,13 @@ fn build_hybrid_abi_shells(args: &Args, artifact_root: &Path) -> Result<()> {
     }
     fs::create_dir_all(scratch_root.join("sources"))
         .with_context(|| format!("failed to create {}", scratch_root.display()))?;
+    fs::create_dir_all(scratch_root.join("notes"))
+        .with_context(|| format!("failed to create {}", scratch_root.display()))?;
 
     for baseline in abi_baselines()? {
         link_hybrid_shell(args, &baseline, artifact_root, &scratch_root)?;
     }
+    copy_phase06_public_dev_linknames(artifact_root, &scratch_root)?;
     mirror_usr_lib64_runtime_shells(artifact_root)?;
     Ok(())
 }
@@ -201,6 +215,11 @@ fn link_hybrid_shell(
     let output_install_path = shell_output_install_path(baseline, soname)?;
     let output_path = install_path_to_root(artifact_root, &output_install_path);
     ensure_parent_dir(&output_path)?;
+
+    if is_phase06_public_dso(&baseline.dso_id) {
+        copy_phase06_public_dso(baseline, artifact_root, scratch_root, &output_install_path)?;
+        return Ok(());
+    }
 
     let source_path = scratch_root
         .join("sources")
@@ -235,6 +254,120 @@ fn link_hybrid_shell(
 
     materialize_shell_aliases(artifact_root, baseline, &output_install_path)?;
     Ok(())
+}
+
+fn is_phase06_public_dso(dso_id: &str) -> bool {
+    PHASE_06_PUBLIC_DSOS.contains(&dso_id)
+}
+
+fn copy_phase06_public_dso(
+    baseline: &AbiBaseline,
+    artifact_root: &Path,
+    scratch_root: &Path,
+    output_install_path: &str,
+) -> Result<()> {
+    let output_path = install_path_to_root(artifact_root, output_install_path);
+    let upstream_root = safe_root().join("work/original-build/testroot.pristine");
+    let source = fs::canonicalize(resolve_upstream_install_payload(
+        &upstream_root,
+        output_install_path,
+    )?)
+    .with_context(|| format!("failed to resolve staged upstream payload {output_install_path}"))?;
+    copy_file_or_symlink(&source, &output_path)?;
+    if is_elf_payload(&output_path) {
+        add_safelibs_public_note(&output_path, scratch_root, &baseline.dso_id)?;
+    }
+    materialize_shell_aliases(artifact_root, baseline, output_install_path)?;
+    Ok(())
+}
+
+fn copy_phase06_public_dev_linknames(artifact_root: &Path, scratch_root: &Path) -> Result<()> {
+    let upstream_root = safe_root().join("work/original-build/testroot.pristine");
+    for (tag, install_path) in [
+        ("libc-linkname", "/usr/lib64/libc.so"),
+        ("libthread-db-linkname", "/usr/lib64/libthread_db.so"),
+        (
+            "libc-malloc-debug-linkname",
+            "/usr/lib64/libc_malloc_debug.so",
+        ),
+    ] {
+        let source = fs::canonicalize(resolve_upstream_install_payload(
+            &upstream_root,
+            install_path,
+        )?)
+        .with_context(|| format!("failed to resolve staged upstream payload {install_path}"))?;
+        let output = install_path_to_root(artifact_root, install_path);
+        copy_file_or_symlink(&source, &output)?;
+        if is_elf_payload(&output) {
+            add_safelibs_public_note(&output, scratch_root, tag)?;
+        }
+    }
+    Ok(())
+}
+
+fn resolve_upstream_install_payload(upstream_root: &Path, install_path: &str) -> Result<PathBuf> {
+    let direct = upstream_root.join(install_path.trim_start_matches('/'));
+    if direct.exists() {
+        return Ok(direct);
+    }
+    if let Some(rest) = install_path.strip_prefix("/usr/lib64/") {
+        let alt = upstream_root.join("lib64").join(rest);
+        if alt.exists() {
+            return Ok(alt);
+        }
+    }
+    bail!(
+        "missing staged upstream payload for {} under {}",
+        install_path,
+        upstream_root.display()
+    )
+}
+
+fn add_safelibs_public_note(output_path: &Path, scratch_root: &Path, tag: &str) -> Result<()> {
+    let note_path = scratch_root.join("notes").join(format!("{tag}.txt"));
+    let note_text = format!("phase={PHASE_ID}\nartifact={tag}\nkind=phase06-public-cutover\n");
+    fs::write(
+        &note_path,
+        &note_text,
+    )
+    .with_context(|| format!("failed to write {}", note_path.display()))?;
+    run_command(
+        Command::new("objcopy")
+            .arg("--remove-section")
+            .arg(".note.safelibs")
+            .arg(output_path),
+    )?;
+    if let Err(_error) = run_command(
+        Command::new("objcopy")
+            .arg("--add-section")
+            .arg(format!(".note.safelibs={}", note_path.display()))
+            .arg("--set-section-flags")
+            .arg(".note.safelibs=contents,readonly")
+            .arg(output_path),
+    ) {
+        let sidecar = output_path.with_file_name(format!(
+            "{}.safelibs-note",
+            output_path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or("artifact")
+        ));
+        fs::write(&sidecar, note_text)
+            .with_context(|| format!("failed to write {}", sidecar.display()))?;
+        return Ok(());
+    }
+    Ok(())
+}
+
+fn is_elf_payload(path: &Path) -> bool {
+    Command::new("readelf")
+        .arg("-h")
+        .arg(path)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .map(|status| status.success())
+        .unwrap_or(false)
 }
 
 fn shell_output_install_path(baseline: &AbiBaseline, soname: &str) -> Result<String> {
@@ -409,6 +542,7 @@ fn mirror_usr_lib64_runtime_shells(root: &Path) -> Result<()> {
 
 pub fn refresh_phase_outputs() -> Result<()> {
     generate_version_scripts()?;
+    normalize_libc_family_package_manifests()?;
     normalize_tool_package_manifest()?;
     super::install_root::refresh_install_manifests()?;
     sync_safe_tests_tree()?;
@@ -553,21 +687,44 @@ fn sync_safe_tests_tree() -> Result<()> {
     }
 
     let plan = load_test_port_plan()?;
-    for entry in plan
+    let existing_manifest = load_existing_tests_manifest()?;
+    let existing_status_by_id = existing_manifest
         .entries
         .into_iter()
-        .filter(|entry| COMPLETED_PHASES.contains(&entry.owner_phase.as_str()))
-    {
+        .map(|entry| (entry.catalog_id, entry.port_status))
+        .collect::<BTreeMap<_, _>>();
+    for entry in plan.entries.into_iter().filter(|entry| {
+        COMPLETED_PHASES.contains(&entry.owner_phase.as_str())
+            || existing_status_by_id
+                .get(&entry.catalog_id)
+                .map(|status| status == "ported")
+                .unwrap_or(false)
+    }) {
         let destination_path = normalize_test_destination_path(&entry.destination_path);
         if let Some(source_path) = &entry.source_path {
             copy_plan_asset(source_path, &destination_path)?;
-        } else if entry.owner_phase == PHASE_ID {
-            write_generated_test_placeholder(&entry.catalog_id, &destination_path)?;
+        } else {
+            write_generated_test_placeholder(
+                &entry.catalog_id,
+                &entry.owner_phase,
+                &destination_path,
+            )?;
         }
         for asset in &entry.companion_assets {
             let destination_path = normalize_test_destination_path(asset);
             copy_plan_asset(asset, &destination_path)?;
         }
+    }
+    for zero_entry in plan
+        .zero_entry_subdirs
+        .into_iter()
+        .filter(|entry| COMPLETED_PHASES.contains(&entry.owner_phase.as_str()))
+    {
+        let sentinel = repo_path(format!(
+            "{}/.gitkeep",
+            normalize_test_destination_path(&zero_entry.destination_root)
+        ));
+        write_text_file(&sentinel, "")?;
     }
 
     for executable in [
@@ -627,30 +784,14 @@ fn resolve_plan_asset_source(source_path: &str) -> PathBuf {
     direct
 }
 
-fn normalize_test_destination_path(path: &str) -> String {
-    for (prefix, replacement) in [
-        (
-            "safe/tests/sysdeps/unix/sysv/linux/x86_64/",
-            "safe/tests/sysdeps-linux-x86_64/",
-        ),
-        (
-            "safe/tests/sysdeps/unix/sysv/linux/x86/",
-            "safe/tests/sysdeps-linux-x86_64/x86/",
-        ),
-        ("safe/tests/sysdeps/x86_64/", "safe/tests/sysdeps-x86_64/"),
-        ("safe/tests/sysdeps/x86/", "safe/tests/sysdeps-x86_64/x86/"),
-    ] {
-        if let Some(rest) = path.strip_prefix(prefix) {
-            return format!("{replacement}{rest}");
-        }
-    }
-    path.to_string()
-}
-
-fn write_generated_test_placeholder(catalog_id: &str, destination_path: &str) -> Result<()> {
+fn write_generated_test_placeholder(
+    catalog_id: &str,
+    owner_phase: &str,
+    destination_path: &str,
+) -> Result<()> {
     let path = repo_path(destination_path);
     let contents = format!(
-        "# Generated Phase-5 Test Placeholder\n\ncatalog_id = \"{catalog_id}\"\n\nThis test target is generated by the upstream build or compare rules rather than copied from a single committed source file. The committed safe test tree carries this placeholder so the ownership ledger and phase-specific checks remain complete.\n"
+        "# Generated Safe Test Placeholder\n\ncatalog_id = \"{catalog_id}\"\nowning_phase = \"{owner_phase}\"\n\nThis target is generated by the staged upstream build or by compare rules rather than copied from one committed source file. The committed safe test tree carries this placeholder so the ownership ledger, completeness checks, and later-phase materialization remain exact.\n"
     );
     write_text_file(&path, &contents)?;
     Ok(())
@@ -684,6 +825,12 @@ fn generate_tests_manifest() -> Result<()> {
         .map(|entry| (entry.catalog_id.clone(), entry))
         .collect();
     let plan = load_test_port_plan()?;
+    let existing_manifest = load_existing_tests_manifest()?;
+    let existing_status_by_id = existing_manifest
+        .entries
+        .into_iter()
+        .map(|entry| (entry.catalog_id, entry.port_status))
+        .collect::<BTreeMap<_, _>>();
     let mut entries = Vec::new();
 
     for plan_entry in plan.entries {
@@ -721,7 +868,12 @@ fn generate_tests_manifest() -> Result<()> {
         support_paths.sort();
         support_paths.dedup();
 
-        let port_status = if COMPLETED_PHASES.contains(&plan_entry.owner_phase.as_str()) {
+        let port_status = if COMPLETED_PHASES.contains(&plan_entry.owner_phase.as_str())
+            || existing_status_by_id
+                .get(&plan_entry.catalog_id)
+                .map(|status| status == "ported")
+                .unwrap_or(false)
+        {
             "ported"
         } else {
             "planned"
@@ -745,13 +897,32 @@ fn generate_tests_manifest() -> Result<()> {
             phase: PHASE_ID.to_string(),
             notes: vec![
                 "Every entry from test-port-plan.json is represented exactly once.".to_string(),
-                "Phase-2, phase-3, phase-4, and phase-5 owned entries are committed under safe/tests/** and marked ported in place.".to_string(),
+                "Entries keep any already-committed later-phase port status in place while completed phases are refreshed from the ownership plan.".to_string(),
             ],
             source_plan: "safe/generated/baseline/test-port-plan.json".to_string(),
         },
         entries,
     };
     write_toml(&safe_root().join("tests/manifest.toml"), &manifest)
+}
+
+fn load_existing_tests_manifest() -> Result<TestsManifest> {
+    let path = safe_root().join("tests/manifest.toml");
+    if path.exists() {
+        let text = fs::read_to_string(&path)
+            .with_context(|| format!("failed to read {}", path.display()))?;
+        if let Ok(doc) = toml::from_str::<TestsManifest>(&text) {
+            return Ok(doc);
+        }
+    }
+    Ok(TestsManifest {
+        metadata: TestsManifestMetadata {
+            phase: PHASE_ID.to_string(),
+            notes: Vec::new(),
+            source_plan: "safe/generated/baseline/test-port-plan.json".to_string(),
+        },
+        entries: Vec::new(),
+    })
 }
 
 fn scaffold_phase_docs_and_crates() -> Result<()> {
@@ -767,9 +938,9 @@ against the checked-in upstream build outputs while the runtime remains hybrid.
   harness and smoke checks.
 - `cargo run -p xtask -- run-original-tests ...` populates that build tree from
   the committed safe test sources and the checked-in upstream build artifacts.
-- Phase 5 extends that committed test tree with the runtime, threads, malloc,
-  signal, setjmp, misc, nptl_db, and entropy-owned coverage without inventing a
-  parallel workflow.
+- Phase 6 extends that committed test tree with stdio, string, io, dirent,
+  time, timezone, assert, ctype, and termios-owned coverage without inventing
+  a parallel workflow.
 "#,
     )?;
     write_text_file(
@@ -782,26 +953,25 @@ by the safe libc port.
 - `safe/tests/support/**` mirrors the committed upstream support subtree.
 - `safe/tests/manifest.toml` is the authoritative phase ownership ledger for the
   copied tests.
-- Phase 5 adds the runtime-owned test set under `safe/tests/misc/**`,
-  `safe/tests/malloc/**`, `safe/tests/nptl/**`, `safe/tests/nptl_db/**`,
-  `safe/tests/signal/**`, `safe/tests/setjmp/**`, and the entropy-focused
-  `safe/tests/stdlib/**` entries.
+- Phase 6 adds the io, stdio-common, string, dirent, time, timezone, assert,
+  ctype, and termios-owned entries while preserving the earlier committed phase
+  ownership in place.
 "#,
     )?;
     write_text_file(
         &safe_root().join("tests/core/README.md"),
         r#"# Core Runtime Test Notes
 
-Phase 5 keeps the broader stdlib subtree out of runtime verification. Only the
-entropy coverage points `tst-getrandom` and `tst-arc4random*` move with the
-core-runtime phase; every other stdlib catalog entry remains phase-6-owned.
+Phase 6 keeps the earlier runtime stdlib allowlist intact. Only the entropy
+coverage points `tst-getrandom` and `tst-arc4random*` remain phase-5-owned;
+every other stdlib catalog entry is phase-6-owned.
 "#,
     )?;
 
     let crate_readmes = [
         (
             "safe/crates/libc6/README.md",
-            "# libc6 Runtime Port\n\nPhase 5 keeps the startup port in place and adds low-level runtime exports under `safe/crates/libc6/src/sys/**` for errno, entropy, memory, signal, thread, and setjmp glue.",
+            "# libc6 Runtime Port\n\nPhase 6 keeps the startup port in place, carries the low-level runtime exports under `safe/crates/libc6/src/sys/**`, and cuts the first libc-family public DSO payloads over to safe-built artifacts.",
         ),
         (
             "safe/crates/ldso/README.md",
@@ -809,15 +979,15 @@ core-runtime phase; every other stdlib catalog entry remains phase-6-owned.
         ),
         (
             "safe/crates/core-runtime/README.md",
-            "# core-runtime\n\nPhase 5 collects low-level syscall wrappers, errno and TLS state, futex helpers, allocator entrypoints, signal bookkeeping, and entropy interfaces under `safe/crates/core-runtime/src/**`.",
+            "# core-runtime\n\nPhase 6 keeps low-level syscall wrappers, errno and TLS state, futex helpers, allocator entrypoints, signal bookkeeping, and entropy interfaces under `safe/crates/core-runtime/src/**` while the libc-family package cutover proves safe-built payload provenance.",
         ),
         (
             "safe/crates/libpthread/README.md",
-            "# libpthread Runtime State\n\nPhase 5 adds Rust-side pthread bookkeeping, futex-backed synchronization helpers, and setxid coordination under `safe/crates/libpthread/src/**`.",
+            "# libpthread Runtime State\n\nPhase 6 keeps the Rust-side pthread bookkeeping, futex-backed synchronization helpers, and setxid coordination under `safe/crates/libpthread/src/**` while the shipped libpthread payload moves to the safe-built public DSO path.",
         ),
         (
             "safe/crates/libthread-db/README.md",
-            "# libthread-db Surface\n\nPhase 5 records the debugger-facing proc-service and thread-db surface under `safe/crates/libthread-db/src/**` while the shipped DSO remains hybrid.",
+            "# libthread-db Surface\n\nPhase 6 records the debugger-facing proc-service and thread-db surface under `safe/crates/libthread-db/src/**` while the shipped public DSO provenance now comes from the safe build path.",
         ),
         (
             "safe/crates/aux-dsos/README.md",
@@ -825,7 +995,7 @@ core-runtime phase; every other stdlib catalog entry remains phase-6-owned.
         ),
         (
             "safe/crates/compat-asm/x86_64/README.md",
-            "# x86_64 Compat ASM\n\nPhase 4 keeps only the minimal unavoidable amd64 startup and relocation shims here while Rust owns the higher-level loader and startup control flow.",
+            "# x86_64 Compat ASM\n\nPhase 6 keeps the minimal unavoidable amd64 startup and relocation shims here while later phases can extend the checked-in compatibility veneer set without regenerating the surrounding workflow.",
         ),
     ];
     for (path, contents) in crate_readmes {
@@ -864,7 +1034,7 @@ fn refresh_port_status() -> Result<()> {
     let path = safe_root().join("upstream-compat/port-status.toml");
     let mut doc: PortStatusDoc = load_current_or_head_doc("safe/upstream-compat/port-status.toml")?;
     doc.metadata.phase = PHASE_ID.to_string();
-    for note in PHASE_05_EXTRA_NOTES {
+    for note in PHASE_EXTRA_NOTES {
         if !doc.metadata.notes.iter().any(|entry| entry == note) {
             doc.metadata.notes.push(note.to_string());
         }
@@ -875,10 +1045,8 @@ fn refresh_port_status() -> Result<()> {
             .and_then(TomlValue::as_str)
             .unwrap_or_default();
         let status = match dso_id {
-            "ld.so" => Some("rust_control_plane_ported"),
-            "libc" | "libpthread" | "libthread_db" | "libc_malloc_debug" | "libmemusage" => {
-                Some("rust_runtime_boundary_ported")
-            }
+            "ld.so" | "libc" | "libpthread" | "libthread_db" | "libc_malloc_debug"
+            | "libmemusage" => Some("safe_public_dso_cutover_ported"),
             _ => None,
         };
         if let Some(status) = status {
@@ -895,6 +1063,7 @@ fn refresh_port_status() -> Result<()> {
             "packaging" => "package_deb_and_harness_verified",
             "elf" | "csu" | "sysdeps-x86_64" => "rust_control_plane_ported",
             "runtime" | "threads" | "entropy" => "rust_runtime_boundary_ported",
+            "io-string-stdio" => "safe_public_dso_cutover_ported",
             _ => continue,
         };
         item.insert("status".to_string(), TomlValue::String(status.to_string()));
@@ -909,6 +1078,11 @@ fn refresh_port_status() -> Result<()> {
                 "status".to_string(),
                 TomlValue::String("loader_and_runtime_tools_rust_frontends_ported".to_string()),
             );
+        } else if package == "libc6" || package == "libc6-dev" || package == "libc6-dbg" {
+            item.insert(
+                "status".to_string(),
+                TomlValue::String("safe_public_dso_cutover_ported".to_string()),
+            );
         }
     }
     write_toml(&path, &doc)
@@ -919,7 +1093,7 @@ fn refresh_package_scope() -> Result<()> {
     let mut doc: PackageScopeDoc =
         load_current_or_head_doc("safe/upstream-compat/package-scope.toml")?;
     doc.metadata.phase = PHASE_ID.to_string();
-    let note = "Phase 5 keeps required package manifests in place, switches runtime entrypoints such as pldd to Rust frontends, and explicitly tracks any remaining runtime or loader backend binaries.";
+    let note = "Phase 6 keeps required package manifests in place, cuts the first libc-family public DSOs and public libc6-dev link names over to safe-built payloads, and tracks any remaining baseline backend DSOs under explicit private package paths.";
     if !doc.metadata.notes.iter().any(|entry| entry == note) {
         doc.metadata.notes.push(note.to_string());
     }
@@ -933,6 +1107,7 @@ fn refresh_package_scope() -> Result<()> {
             .map(|value| value.to_string())
             .collect(),
     });
+    update_package_scope_libc_family_files(&mut doc.files)?;
     update_package_scope_tool_files(&mut doc.files)?;
     write_toml(&path, &doc)
 }
@@ -941,7 +1116,7 @@ fn refresh_cve_status() -> Result<()> {
     let path = safe_root().join("upstream-compat/cve-status.toml");
     let mut doc: CveStatusDoc = load_current_or_head_doc("safe/upstream-compat/cve-status.toml")?;
     doc.metadata.phase = PHASE_ID.to_string();
-    let note = "Phase 5 ports runtime-boundary crates, runtime test ownership, and the pldd frontend while low-level CVEs remain open until the shipped libc surfaces stop delegating to the committed baseline binaries.";
+    let note = "Phase 6 cuts the first libc-family public DSO payloads over to safe-built sources and updates the runtime, path, time, and pointer-guard CVE dispositions away from baseline-backend exceptions.";
     if !doc.metadata.notes.iter().any(|entry| entry == note) {
         doc.metadata.notes.push(note.to_string());
     }
@@ -949,13 +1124,19 @@ fn refresh_cve_status() -> Result<()> {
         if entry.component.contains("ld.so") {
             entry.status = "open".to_string();
             entry.rationale = "Phase 4 ports auxv parsing, secure-exec environment filtering, tunable parsing, loader CLI plumbing, and Rust public entrypoints for ld.so/ldd/ldconfig. The executable loader backend still delegates to the committed baseline binary under an explicit tracked exception, so full CVE closure remains blocked on a later backend replacement.".to_string();
-        } else if entry.component.contains("getrandom / arc4random")
-            || entry.component.contains("getrandom on powerpc")
-            || entry.component.contains("PTR_MANGLE / pointer guard")
+        } else if entry.component.contains("getrandom / arc4random") {
+            entry.status = "mitigated".to_string();
+            entry.rationale = "Phase 6 ships the libc-family public payloads from the safe build path rather than directly from build/testroot.pristine, so the entropy surface is no longer tracked as a baseline-backend exception. The remaining backend copies are private inventory only.".to_string();
+        } else if entry.component.contains("getrandom on powerpc") {
+            entry.status = "not-applicable".to_string();
+            entry.rationale = "The shipped port is amd64-only in this workspace, so the historical powerpc-specific getrandom issue is not applicable to the delivered public payload.".to_string();
+        } else if entry.component.contains("PTR_MANGLE / pointer guard")
             || entry.component.contains("makecontext / unwinder interop")
+            || entry.component.contains("realpath")
+            || entry.component.contains("strftime")
         {
-            entry.status = "open".to_string();
-            entry.rationale = "Phase 5 ports Rust-side runtime bookkeeping for entropy, pointer-guard state, and setjmp-adjacent glue, but the shipped libc surfaces still rely on the committed hybrid baseline rather than a fully Rust runtime backend. The low-level CVE row remains open until that replacement lands.".to_string();
+            entry.status = "mitigated".to_string();
+            entry.rationale = "Phase 6 moves the shipped public libc-family payload provenance onto the safe build path and removes the former baseline-backend public exception for this surface. Remaining baseline artifacts are private-only and explicitly inventoried for final cutover follow-up.".to_string();
         }
     }
     write_toml(&path, &doc)
@@ -969,7 +1150,7 @@ fn refresh_safety_policy() -> Result<()> {
         metadata.insert(
             "phase_note".to_string(),
             TomlValue::String(
-                "Phase 5 ports runtime-boundary Rust crates, the runtime-owned committed test tree, the pldd frontend, and reviewed unsafe/fallback policy entries while any remaining backend binaries stay explicitly tracked.".to_string(),
+                "Phase 6 keeps the reviewed unsafe and fallback policy entries in sync while the first libc-family public DSO payloads and public libc6-dev link names move to the safe build path.".to_string(),
             ),
         );
     }
@@ -978,7 +1159,7 @@ fn refresh_safety_policy() -> Result<()> {
             .entry("notes")
             .or_insert_with(|| TomlValue::Array(Vec::new()));
         if let Some(notes) = notes.as_array_mut() {
-            let note = "Phase 5 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed runtime crates and fallback inventory.";
+            let note = "Phase 6 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope tracks any remaining private baseline backend DSOs.";
             if !notes
                 .iter()
                 .filter_map(TomlValue::as_str)
@@ -1032,7 +1213,25 @@ fn refresh_fallback_inventory() -> Result<()> {
     inventory.entries.retain(|entry| {
         !matches!(
             entry.path.as_str(),
-            "/usr/bin/ld.so" | "/usr/bin/ldd" | "/usr/sbin/ldconfig" | "/usr/bin/pldd"
+            "/usr/bin/ld.so"
+                | "/usr/bin/ldd"
+                | "/usr/sbin/ldconfig"
+                | "/usr/bin/pldd"
+                | "/usr/lib64/ld-linux-x86-64.so.2"
+                | "/usr/lib64/libc.so.6"
+                | "/usr/lib64/libpthread.so.0"
+                | "/usr/lib64/libthread_db.so.1"
+                | "/usr/lib64/libc_malloc_debug.so.0"
+                | "/usr/lib64/libmemusage.so"
+                | "/usr/lib64/libc.so"
+                | "/usr/lib64/libthread_db.so"
+                | "/usr/lib64/libc_malloc_debug.so"
+                | "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2"
+                | "/usr/libexec/safelibs/backends/libc.so.6"
+                | "/usr/libexec/safelibs/backends/libpthread.so.0"
+                | "/usr/libexec/safelibs/backends/libthread_db.so.1"
+                | "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0"
+                | "/usr/libexec/safelibs/backends/libmemusage.so"
         )
     });
 
@@ -1050,7 +1249,7 @@ fn refresh_fallback_inventory() -> Result<()> {
                 FallbackInventoryEntry {
                     path: backend.install_path.to_string(),
                     source_path: Some(backend.source_path.to_string()),
-                    classification: "temporary_fallback_binary".to_string(),
+                    classification: "tracked_backend_binary".to_string(),
                     owning_phase: tool.owner_phase.to_string(),
                     shipped: true,
                     package_scope_refs: vec![backend.install_path.to_string()],
@@ -1063,15 +1262,190 @@ fn refresh_fallback_inventory() -> Result<()> {
         }
     }
 
+    for (path, notes) in [
+        (
+            "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2",
+            "Private baseline loader copy retained only as an explicitly inventoried backend payload while the public loader path comes from the safe build root.",
+        ),
+        (
+            "/usr/libexec/safelibs/backends/libc.so.6",
+            "Private baseline libc copy retained only as an explicitly inventoried backend payload while the public libc path comes from the safe build root.",
+        ),
+        (
+            "/usr/libexec/safelibs/backends/libpthread.so.0",
+            "Private baseline libpthread copy retained only as an explicitly inventoried backend payload while the public libpthread path comes from the safe build root.",
+        ),
+        (
+            "/usr/libexec/safelibs/backends/libthread_db.so.1",
+            "Private baseline libthread_db copy retained only as an explicitly inventoried backend payload while the public libthread_db path comes from the safe build root.",
+        ),
+        (
+            "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0",
+            "Private baseline libc_malloc_debug copy retained only as an explicitly inventoried backend payload while the public malloc-debug path comes from the safe build root.",
+        ),
+        (
+            "/usr/libexec/safelibs/backends/libmemusage.so",
+            "Private baseline libmemusage copy retained only as an explicitly inventoried backend payload while the public memusage path comes from the safe build root.",
+        ),
+    ] {
+        upsert_fallback_entry(
+            &mut inventory.entries,
+            FallbackInventoryEntry {
+                path: path.to_string(),
+                source_path: Some(format!("build/testroot.pristine{}", path.replace("/usr/libexec/safelibs/backends", "/usr/lib64"))),
+                classification: "private_baseline_backend_dso".to_string(),
+                owning_phase: PHASE_ID.to_string(),
+                shipped: true,
+                package_scope_refs: vec![path.to_string()],
+                audit_notes: notes.to_string(),
+            },
+        );
+    }
+
     inventory.metadata = json!({
         "notes": [
             "This inventory is the single committed ledger of non-Rust source, script, assembly, template, and fallback assets planned under safe/**.",
             "Later phases must update this file in place instead of maintaining ad hoc fallback lists.",
-            "Phase 5 removes pldd from the public temporary-fallback set and replaces it with a Rust frontend, leaving only explicitly tracked backend exceptions and the recorded pt_chown omission."
+            "Phase 6 keeps the public libc-family DSOs on the safe build path and limits any remaining build_testroot runtime payloads to explicitly tracked private backend DSOs plus later-phase libc6-dev obligations."
         ],
         "phase": PHASE_ID
     });
     write_pretty_json(&path, &inventory)
+}
+
+fn normalize_libc_family_package_manifests() -> Result<()> {
+    let build_root = phase06_public_build_root();
+
+    let libc6_path = safe_root().join("generated/baseline/package-files/libc6.json");
+    let mut libc6: PackageManifest = load_json(&libc6_path)?;
+    for path in [
+        "/usr/lib64/ld-linux-x86-64.so.2",
+        "/usr/lib64/libc.so.6",
+        "/usr/lib64/libpthread.so.0",
+        "/usr/lib64/libthread_db.so.1",
+        "/usr/lib64/libc_malloc_debug.so.0",
+        "/usr/lib64/libmemusage.so",
+    ] {
+        upsert_package_entry(
+            &mut libc6.entries,
+            PackageEntry {
+                package: "libc6".to_string(),
+                path: path.to_string(),
+                source_path: Some(public_build_source_path(&build_root, path)),
+                source_origin: "safe_build".to_string(),
+                scope: "required_package".to_string(),
+                shipped_status: "shipped".to_string(),
+                asset_kind: "rust_target".to_string(),
+                executable: false,
+                symlink_target: None,
+                owner_phase: Some(PHASE_ID.to_string()),
+                verification: Some("libc-family-cutover".to_string()),
+            },
+        );
+    }
+    for path in [
+        "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2",
+        "/usr/libexec/safelibs/backends/libc.so.6",
+        "/usr/libexec/safelibs/backends/libpthread.so.0",
+        "/usr/libexec/safelibs/backends/libthread_db.so.1",
+        "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0",
+        "/usr/libexec/safelibs/backends/libmemusage.so",
+    ] {
+        let source_install_path = path.replace("/usr/libexec/safelibs/backends", "/usr/lib64");
+        upsert_package_entry(
+            &mut libc6.entries,
+            PackageEntry {
+                package: "libc6".to_string(),
+                path: path.to_string(),
+                source_path: Some(format!("build/testroot.pristine{source_install_path}")),
+                source_origin: "build_testroot".to_string(),
+                scope: "required_package".to_string(),
+                shipped_status: "shipped".to_string(),
+                asset_kind: "private_baseline_backend_dso".to_string(),
+                executable: false,
+                symlink_target: None,
+                owner_phase: Some(PHASE_ID.to_string()),
+                verification: Some("libc-family-cutover".to_string()),
+            },
+        );
+    }
+    libc6
+        .entries
+        .sort_by(|left, right| left.path.cmp(&right.path));
+    write_pretty_json(&libc6_path, &libc6)?;
+
+    let libc6_dev_path = safe_root().join("generated/baseline/package-files/libc6-dev.json");
+    let mut libc6_dev: PackageManifest = load_json(&libc6_dev_path)?;
+    for path in [
+        "/usr/lib64/libc.so",
+        "/usr/lib64/libthread_db.so",
+        "/usr/lib64/libc_malloc_debug.so",
+    ] {
+        upsert_package_entry(
+            &mut libc6_dev.entries,
+            PackageEntry {
+                package: "libc6-dev".to_string(),
+                path: path.to_string(),
+                source_path: Some(match path {
+                    "/usr/lib64/libthread_db.so" => {
+                        public_build_source_path(&build_root, "/usr/lib64/libthread_db.so.1")
+                    }
+                    "/usr/lib64/libc_malloc_debug.so" => {
+                        public_build_source_path(&build_root, "/usr/lib64/libc_malloc_debug.so.0")
+                    }
+                    _ => public_build_source_path(&build_root, path),
+                }),
+                source_origin: "safe_build".to_string(),
+                scope: "required_package".to_string(),
+                shipped_status: "shipped".to_string(),
+                asset_kind: "rust_target".to_string(),
+                executable: false,
+                symlink_target: if path.ends_with("libthread_db.so") {
+                    Some("../../lib64/libthread_db.so.1".to_string())
+                } else if path.ends_with("libc_malloc_debug.so") {
+                    Some("../../lib64/libc_malloc_debug.so.0".to_string())
+                } else {
+                    None
+                },
+                owner_phase: Some(PHASE_ID.to_string()),
+                verification: Some("libc-family-cutover".to_string()),
+            },
+        );
+    }
+    upsert_package_entry(
+        &mut libc6_dev.entries,
+        PackageEntry {
+            package: "libc6-dev".to_string(),
+            path: "/usr/lib64/libpthread_nonshared.a".to_string(),
+            source_path: None,
+            source_origin: "generated_compat".to_string(),
+            scope: "required_package".to_string(),
+            shipped_status: "shipped".to_string(),
+            asset_kind: "generated_compat_archive".to_string(),
+            executable: false,
+            symlink_target: None,
+            owner_phase: Some(PHASE_ID.to_string()),
+            verification: Some("libc-family-cutover".to_string()),
+        },
+    );
+    libc6_dev
+        .entries
+        .sort_by(|left, right| left.path.cmp(&right.path));
+    write_pretty_json(&libc6_dev_path, &libc6_dev)?;
+
+    Ok(())
+}
+
+fn phase06_public_build_root() -> String {
+    "safe/work/libc-family-build/amd64".to_string()
+}
+
+fn public_build_source_path(build_root: &str, install_path: &str) -> String {
+    format!(
+        "{}/{}",
+        build_root.trim_end_matches('/'),
+        install_path.trim_start_matches('/')
+    )
 }
 
 fn normalize_tool_package_manifest() -> Result<()> {
@@ -1114,7 +1488,7 @@ fn normalize_tool_package_manifest() -> Result<()> {
                         source_origin: "build_testroot".to_string(),
                         scope: "required_package".to_string(),
                         shipped_status: "shipped".to_string(),
-                        asset_kind: "temporary_fallback_binary".to_string(),
+                        asset_kind: "tracked_backend_binary".to_string(),
                         executable: true,
                         symlink_target: None,
                         owner_phase: Some(tool.owner_phase.to_string()),
@@ -1131,33 +1505,129 @@ fn normalize_tool_package_manifest() -> Result<()> {
     write_pretty_json(&path, &manifest)
 }
 
-fn update_package_scope_tool_files(files: &mut Vec<TomlValue>) -> Result<()> {
-    for public_path in [
-        "/usr/bin/ld.so",
-        "/usr/bin/ldd",
-        "/usr/sbin/ldconfig",
-        "/usr/bin/pldd",
+fn update_package_scope_libc_family_files(files: &mut Vec<TomlValue>) -> Result<()> {
+    let build_root = phase06_public_build_root();
+    for path in [
+        "/usr/lib64/ld-linux-x86-64.so.2",
+        "/usr/lib64/libc.so.6",
+        "/usr/lib64/libpthread.so.0",
+        "/usr/lib64/libthread_db.so.1",
+        "/usr/lib64/libc_malloc_debug.so.0",
+        "/usr/lib64/libmemusage.so",
     ] {
-        let tool = find_required_tool(public_path)
-            .with_context(|| format!("missing required tool metadata for {public_path}"))?;
         upsert_package_scope_file(
             files,
-            public_path,
+            path,
+            "libc6",
+            &match path {
+                "/usr/lib64/libthread_db.so" => {
+                    public_build_source_path(&build_root, "/usr/lib64/libthread_db.so.1")
+                }
+                "/usr/lib64/libc_malloc_debug.so" => {
+                    public_build_source_path(&build_root, "/usr/lib64/libc_malloc_debug.so.0")
+                }
+                _ => public_build_source_path(&build_root, path),
+            },
+            "rust_target",
+            false,
+            "required_package",
+            "shipped",
+        );
+        clear_package_scope_temporary(files, path);
+    }
+    for path in [
+        "/usr/lib64/libc.so",
+        "/usr/lib64/libthread_db.so",
+        "/usr/lib64/libc_malloc_debug.so",
+    ] {
+        upsert_package_scope_file(
+            files,
+            path,
+            "libc6-dev",
+            &public_build_source_path(&build_root, path),
+            "rust_target",
+            false,
+            "required_package",
+            "shipped",
+        );
+        clear_package_scope_temporary(files, path);
+    }
+    for path in [
+        "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2",
+        "/usr/libexec/safelibs/backends/libc.so.6",
+        "/usr/libexec/safelibs/backends/libpthread.so.0",
+        "/usr/libexec/safelibs/backends/libthread_db.so.1",
+        "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0",
+        "/usr/libexec/safelibs/backends/libmemusage.so",
+    ] {
+        let source_install_path = path.replace("/usr/libexec/safelibs/backends", "/usr/lib64");
+        upsert_package_scope_file(
+            files,
+            path,
+            "libc6",
+            &format!("build/testroot.pristine{source_install_path}"),
+            "private_baseline_backend_dso",
+            false,
+            "required_package",
+            "shipped",
+        );
+        mark_package_scope_temporary(files, path);
+    }
+    upsert_package_scope_file(
+        files,
+        "/usr/lib64/libpthread_nonshared.a",
+        "libc6-dev",
+        "generated:libpthread_nonshared.a",
+        "generated_compat_archive",
+        false,
+        "required_package",
+        "shipped",
+    );
+    clear_package_scope_temporary(files, "/usr/lib64/libpthread_nonshared.a");
+
+    for value in files.iter_mut().filter_map(TomlValue::as_table_mut) {
+        let Some(package) = value.get("package").and_then(TomlValue::as_str) else {
+            continue;
+        };
+        let Some(source_path) = value.get("source_path").and_then(TomlValue::as_str) else {
+            continue;
+        };
+        if package == "libc6-dev" && source_path.starts_with("build/testroot.pristine") {
+            value.insert("temporary".to_string(), TomlValue::Boolean(true));
+            value.insert(
+                "final_cutover_phase".to_string(),
+                TomlValue::String("impl_10_final_fixup_and_audit".to_string()),
+            );
+        }
+    }
+
+    Ok(())
+}
+
+fn update_package_scope_tool_files(files: &mut Vec<TomlValue>) -> Result<()> {
+    for tool in required_tools() {
+        let asset_kind = match tool.kind {
+            RequiredToolKind::FallbackWrapper { .. } => "fallback_wrapper",
+            RequiredToolKind::RustEntrypoint { .. } => "rust_target",
+        };
+        upsert_package_scope_file(
+            files,
+            tool.entrypoint,
             tool.package,
             logical_source_path(tool),
-            "rust_target",
+            asset_kind,
             true,
             "required_package",
             "shipped",
         );
-        remove_symlink_target(files, public_path);
+        remove_symlink_target(files, tool.entrypoint);
         for backend in backend_assets(tool) {
             upsert_package_scope_file(
                 files,
                 backend.install_path,
                 tool.package,
                 backend.source_path,
-                "temporary_fallback_binary",
+                "tracked_backend_binary",
                 true,
                 "required_package",
                 "shipped",
@@ -1175,6 +1645,35 @@ fn remove_symlink_target(files: &mut [TomlValue], path: &str) {
         if table.get("path").and_then(TomlValue::as_str) == Some(path) {
             table.remove("symlink_target");
         }
+    }
+}
+
+fn mark_package_scope_temporary(files: &mut [TomlValue], path: &str) {
+    for value in files {
+        let Some(table) = value.as_table_mut() else {
+            continue;
+        };
+        if table.get("path").and_then(TomlValue::as_str) != Some(path) {
+            continue;
+        }
+        table.insert("temporary".to_string(), TomlValue::Boolean(true));
+        table.insert(
+            "final_cutover_phase".to_string(),
+            TomlValue::String("impl_10_final_fixup_and_audit".to_string()),
+        );
+    }
+}
+
+fn clear_package_scope_temporary(files: &mut [TomlValue], path: &str) {
+    for value in files {
+        let Some(table) = value.as_table_mut() else {
+            continue;
+        };
+        if table.get("path").and_then(TomlValue::as_str) != Some(path) {
+            continue;
+        }
+        table.remove("temporary");
+        table.remove("final_cutover_phase");
     }
 }
 
