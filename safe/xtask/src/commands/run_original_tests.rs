@@ -582,6 +582,7 @@ fn run_one(config: &RunConfig, entry: &TestsManifestEntry) -> Result<()> {
 
     match attempt {
         Ok(()) => Ok(()),
+        Err(_error) if entry_is_expected_failure(entry)? => Ok(()),
         Err(_error)
             if allows_generated_artifact_success(entry)?
                 && resolve_generated_test_artifact(entry, &config.build_root)?.is_some() =>
@@ -1033,10 +1034,17 @@ fn parse_upstream_test_env(
             let Some((key, value)) = assignment.split_once('=') else {
                 bail!("unsupported upstream test environment token: {assignment}");
             };
-            Ok((
-                key.to_string(),
-                expand_upstream_make_value(config, entry, value),
-            ))
+            let value = expand_upstream_make_value(config, entry, value);
+            let value = if key == "LD_PRELOAD" && value.contains("libc_malloc_debug.so") {
+                config
+                    .install_root
+                    .join("usr/lib64/libc_malloc_debug.so")
+                    .display()
+                    .to_string()
+            } else {
+                value
+            };
+            Ok((key.to_string(), value))
         })
         .collect()
 }
@@ -1075,6 +1083,8 @@ fn required_generated_locales(entry: &TestsManifestEntry) -> Result<Vec<String>>
         let locales = raw_value
             .split_whitespace()
             .take_while(|token| !token.starts_with('#'))
+            .filter(|token| !token.is_empty())
+            .filter(|token| !token.starts_with("$(") && !token.starts_with("${"))
             .map(|token| token.to_string())
             .collect::<Vec<_>>();
         if !locales.is_empty() {
@@ -1241,9 +1251,20 @@ fn expand_upstream_make_value_with_objpfx(
         .map(Path::to_path_buf)
         .unwrap_or_else(|| config.build_root.clone());
     let common_objpfx = format!("{}/", common_objdir.display());
+    let test_wrapper_env = test_wrapper_env_string();
     let host_test_program_cmd = binary
         .map(|binary| host_test_program_command(config, binary, false))
         .unwrap_or_else(|| "$(host-test-program-cmd)".to_string());
+    let no_fortify_source =
+        resolve_make_variable(&config.build_root.join("config.make"), "no-fortify-source")
+            .ok()
+            .flatten()
+            .unwrap_or_else(|| "-U_FORTIFY_SOURCE".to_string());
+    let fortify_source =
+        resolve_make_variable(&config.build_root.join("config.make"), "fortify-source")
+            .ok()
+            .flatten()
+            .unwrap_or_default();
     value
         .replace("$(objpfx)", &objpfx)
         .replace("${objpfx}", &objpfx)
@@ -1253,8 +1274,14 @@ fn expand_upstream_make_value_with_objpfx(
         .replace("${common-objpfx}", &common_objpfx)
         .replace("$(common-objdir)", &common_objdir.display().to_string())
         .replace("${common-objdir}", &common_objdir.display().to_string())
+        .replace("$(test-wrapper-env)", &test_wrapper_env)
+        .replace("${test-wrapper-env}", &test_wrapper_env)
         .replace("$(host-test-program-cmd)", &host_test_program_cmd)
         .replace("${host-test-program-cmd}", &host_test_program_cmd)
+        .replace("$(no-fortify-source)", &no_fortify_source)
+        .replace("${no-fortify-source}", &no_fortify_source)
+        .replace("$(fortify-source)", &fortify_source)
+        .replace("${fortify-source}", &fortify_source)
         .replace("$(posixrules-file)", "posixrules")
         .replace("${posixrules-file}", "posixrules")
         .replace("$(localtime-file)", "/etc/localtime")
@@ -1325,6 +1352,39 @@ fn build_artifact_hints(build_root: &Path, entry: &TestsManifestEntry) -> Vec<Pa
     hints
 }
 
+fn container_wrapper_is_restricted(config: &RunConfig) -> bool {
+    static RESTRICTED: OnceLock<bool> = OnceLock::new();
+    *RESTRICTED.get_or_init(|| probe_container_wrapper_restrictions(config).unwrap_or(false))
+}
+
+fn probe_container_wrapper_restrictions(config: &RunConfig) -> Result<bool> {
+    let output = Command::new(config.build_root.join("support/test-container"))
+        .current_dir(&config.build_root)
+        .arg("/bin/true")
+        .output()
+        .with_context(|| {
+            format!(
+                "failed to probe {}",
+                config.build_root.join("support/test-container").display()
+            )
+        })?;
+    if output.status.success() {
+        return Ok(false);
+    }
+    let combined = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    Ok([
+        "could not create a private mount namespace",
+        "Could not write ID map file",
+        "can not create a new cgroupv2 group",
+    ]
+    .into_iter()
+    .any(|pattern| combined.contains(pattern)))
+}
+
 fn run_built_test_binary(
     config: &RunConfig,
     binary: &Path,
@@ -1332,7 +1392,11 @@ fn run_built_test_binary(
     force_container: bool,
 ) -> Result<()> {
     let effective_mode = if force_container && config.mode == "default" {
-        "container"
+        if container_wrapper_is_restricted(config) {
+            "direct"
+        } else {
+            "container"
+        }
     } else {
         config.mode.as_str()
     };
@@ -1382,14 +1446,6 @@ fn run_built_test_binary(
 
     match run(effective_mode) {
         Ok(()) => Ok(()),
-        Err(error)
-            if effective_mode == "container"
-                && error
-                    .to_string()
-                    .contains("could not create a private mount namespace") =>
-        {
-            run("direct")
-        }
         Err(error) => Err(error),
     }
 }
@@ -1554,7 +1610,11 @@ fn run_host_test_binary_in_dir(
     stdin_path: Option<&Path>,
 ) -> Result<()> {
     let effective_mode = if force_container && config.mode == "default" {
-        "container"
+        if container_wrapper_is_restricted(config) {
+            "direct"
+        } else {
+            "container"
+        }
     } else {
         config.mode.as_str()
     };
@@ -1587,27 +1647,41 @@ fn run_host_test_binary_in_dir(
 
     match run(effective_mode) {
         Ok(()) => Ok(()),
-        Err(error)
-            if effective_mode == "container"
-                && error
-                    .to_string()
-                    .contains("could not create a private mount namespace") =>
-        {
-            run("direct")
-        }
         Err(error) => Err(error),
     }
 }
 
 fn run_shell_test_script(config: &RunConfig, script: &Path, args: &[String]) -> Result<()> {
-    let mut command = Command::new("sh");
-    command
-        .current_dir(&config.build_root)
-        .arg(script)
-        .args(args);
+    run_shell_test_script_in_dir(config, &config.build_root, script, args)
+}
+
+fn run_shell_test_script_in_dir(
+    config: &RunConfig,
+    current_dir: &Path,
+    script: &Path,
+    args: &[String],
+) -> Result<()> {
+    let mut command = Command::new(shell_interpreter_for_script(script));
+    command.current_dir(current_dir).arg(script).args(args);
     apply_harness_env(&mut command, config);
     apply_entry_env(&mut command, config);
     run_test_command(&mut command)
+}
+
+fn shell_interpreter_for_script(script: &Path) -> &'static str {
+    let Ok(contents) = fs::read(script) else {
+        return "sh";
+    };
+    let header = String::from_utf8_lossy(&contents);
+    if header
+        .lines()
+        .next()
+        .is_some_and(|line| line.contains("bash"))
+    {
+        "bash"
+    } else {
+        "sh"
+    }
 }
 
 fn run_python_test_script(
@@ -1678,6 +1752,20 @@ fn run_program_env_string(config: &RunConfig) -> String {
         "GCONV_PATH={} LOCPATH={} LC_ALL=C",
         config.build_root.join("iconvdata").display(),
         runtime_locale_path(config).display()
+    )
+}
+
+fn script_run_program_env_string(config: &RunConfig, locale_root: &Path) -> String {
+    let runtime_locale = runtime_locale_path(config);
+    let locale_path = if locale_root == runtime_locale {
+        locale_root.display().to_string()
+    } else {
+        format!("{}:{}", locale_root.display(), runtime_locale.display())
+    };
+    format!(
+        "GCONV_PATH={} LOCPATH={} LC_ALL=C",
+        config.build_root.join("iconvdata").display(),
+        locale_path
     )
 }
 
@@ -1881,6 +1969,14 @@ fn safe_loader_path(config: &RunConfig) -> PathBuf {
     config.install_root.join("usr/lib64/ld-linux-x86-64.so.2")
 }
 
+fn build_root_loader_prefix_string(build_root: &Path) -> String {
+    format!(
+        "{} --library-path {}",
+        build_root.join("elf/ld.so").display(),
+        build_root_library_path(build_root)
+    )
+}
+
 fn build_root_relative_arg(path: &Path, build_root: &Path) -> String {
     if let Ok(relative) = path.strip_prefix(build_root) {
         format!("./{}", relative.display())
@@ -1889,16 +1985,43 @@ fn build_root_relative_arg(path: &Path, build_root: &Path) -> String {
     }
 }
 
+fn loader_prefix_for_binary(config: &RunConfig, binary: &Path) -> String {
+    if binary.starts_with(&config.build_root) {
+        build_root_loader_prefix_string(&config.build_root)
+    } else {
+        safe_loader_prefix_string(config)
+    }
+}
+
+fn script_test_program_command(config: &RunConfig, binary: &Path) -> String {
+    if binary
+        .file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| name.contains("-static"))
+    {
+        binary.display().to_string()
+    } else {
+        format!(
+            "{} {}",
+            loader_prefix_for_binary(config, binary),
+            binary.display()
+        )
+    }
+}
+
 fn host_test_program_command(config: &RunConfig, binary: &Path, child_mode: bool) -> String {
-    let binary_arg = build_root_relative_arg(binary, &config.build_root);
     let mut command = if binary
         .file_name()
         .and_then(|name| name.to_str())
         .is_some_and(|name| name.contains("-static"))
     {
-        binary_arg
+        binary.display().to_string()
     } else {
-        format!("{} {}", safe_loader_prefix_string(config), binary_arg)
+        format!(
+            "{} {}",
+            loader_prefix_for_binary(config, binary),
+            binary.display()
+        )
     };
     if child_mode {
         command.push_str(" --child");
@@ -1975,6 +2098,9 @@ fn try_run_source_backed_entry(
     let Some(extension) = source.extension().and_then(|ext| ext.to_str()) else {
         return Ok(None);
     };
+    if extension == "sh" {
+        return Ok(Some(run_direct_shell_source_entry(config, entry, &source)));
+    }
     if !matches!(extension, "c" | "cc" | "cpp" | "cxx") {
         return Ok(None);
     }
@@ -2172,6 +2298,11 @@ fn source_stage_relative_path(source: &Path, source_hint: Option<&str>) -> Resul
     })?))
 }
 
+fn read_text_for_source_scan(path: &Path) -> Result<String> {
+    let bytes = fs::read(path).with_context(|| format!("failed to read {}", path.display()))?;
+    Ok(String::from_utf8_lossy(&bytes).into_owned())
+}
+
 fn stage_source_dependencies(
     config: &RunConfig,
     entry: &TestsManifestEntry,
@@ -2186,8 +2317,7 @@ fn stage_source_dependencies(
         return Ok(());
     }
 
-    let contents = fs::read_to_string(&actual_source)
-        .with_context(|| format!("failed to read {}", actual_source.display()))?;
+    let contents = read_text_for_source_scan(&actual_source)?;
     for (kind, include) in parse_include_directives(&contents) {
         if should_use_installed_header(config, &include) {
             continue;
@@ -2288,6 +2418,14 @@ fn staged_dependency_path(
             .parent()
             .ok_or_else(|| anyhow!("{} has no parent directory", staged_source.display()))?
             .to_path_buf(),
+        IncludeKind::Angle
+            if include_path_is_source_like(include) && include_path.components().count() == 1 =>
+        {
+            staged_source
+                .parent()
+                .ok_or_else(|| anyhow!("{} has no parent directory", staged_source.display()))?
+                .to_path_buf()
+        }
         IncludeKind::Angle if include_path_is_source_like(include) => work_dir.to_path_buf(),
         IncludeKind::Angle
             if include_path
@@ -2759,8 +2897,14 @@ do_test (void)
 }
 
 fn inject_prototype_if_missing(staged_source: &Path, symbol: &str, prototype: &str) -> Result<()> {
-    let original = fs::read_to_string(staged_source)
-        .with_context(|| format!("failed to read {}", staged_source.display()))?;
+    let original = match fs::read_to_string(staged_source) {
+        Ok(contents) => contents,
+        Err(error) if error.kind() == std::io::ErrorKind::InvalidData => return Ok(()),
+        Err(error) => {
+            return Err(error)
+                .with_context(|| format!("failed to read {}", staged_source.display()))
+        }
+    };
     if !original.contains(symbol) || original.contains(prototype) {
         return Ok(());
     }
@@ -3151,8 +3295,7 @@ fn collect_source_referenced_companion_dsos(
         return Ok(());
     }
 
-    let contents = fs::read_to_string(&source)
-        .with_context(|| format!("failed to read {}", source.display()))?;
+    let contents = read_text_for_source_scan(&source)?;
     for token in contents
         .split(|ch: char| ch.is_whitespace() || ch == '"' || ch == '\'' || ch == ')' || ch == '(')
     {
@@ -3359,6 +3502,14 @@ fn stage_source_backed_runtime_assets(
                 .with_context(|| format!("failed to create {}", target.display()))?;
         }
     }
+    if entry.catalog_id == "tests::posix::tst-regex2::base" {
+        let source = repo_root().join("original/ChangeLog.old");
+        let target = work_dir.join("ChangeLog.old");
+        if !target.exists() {
+            std::os::unix::fs::symlink(&source, &target)
+                .with_context(|| format!("failed to create {}", target.display()))?;
+        }
+    }
     stage_makefile_generated_assets(entry, work_dir)?;
     Ok(())
 }
@@ -3552,6 +3703,25 @@ fn apply_makefile_compile_flags(
     Ok(())
 }
 
+fn entry_is_expected_failure(entry: &TestsManifestEntry) -> Result<bool> {
+    let stem = artifact_stem(entry)?;
+    let variable = format!("test-xfail-{stem}");
+    for makefile in makefiles_for_manifest_entry(entry)? {
+        let Some(raw_value) = resolve_make_variable(&makefile, &variable)? else {
+            continue;
+        };
+        let value = raw_value.trim();
+        if value.is_empty() {
+            continue;
+        }
+        return Ok(!matches!(
+            value,
+            "0" | "false" | "False" | "FALSE" | "no" | "No" | "NO"
+        ));
+    }
+    Ok(false)
+}
+
 fn makefiles_for_manifest_entry(entry: &TestsManifestEntry) -> Result<Vec<PathBuf>> {
     let mut makefiles = Vec::new();
     let mut seen = BTreeSet::new();
@@ -3607,45 +3777,37 @@ fn run_entry_support_script(
     script: &Path,
 ) -> Result<()> {
     prepare_script_objpfx_layout(entry, compiled)?;
-    let script_name = script
-        .file_name()
-        .and_then(|name| name.to_str())
-        .ok_or_else(|| anyhow!("failed to derive script name from {}", script.display()))?;
-    let common_objpfx = format!("{}/", compiled.work_dir.display());
-    let run_program_env = run_program_env_string(config);
-    let test_program_prefix = safe_loader_prefix_string(config);
-    let binary_path = compiled.binary.display().to_string();
-    let binary_output = format!("{}.out", compiled.binary.display());
-    let args = match script_name {
-        "test-freopen.sh" => vec![
-            common_objpfx.clone(),
-            test_program_prefix.clone(),
-            common_objpfx.clone(),
-        ],
-        "tst-fmtmsg.sh" | "tst-setcontext3.sh" => vec![
-            common_objpfx.clone(),
-            "env".to_string(),
-            run_program_env,
-            test_program_prefix,
-            common_objpfx.clone(),
-        ],
-        "tst-printfsz-islongdouble.sh" => vec![binary_path, test_program_prefix, binary_output],
-        "tst_fgetgrent.sh" | "tst-printf.sh" | "tst-unbputc.sh" => {
-            vec![common_objpfx.clone(), test_program_prefix]
+    stage_build_root_script_helpers(config, &compiled.work_dir)?;
+    let staged_subdir = compiled.work_dir.join(&entry.subdir);
+    let args = resolve_shell_script_recipe_args(
+        config,
+        entry,
+        script,
+        &staged_subdir,
+        &compiled.work_dir,
+        Some(&staged_subdir),
+        Some(&compiled.binary),
+    )?
+    .with_context(|| format!("missing shell rule for {}", entry.catalog_id))?;
+    let current_dir =
+        original_source_context_dir(entry).unwrap_or_else(|| compiled.work_dir.join(&entry.subdir));
+    run_shell_test_script_in_dir(config, &current_dir, script, &args)
+}
+
+fn stage_build_root_script_helpers(config: &RunConfig, work_dir: &Path) -> Result<()> {
+    for relative in [
+        "locale/localedef",
+        "locale/locale",
+        "localedata/collate-test",
+        "localedata/xfrm-test",
+    ] {
+        let source = config.build_root.join(relative);
+        if !source.exists() {
+            continue;
         }
-        other => bail!(
-            "unsupported test support script {other} for {}",
-            entry.catalog_id
-        ),
-    };
-    let mut command = Command::new("sh");
-    command
-        .current_dir(&compiled.work_dir)
-        .arg(script)
-        .args(args);
-    apply_harness_env(&mut command, config);
-    apply_entry_env(&mut command, config);
-    run_test_command(&mut command)
+        copy_file_or_symlink(&source, &work_dir.join(relative))?;
+    }
+    Ok(())
 }
 
 fn prepare_script_objpfx_layout(
@@ -3681,6 +3843,393 @@ fn upstream_source_context_dir(entry: &TestsManifestEntry) -> Option<PathBuf> {
         .and_then(|path| repo_root().join(path).parent().map(Path::to_path_buf))
 }
 
+fn original_source_context_dir(entry: &TestsManifestEntry) -> Option<PathBuf> {
+    entry
+        .source_path
+        .as_ref()
+        .and_then(|path| repo_root().join(path).parent().map(Path::to_path_buf))
+        .or_else(|| repo_path(&entry.safe_path).parent().map(Path::to_path_buf))
+}
+
+fn direct_shell_runtime_root(entry: &TestsManifestEntry) -> PathBuf {
+    upstream_build_dir().join("compiled").join(format!(
+        "{}-script-runtime",
+        sanitize_catalog_id(&entry.catalog_id)
+    ))
+}
+
+fn requires_direct_shell_runtime_root(entry: &TestsManifestEntry) -> bool {
+    matches!(
+        entry.catalog_id.as_str(),
+        "tests-special::iconvdata::tst-tables::base"
+            | "tests-special::localedata::sort-test::base"
+            | "tests-special::posix::wordexp-tst::base"
+    )
+}
+
+fn prepare_direct_shell_runtime_root(entry: &TestsManifestEntry) -> Result<PathBuf> {
+    let root = direct_shell_runtime_root(entry);
+    if root.exists() {
+        fs::remove_dir_all(&root)
+            .with_context(|| format!("failed to remove {}", root.display()))?;
+    }
+    fs::create_dir_all(root.join(&entry.subdir))
+        .with_context(|| format!("failed to create {}", root.display()))?;
+    Ok(root)
+}
+
+fn helper_source_candidates(entry: &TestsManifestEntry, basename: &str) -> Vec<PathBuf> {
+    let mut candidates = Vec::new();
+    for extension in ["c", "cc", "cpp", "cxx"] {
+        candidates.push(repo_path(format!(
+            "safe/tests/{}/{}.{}",
+            entry.subdir, basename, extension
+        )));
+        candidates.push(
+            repo_root()
+                .join("original")
+                .join(&entry.subdir)
+                .join(format!("{}.{}", basename, extension)),
+        );
+    }
+    candidates
+}
+
+fn resolve_direct_shell_helper_source(
+    entry: &TestsManifestEntry,
+    basename: &str,
+) -> Result<PathBuf> {
+    for candidate in helper_source_candidates(entry, basename) {
+        if candidate.is_file() {
+            return Ok(candidate);
+        }
+    }
+    bail!(
+        "failed to find helper source for {} under safe/tests/{}/ or original/{}/",
+        basename,
+        entry.subdir,
+        entry.subdir
+    )
+}
+
+fn helper_manifest_entry(entry: &TestsManifestEntry, source: &Path) -> TestsManifestEntry {
+    let safe_path = source
+        .strip_prefix(repo_root())
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|_| source.to_path_buf())
+        .to_string_lossy()
+        .replace('\\', "/");
+    TestsManifestEntry {
+        catalog_id: entry.catalog_id.clone(),
+        safe_path,
+        support_paths: entry.support_paths.clone(),
+        owner_phase: entry.owner_phase.clone(),
+        port_status: entry.port_status.clone(),
+        source_path: entry.source_path.clone(),
+        subdir: entry.subdir.clone(),
+        family: entry.family.clone(),
+    }
+}
+
+fn copy_executable_file(source: &Path, dest: &Path) -> Result<()> {
+    if let Some(parent) = dest.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("failed to create {}", parent.display()))?;
+    }
+    fs::copy(source, dest)
+        .with_context(|| format!("failed to copy {} to {}", source.display(), dest.display()))?;
+    let permissions = fs::metadata(source)
+        .with_context(|| format!("failed to stat {}", source.display()))?
+        .permissions();
+    fs::set_permissions(dest, permissions)
+        .with_context(|| format!("failed to chmod {}", dest.display()))?;
+    Ok(())
+}
+
+fn compile_direct_shell_helper_binary(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+    source: &Path,
+    target: &Path,
+) -> Result<()> {
+    let helper_entry = helper_manifest_entry(entry, source);
+    let source_hint = source
+        .strip_prefix(repo_root())
+        .ok()
+        .map(|relative| relative.to_string_lossy().replace('\\', "/"));
+    let compiled = compile_entry_against_install_root_with_source(
+        config,
+        &helper_entry,
+        source,
+        source_hint.as_deref(),
+    )?;
+    copy_executable_file(&compiled.binary, target)
+}
+
+fn materialize_direct_shell_runtime_helpers(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+    runtime_root: &Path,
+) -> Result<()> {
+    let helpers: &[&str] = match entry.catalog_id.as_str() {
+        "tests-special::iconvdata::tst-tables::base" => &["tst-table-from", "tst-table-to"],
+        "tests-special::localedata::sort-test::base" => &["collate-test", "xfrm-test"],
+        "tests-special::posix::wordexp-tst::base" => &["wordexp-test"],
+        _ => &[],
+    };
+    for helper in helpers {
+        let source = resolve_direct_shell_helper_source(entry, helper)?;
+        let target = runtime_root.join(&entry.subdir).join(helper);
+        compile_direct_shell_helper_binary(config, entry, &source, &target)?;
+    }
+    Ok(())
+}
+
+fn run_direct_shell_source_entry(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+    script: &Path,
+) -> Result<()> {
+    ensure_generated_runtime_assets(config, entry)?;
+    let (objpfx_root, common_objdir) = if requires_direct_shell_runtime_root(entry) {
+        let runtime_root = prepare_direct_shell_runtime_root(entry)?;
+        materialize_direct_shell_runtime_helpers(config, entry, &runtime_root)?;
+        (runtime_root.join(&entry.subdir), runtime_root)
+    } else {
+        (
+            build_artifact_hints(&config.build_root, entry)
+                .into_iter()
+                .next()
+                .unwrap_or_else(|| config.build_root.join(&entry.subdir)),
+            config.build_root.clone(),
+        )
+    };
+    let args = resolve_shell_script_recipe_args(
+        config,
+        entry,
+        script,
+        &objpfx_root,
+        &common_objdir,
+        Some(&objpfx_root),
+        None,
+    )?
+    .with_context(|| format!("missing shell rule for {}", entry.catalog_id))?;
+    let current_dir = original_source_context_dir(entry)
+        .ok_or_else(|| anyhow!("failed to derive source context for {}", entry.catalog_id))?;
+    run_shell_test_script_in_dir(config, &current_dir, script, &args)
+}
+
+fn resolve_shell_script_recipe_args(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+    _script: &Path,
+    objpfx_root: &Path,
+    common_objdir: &Path,
+    staged_subdir: Option<&Path>,
+    binary: Option<&Path>,
+) -> Result<Option<Vec<String>>> {
+    let stem = artifact_stem(entry)?;
+    let source_dir = upstream_source_context_dir(entry);
+    for makefile in makefiles_for_manifest_entry(entry)? {
+        let logical_lines = read_make_logical_lines(&makefile)?;
+        for (index, line) in logical_lines.iter().enumerate() {
+            if !line.starts_with(&format!("$(objpfx){stem}.out")) || !line.contains(':') {
+                continue;
+            }
+            let Some(recipe_line) = logical_lines.get(index + 1) else {
+                continue;
+            };
+            if !recipe_line.contains("$<") {
+                continue;
+            }
+            let built_binary = resolve_shell_recipe_primary_binary(
+                config,
+                entry,
+                &makefile,
+                line,
+                objpfx_root,
+                common_objdir,
+                staged_subdir,
+            )?;
+            let Some((_, raw_args)) = recipe_line.split_once("$<") else {
+                continue;
+            };
+            let raw_args = raw_args
+                .split_once(';')
+                .map(|(head, _)| head)
+                .unwrap_or(raw_args);
+            let expanded_refs = expand_make_variable_refs(&makefile, raw_args, 0)?;
+            let expanded = expand_shell_script_special_vars(
+                config,
+                binary,
+                built_binary.as_deref(),
+                common_objdir,
+                &expand_upstream_make_value_with_objpfx(
+                    config,
+                    entry,
+                    Some(objpfx_root),
+                    Some(common_objdir),
+                    None,
+                    &expanded_refs,
+                ),
+            );
+            let mut args = Vec::new();
+            for token in split_shell_words(&expanded)? {
+                if token == "#" || token.starts_with('#') {
+                    break;
+                }
+                if is_shell_redirection_token(&token) {
+                    break;
+                }
+                let resolved = resolve_upstream_arg_token(
+                    config,
+                    entry,
+                    staged_subdir,
+                    source_dir.as_deref(),
+                    &token,
+                );
+                if resolved.starts_with("$(") || resolved.starts_with("${") {
+                    continue;
+                }
+                args.push(resolved);
+            }
+            return Ok(Some(args));
+        }
+    }
+    Ok(None)
+}
+
+fn expand_shell_script_special_vars(
+    config: &RunConfig,
+    test_binary: Option<&Path>,
+    built_binary: Option<&Path>,
+    common_objdir: &Path,
+    value: &str,
+) -> String {
+    let test_wrapper_env = test_wrapper_env_string();
+    let run_program_env = script_run_program_env_string(config, &common_objdir.join("localedata"));
+    let build_program_prefix = build_root_loader_prefix_string(&config.build_root);
+    let primary_test_binary = test_binary.or(built_binary);
+    let test_program_prefix_after_env = primary_test_binary
+        .map(|binary| loader_prefix_for_binary(config, binary))
+        .unwrap_or_else(|| build_program_prefix.clone());
+    let test_program_prefix =
+        format!("{test_wrapper_env} {run_program_env} {test_program_prefix_after_env}");
+    let run_program_prefix = format!("{test_wrapper_env} {run_program_env} {build_program_prefix}");
+    let built_program_command_after_env = built_binary
+        .map(|binary| script_test_program_command(config, binary))
+        .unwrap_or_else(|| "$(built-program-cmd)".to_string());
+    let built_program_command =
+        format!("{test_wrapper_env} {run_program_env} {built_program_command_after_env}");
+    let test_program_command_after_env = primary_test_binary
+        .map(|binary| script_test_program_command(config, binary))
+        .unwrap_or_else(|| "$(test-program-cmd)".to_string());
+    let test_program_command =
+        format!("{test_wrapper_env} {run_program_env} {test_program_command_after_env}");
+    value
+        .replace("$(run-program-env)", &run_program_env)
+        .replace("${run-program-env}", &run_program_env)
+        .replace("$(test-program-prefix)", &test_program_prefix)
+        .replace("${test-program-prefix}", &test_program_prefix)
+        .replace("$(test-via-rtld-prefix)", &test_program_prefix)
+        .replace("${test-via-rtld-prefix}", &test_program_prefix)
+        .replace("$(run-program-prefix)", &run_program_prefix)
+        .replace("${run-program-prefix}", &run_program_prefix)
+        .replace("$(test-program-prefix-before-env)", &test_wrapper_env)
+        .replace("${test-program-prefix-before-env}", &test_wrapper_env)
+        .replace(
+            "$(test-program-prefix-after-env)",
+            &test_program_prefix_after_env,
+        )
+        .replace(
+            "${test-program-prefix-after-env}",
+            &test_program_prefix_after_env,
+        )
+        .replace("$(run-program-prefix-before-env)", &test_wrapper_env)
+        .replace("${run-program-prefix-before-env}", &test_wrapper_env)
+        .replace("$(run-program-prefix-after-env)", &build_program_prefix)
+        .replace("${run-program-prefix-after-env}", &build_program_prefix)
+        .replace("$(built-program-cmd)", &built_program_command)
+        .replace("${built-program-cmd}", &built_program_command)
+        .replace("$(built-program-cmd-before-env)", &test_wrapper_env)
+        .replace("${built-program-cmd-before-env}", &test_wrapper_env)
+        .replace(
+            "$(built-program-cmd-after-env)",
+            &built_program_command_after_env,
+        )
+        .replace(
+            "${built-program-cmd-after-env}",
+            &built_program_command_after_env,
+        )
+        .replace("$(test-program-cmd)", &test_program_command)
+        .replace("${test-program-cmd}", &test_program_command)
+        .replace("$(test-program-cmd-before-env)", &test_wrapper_env)
+        .replace("${test-program-cmd-before-env}", &test_wrapper_env)
+        .replace(
+            "$(test-program-cmd-after-env)",
+            &test_program_command_after_env,
+        )
+        .replace(
+            "${test-program-cmd-after-env}",
+            &test_program_command_after_env,
+        )
+}
+
+fn resolve_shell_recipe_primary_binary(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+    makefile: &Path,
+    target_line: &str,
+    objpfx_root: &Path,
+    common_objdir: &Path,
+    staged_subdir: Option<&Path>,
+) -> Result<Option<PathBuf>> {
+    let Some((_, dependencies)) = target_line.split_once(':') else {
+        return Ok(None);
+    };
+    let source_dir = upstream_source_context_dir(entry);
+    let expanded_refs = expand_make_variable_refs(makefile, dependencies, 0)?;
+    let expanded = expand_upstream_make_value_with_objpfx(
+        config,
+        entry,
+        Some(objpfx_root),
+        Some(common_objdir),
+        None,
+        &expanded_refs,
+    );
+    for token in split_shell_words(&expanded)? {
+        if token.starts_with("$(") || token.starts_with("${") {
+            continue;
+        }
+        if token.ends_with(".sh")
+            || token.ends_with(".out")
+            || token.ends_with(".mtrace")
+            || token.ends_with(".data")
+            || token.ends_with(".in")
+            || token.ends_with(".cm")
+            || token.ends_with(".def")
+            || token.ends_with(".ds")
+            || token.ends_with('/')
+        {
+            continue;
+        }
+        let resolved =
+            resolve_upstream_arg_token(config, entry, staged_subdir, source_dir.as_deref(), &token);
+        let path = PathBuf::from(&resolved);
+        if path.is_file() {
+            return Ok(Some(path));
+        }
+    }
+    Ok(None)
+}
+
+fn is_shell_redirection_token(token: &str) -> bool {
+    matches!(token, ">" | ">>" | "1>" | "1>>" | "2>" | "2>>")
+        || token.starts_with('>')
+        || token.starts_with("1>")
+        || token.starts_with("2>")
+}
+
 fn resolve_upstream_arg_token(
     config: &RunConfig,
     entry: &TestsManifestEntry,
@@ -3706,7 +4255,7 @@ fn resolve_upstream_arg_token(
     candidates.push(repo_root().join("original").join(token));
 
     for candidate in candidates {
-        if candidate.exists() {
+        if candidate.is_file() {
             return candidate.display().to_string();
         }
     }
