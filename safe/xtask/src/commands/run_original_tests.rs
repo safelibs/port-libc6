@@ -373,6 +373,9 @@ fn run_one(config: &RunConfig, entry: &TestsManifestEntry) -> Result<()> {
         other if other.contains("::check-installed-headers-cxx::") => {
             run_phase_owned_installed_headers_check(config, "c++")
         }
+        other if other.contains("::tst-socket-consts::") => {
+            run_phase_owned_socket_consts_check(config, &source_path)
+        }
         other if other.contains("::check-wrapper-headers::") => run_wrapper_headers_check(),
         other if other.contains("::check-obsolete-constructs::") => {
             run_phase_owned_obsolete_constructs_check(config)
@@ -3430,7 +3433,9 @@ fn run_entry_support_script(
             common_objpfx.clone(),
         ],
         "tst-printfsz-islongdouble.sh" => vec![binary_path, test_program_prefix, binary_output],
-        "tst-printf.sh" | "tst-unbputc.sh" => vec![common_objpfx.clone(), test_program_prefix],
+        "tst_fgetgrent.sh" | "tst-printf.sh" | "tst-unbputc.sh" => {
+            vec![common_objpfx.clone(), test_program_prefix]
+        }
         other => bail!(
             "unsupported test support script {other} for {}",
             entry.catalog_id
@@ -3523,6 +3528,43 @@ fn run_phase_owned_obsolete_constructs_check(config: &RunConfig) -> Result<()> {
     run_test_command(&mut command)?;
     fs::write(&stamp, b"ok").with_context(|| format!("failed to write {}", stamp.display()))?;
     Ok(())
+}
+
+fn run_phase_owned_socket_consts_check(config: &RunConfig, script: &Path) -> Result<()> {
+    let args = vec![format!("--cc={}", socket_consts_cc(config))];
+    run_python_test_script(
+        config,
+        script,
+        &args,
+        &[(
+            "PYTHONPATH",
+            repo_root().join("original/scripts").display().to_string(),
+        )],
+    )
+}
+
+fn socket_consts_cc(config: &RunConfig) -> String {
+    let mut parts = vec![
+        "gcc".to_string(),
+        format!("--sysroot={}", config.install_root.display()),
+        "-I".to_string(),
+        config.install_root.join("usr/include").display().to_string(),
+        "-I".to_string(),
+        config.build_root.display().to_string(),
+        "-I".to_string(),
+        config.build_root.join("support").display().to_string(),
+        "-I".to_string(),
+        config.build_root.join("elf").display().to_string(),
+        "-I".to_string(),
+        config.build_root.join("nptl").display().to_string(),
+        "-DMODULE_NAME=testsuite".to_string(),
+        "-D_ISOMAC".to_string(),
+    ];
+    for include_dir in host_after_include_dirs() {
+        parts.push("-idirafter".to_string());
+        parts.push(include_dir.display().to_string());
+    }
+    parts.join(" ")
 }
 
 fn phase_owned_obsolete_headers(include_root: &Path) -> Vec<PathBuf> {
