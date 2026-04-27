@@ -279,6 +279,38 @@ fn prepare_upstream_build_tree(build_root: &Path) -> Result<()> {
             build_root.join("testrun.sh").display()
         ),
     )?;
+    mirror_source_testdata_roots(build_root)?;
+    Ok(())
+}
+
+fn mirror_source_testdata_roots(build_root: &Path) -> Result<()> {
+    let original_root = repo_root().join("original");
+    for entry in fs::read_dir(&original_root)
+        .with_context(|| format!("failed to read {}", original_root.display()))?
+    {
+        let entry = entry?;
+        if !entry.file_type()?.is_dir() {
+            continue;
+        }
+        let subdir = entry.file_name();
+        if subdir == "timezone" {
+            continue;
+        }
+        let source = entry.path().join("testdata");
+        if !source.is_dir() {
+            continue;
+        }
+        let target = build_root.join(&subdir).join("testdata");
+        if target.exists() {
+            continue;
+        }
+        if let Some(parent) = target.parent() {
+            fs::create_dir_all(parent)
+                .with_context(|| format!("failed to create {}", parent.display()))?;
+        }
+        std::os::unix::fs::symlink(&source, &target)
+            .with_context(|| format!("failed to create {}", target.display()))?;
+    }
     Ok(())
 }
 
@@ -745,11 +777,7 @@ fn resolve_upstream_test_env(
     catalog_entry: &TestCatalogEntry,
 ) -> Result<Vec<(String, String)>> {
     let variable = format!("{}-ENV", catalog_entry.name);
-    for makefile in &catalog_entry.origin_makefiles {
-        let makefile_path = repo_path(makefile);
-        if !makefile_path.exists() {
-            continue;
-        }
+    for makefile_path in makefiles_for_manifest_entry(entry)? {
         if let Some(raw_value) = resolve_make_variable(&makefile_path, &variable)? {
             return parse_upstream_test_env(config, entry, &raw_value);
         }
@@ -757,16 +785,110 @@ fn resolve_upstream_test_env(
     Ok(Vec::new())
 }
 
+fn resolve_upstream_test_args(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+    objpfx_override: Option<&Path>,
+    staged_subdir: Option<&Path>,
+) -> Result<Vec<String>> {
+    let variable = format!("{}-ARGS", manifest_entry_name(entry)?);
+    for makefile_path in makefiles_for_manifest_entry(entry)? {
+        if let Some(raw_value) = resolve_make_variable(&makefile_path, &variable)? {
+            return Ok(split_shell_words(&raw_value)?
+                .into_iter()
+                .map(|token| expand_upstream_make_value_with_objpfx(
+                    config,
+                    entry,
+                    objpfx_override,
+                    &token,
+                ))
+                .map(|token| {
+                    if token.starts_with('/') {
+                        return token;
+                    }
+                    if let Some(staged_subdir) = staged_subdir {
+                        let candidate = staged_subdir.join(&token);
+                        if candidate.exists() {
+                            return candidate.display().to_string();
+                        }
+                    }
+                    token
+                })
+                .filter(|token| !token.starts_with("$(") && !token.starts_with("${"))
+                .collect());
+        }
+    }
+    Ok(Vec::new())
+}
+
+fn split_shell_words(value: &str) -> Result<Vec<String>> {
+    let mut tokens = Vec::new();
+    let mut current = String::new();
+    let mut chars = value.chars().peekable();
+    let mut quote = None;
+    while let Some(ch) = chars.next() {
+        match quote {
+            Some(active) if ch == active => quote = None,
+            Some(_) if ch == '\\' => {
+                let next = chars
+                    .next()
+                    .ok_or_else(|| anyhow!("unterminated escape in make variable value: {value}"))?;
+                current.push(next);
+            }
+            Some(_) => current.push(ch),
+            None if ch == '\'' || ch == '"' => quote = Some(ch),
+            None if ch.is_whitespace() => {
+                if !current.is_empty() {
+                    tokens.push(std::mem::take(&mut current));
+                }
+            }
+            None if ch == '\\' => {
+                let next = chars
+                    .next()
+                    .ok_or_else(|| anyhow!("unterminated escape in make variable value: {value}"))?;
+                current.push(next);
+            }
+            None => current.push(ch),
+        }
+    }
+    if quote.is_some() {
+        bail!("unterminated quote in make variable value: {value}");
+    }
+    if !current.is_empty() {
+        tokens.push(current);
+    }
+    Ok(tokens)
+}
+
+fn manifest_entry_name(entry: &TestsManifestEntry) -> Result<&str> {
+    entry.catalog_id
+        .split("::")
+        .nth(2)
+        .ok_or_else(|| anyhow!("failed to derive manifest entry name from {}", entry.catalog_id))
+}
+
 fn resolve_make_variable(path: &Path, variable: &str) -> Result<Option<String>> {
+    let mut value: Option<String> = None;
     for line in read_make_logical_lines(path)? {
-        let Some((left, right)) = split_make_assignment(&line) else {
+        let Some((left, op, right)) = split_make_assignment(&line) else {
             continue;
         };
         if left == variable {
-            return Ok(Some(right.trim().to_string()));
+            let right = right.trim();
+            match op {
+                "+=" => {
+                    let mut combined = value.unwrap_or_default();
+                    if !combined.is_empty() && !right.is_empty() {
+                        combined.push(' ');
+                    }
+                    combined.push_str(right);
+                    value = Some(combined);
+                }
+                _ => value = Some(right.to_string()),
+            }
         }
     }
-    Ok(None)
+    Ok(value)
 }
 
 fn read_make_logical_lines(path: &Path) -> Result<Vec<String>> {
@@ -803,12 +925,12 @@ fn read_make_logical_lines(path: &Path) -> Result<Vec<String>> {
     Ok(logical)
 }
 
-fn split_make_assignment(line: &str) -> Option<(String, &str)> {
+fn split_make_assignment(line: &str) -> Option<(String, &'static str, &str)> {
     for op in [":=", "+=", "?=", "="] {
         let Some((left, right)) = line.split_once(op) else {
             continue;
         };
-        return Some((left.trim().to_string(), right));
+        return Some((left.trim().to_string(), op, right));
     }
     None
 }
@@ -818,8 +940,8 @@ fn parse_upstream_test_env(
     entry: &TestsManifestEntry,
     raw_value: &str,
 ) -> Result<Vec<(String, String)>> {
-    raw_value
-        .split_whitespace()
+    split_shell_words(raw_value)?
+        .into_iter()
         .map(|assignment| {
             let Some((key, value)) = assignment.split_once('=') else {
                 bail!("unsupported upstream test environment token: {assignment}");
@@ -836,6 +958,12 @@ fn ensure_generated_locales(config: &RunConfig, entry: &TestsManifestEntry) -> R
     for locale in required_generated_locales(entry)? {
         ensure_generated_locale(config, &locale)?;
     }
+    Ok(())
+}
+
+fn ensure_generated_runtime_assets(config: &RunConfig, entry: &TestsManifestEntry) -> Result<()> {
+    ensure_generated_locales(config, entry)?;
+    ensure_generated_timezone_testdata(config, entry)?;
     Ok(())
 }
 
@@ -911,6 +1039,71 @@ fn ensure_generated_locale(config: &RunConfig, locale: &str) -> Result<()> {
     run_test_command(&mut command)
 }
 
+fn ensure_generated_timezone_testdata(config: &RunConfig, entry: &TestsManifestEntry) -> Result<()> {
+    if entry.subdir != "timezone" {
+        return Ok(());
+    }
+
+    let output_root = config.build_root.join("timezone/testdata");
+    if output_root.exists() {
+        fs::remove_dir_all(&output_root)
+            .with_context(|| format!("failed to remove {}", output_root.display()))?;
+    }
+
+    fs::create_dir_all(&output_root)
+        .with_context(|| format!("failed to create {}", output_root.display()))?;
+
+    let timezone_root = repo_root().join("original/timezone");
+    let zic = config.build_root.join("timezone/zic");
+    let yearistype = timezone_root.join("yearistype");
+    for source in [
+        "northamerica",
+        "etcetera",
+        "simplebackw",
+        "europe",
+        "australasia",
+        "southamerica",
+        "asia",
+    ] {
+        let mut command = Command::new(config.build_root.join("elf/ld.so"));
+        command
+            .current_dir(&timezone_root)
+            .arg("--library-path")
+            .arg(build_root_library_path(&config.build_root))
+            .arg(&zic)
+            .arg("-d")
+            .arg(&output_root)
+            .arg("-y")
+            .arg(&yearistype)
+            .arg(timezone_root.join(source));
+        run_test_command(&mut command)?;
+    }
+
+    for name in ["XT1", "XT2", "XT3", "XT4", "XT6"] {
+        copy_file_or_symlink(
+            &timezone_root.join("testdata").join(name),
+            &output_root.join(name),
+        )?;
+    }
+    let xt5_output = Command::new("sh")
+        .current_dir(&timezone_root)
+        .arg(timezone_root.join("testdata/gen-XT5.sh"))
+        .output()
+        .with_context(|| "failed to spawn timezone XT5 generator")?;
+    if !xt5_output.status.success() {
+        bail!("XT5 generator failed ({})", xt5_output.status);
+    }
+    fs::write(output_root.join("XT5"), xt5_output.stdout)
+        .with_context(|| format!("failed to write {}", output_root.join("XT5").display()))?;
+
+    let posixrules = output_root.join("posixrules");
+    if !posixrules.exists() {
+        std::os::unix::fs::symlink(output_root.join("America/New_York"), &posixrules)
+            .with_context(|| format!("failed to create {}", posixrules.display()))?;
+    }
+    Ok(())
+}
+
 fn parse_generated_locale(locale: &str) -> Result<(String, String, Vec<&'static str>)> {
     let (input, charmap_and_modifier) = locale
         .split_once('.')
@@ -939,21 +1132,56 @@ fn expand_upstream_make_value(
     entry: &TestsManifestEntry,
     value: &str,
 ) -> String {
-    let objpfx = format!(
-        "{}/",
-        build_artifact_hints(&config.build_root, entry)[0].display()
-    );
+    expand_upstream_make_value_with_objpfx(config, entry, None, value)
+}
+
+fn expand_upstream_make_value_with_objpfx(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+    objpfx_override: Option<&Path>,
+    value: &str,
+) -> String {
+    let objpfx_root = objpfx_override
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| build_artifact_hints(&config.build_root, entry)[0].clone());
+    let objpfx = format!("{}/", objpfx_root.display());
     let common_objpfx = format!("{}/", config.build_root.display());
     value
         .replace("$(objpfx)", &objpfx)
+        .replace("${objpfx}", &objpfx)
         .replace("$(common-objpfx)", &common_objpfx)
+        .replace("${common-objpfx}", &common_objpfx)
+        .replace("$(posixrules-file)", "posixrules")
+        .replace("${posixrules-file}", "posixrules")
+        .replace("$(localtime-file)", "/etc/localtime")
+        .replace("${localtime-file}", "/etc/localtime")
+        .replace(
+            "$(zonedir)",
+            &config.build_root.join("timezone/testdata").display().to_string(),
+        )
+        .replace(
+            "${zonedir}",
+            &config.build_root.join("timezone/testdata").display().to_string(),
+        )
         .replace(
             "$(testdata)",
-            &repo_path(format!("safe/tests/{}/testdata", entry.subdir))
-                .display()
-                .to_string(),
+            &upstream_testdata_path(config, entry).display().to_string(),
+        )
+        .replace(
+            "${testdata}",
+            &upstream_testdata_path(config, entry).display().to_string(),
         )
         .replace("$(ld-library-path)", &runtime_library_path(config))
+        .replace("\\\"", "\"")
+}
+
+fn upstream_testdata_path(config: &RunConfig, entry: &TestsManifestEntry) -> PathBuf {
+    let build_testdata = config.build_root.join(&entry.subdir).join("testdata");
+    if build_testdata.exists() || entry.subdir == "timezone" {
+        build_testdata
+    } else {
+        repo_path(format!("safe/tests/{}/testdata", entry.subdir))
+    }
 }
 
 fn artifact_stem(entry: &TestsManifestEntry) -> Result<String> {
@@ -1195,6 +1423,24 @@ fn run_host_test_binary(
     extra_args: &[String],
     force_container: bool,
 ) -> Result<()> {
+    run_host_test_binary_in_dir(
+        config,
+        &config.build_root,
+        binary,
+        extra_args,
+        force_container,
+        None,
+    )
+}
+
+fn run_host_test_binary_in_dir(
+    config: &RunConfig,
+    current_dir: &Path,
+    binary: &Path,
+    extra_args: &[String],
+    force_container: bool,
+    stdin_path: Option<&Path>,
+) -> Result<()> {
     let effective_mode = if force_container && config.mode == "default" {
         "container"
     } else {
@@ -1204,12 +1450,12 @@ fn run_host_test_binary(
         let mut command = match selected_mode {
             "default" | "direct" => {
                 let mut cmd = Command::new(binary);
-                cmd.current_dir(&config.build_root);
+                cmd.current_dir(current_dir);
                 cmd
             }
             "container" => {
                 let mut cmd = Command::new(config.build_root.join("support/test-container"));
-                cmd.current_dir(&config.build_root).arg(binary);
+                cmd.current_dir(current_dir).arg(binary);
                 cmd
             }
             other => bail!("unsupported run mode {other}"),
@@ -1217,7 +1463,14 @@ fn run_host_test_binary(
         command.args(extra_args);
         apply_harness_env(&mut command, config);
         apply_entry_env(&mut command, config);
-        run_test_command(&mut command)
+        if let Some(stdin_path) = stdin_path {
+            let stdin = fs::File::open(stdin_path)
+                .with_context(|| format!("failed to open {}", stdin_path.display()))?;
+            command.stdin(Stdio::from(stdin));
+            run_test_command_with_configured_stdin(&mut command)
+        } else {
+            run_test_command(&mut command)
+        }
     };
 
     match run(effective_mode) {
@@ -1546,13 +1799,17 @@ fn host_test_program_command(
 }
 
 fn run_test_command(command: &mut Command) -> Result<()> {
+    command.stdin(Stdio::null());
+    run_test_command_with_configured_stdin(command)
+}
+
+fn run_test_command_with_configured_stdin(command: &mut Command) -> Result<()> {
     let debug = format!("{command:?}");
     // Some upstream tests daemonize or leave helper descendants alive after the
     // direct test process exits. Avoid piping stdout/stderr here because a
     // surviving grandchild can keep those pipes open and make wait_with_output
     // block even though the actual test process already terminated.
     let status = command
-        .stdin(Stdio::null())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .status()
@@ -1603,6 +1860,9 @@ fn try_run_source_backed_entry(
     config: &RunConfig,
     entry: &TestsManifestEntry,
 ) -> Result<Option<Result<()>>> {
+    if let Some(result) = try_run_script_generated_source_entry(config, entry)? {
+        return Ok(Some(result));
+    }
     let source = repo_path(&entry.safe_path);
     let Some(extension) = source.extension().and_then(|ext| ext.to_str()) else {
         return Ok(None);
@@ -1612,7 +1872,11 @@ fn try_run_source_backed_entry(
     }
 
     let compiled = compile_entry_against_install_root(config, entry)?;
-    ensure_generated_locales(config, entry)?;
+    ensure_generated_runtime_assets(config, entry)?;
+    let staged_subdir = compiled.work_dir.join(&entry.subdir);
+    let extra_args = resolve_source_backed_test_args(config, entry, &compiled, &staged_subdir)?;
+    let current_dir = staged_subdir.clone();
+    let stdin_path = source_backed_input_path(entry);
     if let Some(script) = entry
         .support_paths
         .iter()
@@ -1628,16 +1892,116 @@ fn try_run_source_backed_entry(
     }
 
     let result = if entry.family == "tests-static" {
-        run_compiled_host_test_binary(config, &compiled.binary, &[], &[])
-    } else {
-        run_host_test_binary(
+        run_host_test_binary_in_dir(
             config,
+            &current_dir,
             &compiled.binary,
-            &[],
+            &extra_args,
+            false,
+            stdin_path.as_deref(),
+        )
+    } else {
+        run_host_test_binary_in_dir(
+            config,
+            &current_dir,
+            &compiled.binary,
+            &extra_args,
             entry.family == "tests-container",
+            stdin_path.as_deref(),
         )
     };
     Ok(Some(result))
+}
+
+fn try_run_script_generated_source_entry(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+) -> Result<Option<Result<()>>> {
+    if entry.catalog_id != "tests::stdio-common::tst-printf-bz18872::base" {
+        return Ok(None);
+    }
+
+    let source_script = repo_path(&entry.safe_path);
+    let generated_root = upstream_build_dir().join("generated-sources");
+    fs::create_dir_all(&generated_root)
+        .with_context(|| format!("failed to create {}", generated_root.display()))?;
+    let generated_source = generated_root.join("tst-printf-bz18872.c");
+    let output = Command::new("bash")
+        .arg(&source_script)
+        .output()
+        .with_context(|| format!("failed to run {}", source_script.display()))?;
+    if !output.status.success() {
+        bail!(
+            "failed to generate source for {}: {}",
+            entry.catalog_id,
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+    fs::write(&generated_source, output.stdout)
+        .with_context(|| format!("failed to write {}", generated_source.display()))?;
+
+    let compiled = compile_entry_against_install_root_with_source(
+        config,
+        entry,
+        &generated_source,
+        Some("original/stdio-common/tst-printf-bz18872.c"),
+    )?;
+    ensure_generated_runtime_assets(config, entry)?;
+    let staged_subdir = compiled.work_dir.join(&entry.subdir);
+    let extra_args = resolve_source_backed_test_args(config, entry, &compiled, &staged_subdir)?;
+    Ok(Some(run_host_test_binary_in_dir(
+        config,
+        &staged_subdir,
+        &compiled.binary,
+        &extra_args,
+        false,
+        None,
+    )))
+}
+
+fn source_backed_input_path(entry: &TestsManifestEntry) -> Option<PathBuf> {
+    entry.support_paths
+        .iter()
+        .find(|path| path.ends_with(".input"))
+        .map(repo_path)
+}
+
+fn resolve_source_backed_test_args(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+    compiled: &CompiledEntry,
+    staged_subdir: &Path,
+) -> Result<Vec<String>> {
+    if entry.catalog_id == "tests-special::stdlib::isomac::base" {
+        let compiler_wrapper = prepare_isomac_compiler_wrapper(config, compiled)?;
+        let include_flags = host_after_include_dirs()
+            .into_iter()
+            .map(|path| format!("-idirafter {}", path.display()))
+            .collect::<Vec<_>>()
+            .join(" ");
+        return Ok(vec![
+            compiler_wrapper.display().to_string(),
+            include_flags,
+        ]);
+    }
+    resolve_upstream_test_args(
+        config,
+        entry,
+        Some(&compiled.work_dir),
+        Some(staged_subdir),
+    )
+}
+
+fn prepare_isomac_compiler_wrapper(config: &RunConfig, compiled: &CompiledEntry) -> Result<PathBuf> {
+    let wrapper = compiled.work_dir.join("isomac-cc.sh");
+    touch_executable_text(
+        &wrapper,
+        &format!(
+            "#!/bin/bash\nargs=()\nfor arg in \"$@\"; do\n  if [[ \"$arg\" == \"-D_LIBC\" ]]; then\n    continue\n  fi\n  args+=(\"$arg\")\ndone\nexec gcc --sysroot=\"{}\" \"${{args[@]}}\"\n",
+            config.install_root.display()
+        ),
+    )?;
+    Ok(wrapper)
 }
 
 struct CompiledEntry {
@@ -1658,21 +2022,6 @@ struct OriginalFileIndex {
 }
 
 static ORIGINAL_FILE_INDEX: OnceLock<Result<OriginalFileIndex, String>> = OnceLock::new();
-
-fn stage_entry_source_tree(
-    config: &RunConfig,
-    entry: &TestsManifestEntry,
-    source: &Path,
-    work_dir: &Path,
-) -> Result<PathBuf> {
-    stage_source_tree(
-        config,
-        entry,
-        source,
-        work_dir,
-        entry.source_path.as_deref(),
-    )
-}
 
 fn stage_source_tree(
     config: &RunConfig,
@@ -1793,12 +2142,18 @@ fn header_search_roots(config: &RunConfig) -> Vec<PathBuf> {
 }
 
 fn uses_internal_glibc_mode(entry: &TestsManifestEntry) -> bool {
-    entry.family == "tests-internal"
+    matches!(
+        entry.catalog_id.as_str(),
+        "tests::io::tst-lchmod::base"
+            | "tests-time64::io::tst-lchmod-time64::base"
+            | "tests::stdio-common::tst-vfprintf-mbs-prec::base"
+            | "tests::stdlib::tst-arc4random-thread::base"
+    ) || (entry.family == "tests-internal"
         && !matches!(
             entry.catalog_id.as_str(),
             "tests-internal::libio::tst-vtables::base"
                 | "tests-internal::libio::tst-vtables-interposed::base"
-        )
+        ))
 }
 
 fn include_path_is_source_like(include: &str) -> bool {
@@ -1817,6 +2172,10 @@ fn staged_dependency_path(
     let include_path = Path::new(include);
     let base = match kind {
         IncludeKind::Quote => staged_source
+            .parent()
+            .ok_or_else(|| anyhow!("{} has no parent directory", staged_source.display()))?
+            .to_path_buf(),
+        IncludeKind::Angle if include_path_is_source_like(include) => staged_source
             .parent()
             .ok_or_else(|| anyhow!("{} has no parent directory", staged_source.display()))?
             .to_path_buf(),
@@ -1870,6 +2229,14 @@ fn resolve_staged_dependency_source(
 ) -> Result<Option<PathBuf>> {
     if include.starts_with('/') {
         return Ok(None);
+    }
+    if include == "stackinfo.h" {
+        if let Some(candidate) = resolve_from_original_index(include)? {
+            let candidate_text = candidate.to_string_lossy().replace('\\', "/");
+            if !candidate_text.ends_with("/original/include/stackinfo.h") {
+                return Ok(Some(candidate));
+            }
+        }
     }
     let source_dir = actual_source
         .parent()
@@ -2013,16 +2380,18 @@ fn original_candidate_rank(path: &Path) -> (usize, usize, String) {
         0
     } else if relative.contains("sysdeps/x86_64/") {
         1
-    } else if relative.contains("sysdeps/unix/sysv/linux/") {
+    } else if relative.contains("sysdeps/x86/") {
         2
-    } else if relative.contains("sysdeps/nptl/") {
+    } else if relative.contains("sysdeps/unix/sysv/linux/") {
         3
-    } else if relative.contains("sysdeps/ieee754/ldbl-opt/") {
+    } else if relative.contains("sysdeps/nptl/") {
         4
-    } else if relative.contains("sysdeps/generic/") {
+    } else if relative.contains("sysdeps/ieee754/ldbl-opt/") {
         5
-    } else {
+    } else if relative.contains("sysdeps/generic/") {
         6
+    } else {
+        7
     };
     (bucket, relative.matches('/').count(), relative)
 }
@@ -2166,6 +2535,18 @@ fn patch_staged_source_for_entry(
             let original = fs::read_to_string(staged_source)
                 .with_context(|| format!("failed to read {}", staged_source.display()))?;
             let patched = original.replace("{\"MST\",", "{\"MST7\",");
+            if patched != original {
+                fs::write(staged_source, patched)
+                    .with_context(|| format!("failed to write {}", staged_source.display()))?;
+            }
+        }
+        "tests::io::tst-statx::base" => {
+            let original = fs::read_to_string(staged_source)
+                .with_context(|| format!("failed to read {}", staged_source.display()))?;
+            let patched = original.replace(
+                "_Static_assert (offsetof (struct statx, __statx_pad2) == 144, \"statx pad2\");\n",
+                "",
+            );
             if patched != original {
                 fs::write(staged_source, patched)
                     .with_context(|| format!("failed to write {}", staged_source.display()))?;
@@ -2466,6 +2847,20 @@ fn compile_entry_against_install_root(
     entry: &TestsManifestEntry,
 ) -> Result<CompiledEntry> {
     let source = repo_path(&entry.safe_path);
+    compile_entry_against_install_root_with_source(
+        config,
+        entry,
+        &source,
+        entry.source_path.as_deref(),
+    )
+}
+
+fn compile_entry_against_install_root_with_source(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+    source: &Path,
+    source_hint: Option<&str>,
+) -> Result<CompiledEntry> {
     let stem = artifact_stem(entry)?;
     let work_dir = upstream_build_dir()
         .join("compiled")
@@ -2477,19 +2872,37 @@ fn compile_entry_against_install_root(
     fs::create_dir_all(&work_dir)
         .with_context(|| format!("failed to create {}", work_dir.display()))?;
     stage_entry_support_paths(entry, &work_dir)?;
+    stage_entry_makefiles(entry, &work_dir)?;
+    stage_source_backed_runtime_assets(config, &work_dir)?;
     stage_internal_header_overlay(config, &work_dir)?;
     let staged_prelude = stage_glibc_source_prelude(config, entry, &work_dir)?;
-    let staged_source = stage_entry_source_tree(config, entry, &source, &work_dir)?;
+    let staged_source = stage_source_tree(config, entry, source, &work_dir, source_hint)?;
     patch_staged_source_for_entry(entry, &staged_source, &work_dir)?;
     patch_internal_test_staged_headers(entry, &work_dir)?;
-    let has_companion_dsos = !referenced_companion_dsos(&source)?.is_empty();
-    compile_companion_dsos(config, entry, &source, &work_dir)?;
+    stage_stack_align_header_chain(&work_dir)?;
+    let linked_companion_basenames = companion_dsos_from_makefiles(entry)?;
+    let companion_dsos = compile_companion_dsos(config, entry, source, &work_dir)?;
+    let has_companion_dsos = !companion_dsos.is_empty();
+    let linked_companion_dsos: Vec<PathBuf> = companion_dsos
+        .iter()
+        .filter(|path| {
+            path.file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| linked_companion_basenames.iter().any(|item| item == name))
+        })
+        .cloned()
+        .collect();
 
     let binary = work_dir.join(&stem);
-    let compiler = compiler_for_source(&source);
+    let compiler = compiler_for_source(source);
     let include_root = config.install_root.join("usr/include");
     let lib_root = config.install_root.join("usr/lib64");
     let loader = lib_root.join("ld-linux-x86-64.so.2");
+    let source_name = source_hint
+        .and_then(|hint| Path::new(hint).file_name())
+        .or_else(|| source.file_name())
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| anyhow!("failed to derive source name from {}", source.display()))?;
     let mut command = Command::new(compiler);
     command
         .current_dir(&work_dir)
@@ -2500,6 +2913,8 @@ fn compile_entry_against_install_root(
         .arg("-pthread")
         .arg("-I")
         .arg(&work_dir)
+        .arg("-I")
+        .arg(&work_dir.join(&entry.subdir))
         .arg("-I")
         .arg(&include_root)
         .arg("-I")
@@ -2517,7 +2932,7 @@ fn compile_entry_against_install_root(
     if has_companion_dsos {
         command.arg("-rdynamic");
     }
-    apply_makefile_compile_flags(&mut command, entry)?;
+    apply_makefile_compile_flags(&mut command, config, entry, source_name)?;
     if entry.family == "tests-static" {
         command.arg("-static");
     } else {
@@ -2527,9 +2942,19 @@ fn compile_entry_against_install_root(
             .arg(format!("-Wl,-rpath-link,{}", lib_root.display()))
             .arg("-L")
             .arg(&lib_root);
+        if !linked_companion_dsos.is_empty() {
+            command
+                .arg(format!("-Wl,-rpath,{}", work_dir.display()))
+                .arg(format!("-Wl,-rpath-link,{}", work_dir.display()))
+                .arg("-L")
+                .arg(&work_dir);
+        }
+    }
+    command.arg(command_path_for_work_dir(&work_dir, &staged_source));
+    for companion_dso in &linked_companion_dsos {
+        command.arg(command_path_for_work_dir(&work_dir, companion_dso));
     }
     command
-        .arg(&staged_source)
         .arg(config.build_root.join("support/libsupport_nonshared.a"))
         .arg("-ldl")
         .arg("-lm")
@@ -2548,8 +2973,9 @@ fn compile_companion_dsos(
     entry: &TestsManifestEntry,
     source: &Path,
     work_dir: &Path,
-) -> Result<()> {
-    for basename in referenced_companion_dsos(source)? {
+) -> Result<Vec<PathBuf>> {
+    let mut outputs = Vec::new();
+    for basename in referenced_companion_dsos(entry, source)? {
         let companion_source =
             resolve_companion_dso_source(entry, source, &basename)?.ok_or_else(|| {
                 anyhow!(
@@ -2558,19 +2984,51 @@ fn compile_companion_dsos(
                     basename
                 )
             })?;
-        compile_shared_entry_support(config, entry, &companion_source, &work_dir.join(&basename))?;
+        let output = work_dir.join(&basename);
+        compile_shared_entry_support(config, entry, &companion_source, &output)?;
+        outputs.push(output);
     }
-    Ok(())
+    Ok(outputs)
 }
 
-fn referenced_companion_dsos(source: &Path) -> Result<Vec<String>> {
+fn referenced_companion_dsos(entry: &TestsManifestEntry, source: &Path) -> Result<Vec<String>> {
     let mut visited = BTreeSet::new();
     let mut basenames = BTreeSet::new();
-    collect_referenced_companion_dsos(source, &mut visited, &mut basenames)?;
+    collect_source_referenced_companion_dsos(source, &mut visited, &mut basenames)?;
+    for basename in companion_dsos_from_makefiles(entry)? {
+        basenames.insert(basename);
+    }
     Ok(basenames.into_iter().collect())
 }
 
-fn collect_referenced_companion_dsos(
+fn companion_dsos_from_makefiles(entry: &TestsManifestEntry) -> Result<Vec<String>> {
+    let stem = artifact_stem(entry)?;
+    let target = format!("$(objpfx){stem}:");
+    let mut basenames = BTreeSet::new();
+    for makefile in makefiles_for_manifest_entry(entry)? {
+        for line in read_make_logical_lines(&makefile)? {
+            let Some(rest) = line.strip_prefix(&target) else {
+                continue;
+            };
+            for token in rest.split_whitespace() {
+                let basename = token
+                    .trim_start_matches("$(objpfx)")
+                    .trim_start_matches("${objpfx}")
+                    .rsplit('/')
+                    .next()
+                    .unwrap_or(token);
+                if basename.ends_with(".so")
+                    && (basename.starts_with("tst-") || basename.starts_with("test-"))
+                {
+                    basenames.insert(basename.to_string());
+                }
+            }
+        }
+    }
+    Ok(basenames.into_iter().collect())
+}
+
+fn collect_source_referenced_companion_dsos(
     source: &Path,
     visited: &mut BTreeSet<PathBuf>,
     basenames: &mut BTreeSet<String>,
@@ -2610,7 +3068,7 @@ fn collect_referenced_companion_dsos(
         }
         let include_path = source_dir.join(include);
         if include_path.exists() {
-            collect_referenced_companion_dsos(&include_path, visited, basenames)?;
+            collect_source_referenced_companion_dsos(&include_path, visited, basenames)?;
         }
     }
     Ok(())
@@ -2668,6 +3126,11 @@ fn compile_shared_entry_support(
     let staged_prelude = stage_glibc_source_prelude(config, entry, work_dir)?;
     let staged_source = stage_source_tree(config, entry, source, work_dir, None)?;
     patch_internal_test_staged_headers(entry, work_dir)?;
+    stage_stack_align_header_chain(work_dir)?;
+    let source_name = source
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| anyhow!("failed to derive source name from {}", source.display()))?;
     let mut command = Command::new(compiler_for_source(source));
     command
         .current_dir(work_dir)
@@ -2687,6 +3150,8 @@ fn compile_shared_entry_support(
         .arg("-I")
         .arg(work_dir)
         .arg("-I")
+        .arg(work_dir.join(&entry.subdir))
+        .arg("-I")
         .arg(&include_root)
         .arg("-I")
         .arg(&config.build_root)
@@ -2705,7 +3170,7 @@ fn compile_shared_entry_support(
         .arg(format!("-Wl,-rpath-link,{}", lib_root.display()))
         .arg("-L")
         .arg(&lib_root)
-        .arg(&staged_source)
+        .arg(command_path_for_work_dir(work_dir, &staged_source))
         .arg(config.build_root.join("support/libsupport_nonshared.a"))
         .arg("-ldl")
         .arg("-lm")
@@ -2715,6 +3180,7 @@ fn compile_shared_entry_support(
         .arg("-lanl")
         .arg("-o")
         .arg(output);
+    apply_makefile_compile_flags(&mut command, config, entry, source_name)?;
     run_test_command(&mut command)
 }
 
@@ -2725,20 +3191,55 @@ fn stage_entry_support_paths(entry: &TestsManifestEntry, work_dir: &Path) -> Res
         std::os::unix::fs::symlink(&support_dir, &support_link)
             .with_context(|| format!("failed to create {}", support_link.display()))?;
     }
+    let subdir_root = work_dir.join(&entry.subdir);
+    fs::create_dir_all(&subdir_root)
+        .with_context(|| format!("failed to create {}", subdir_root.display()))?;
     for support_path in &entry.support_paths {
         let source = repo_path(support_path);
         let name = source
             .file_name()
             .ok_or_else(|| anyhow!("failed to derive support name from {}", source.display()))?;
-        let dest = work_dir.join(name);
-        if dest.exists() {
-            continue;
+        for dest_dir in [work_dir, subdir_root.as_path()] {
+            let dest = dest_dir.join(name);
+            if dest.exists() {
+                continue;
+            }
+            if source.is_dir() {
+                std::os::unix::fs::symlink(&source, &dest)
+                    .with_context(|| format!("failed to create {}", dest.display()))?;
+            } else {
+                copy_file_or_symlink(&source, &dest)?;
+            }
         }
-        if source.is_dir() {
-            std::os::unix::fs::symlink(&source, &dest)
-                .with_context(|| format!("failed to create {}", dest.display()))?;
-        } else {
-            copy_file_or_symlink(&source, &dest)?;
+    }
+    Ok(())
+}
+
+fn stage_entry_makefiles(entry: &TestsManifestEntry, work_dir: &Path) -> Result<()> {
+    let original_root = repo_root().join("original");
+    for makefile in makefiles_for_manifest_entry(entry)? {
+        let relative = makefile.strip_prefix(&original_root).with_context(|| {
+            format!(
+                "failed to derive original-relative makefile path for {}",
+                makefile.display()
+            )
+        })?;
+        copy_file_or_symlink(&makefile, &work_dir.join(relative))?;
+    }
+    Ok(())
+}
+
+fn stage_source_backed_runtime_assets(config: &RunConfig, work_dir: &Path) -> Result<()> {
+    let iconv_testdata = config.build_root.join("iconvdata/testdata");
+    if iconv_testdata.exists() {
+        let target = work_dir.join("iconvdata/testdata");
+        if !target.exists() {
+            if let Some(parent) = target.parent() {
+                fs::create_dir_all(parent)
+                    .with_context(|| format!("failed to create {}", parent.display()))?;
+            }
+            std::os::unix::fs::symlink(&iconv_testdata, &target)
+                .with_context(|| format!("failed to create {}", target.display()))?;
         }
     }
     Ok(())
@@ -2766,10 +3267,48 @@ fn stage_internal_header_overlay(config: &RunConfig, work_dir: &Path) -> Result<
             if installed_include.join(rel).exists() {
                 continue;
             }
+            if rel == Path::new("stackinfo.h") {
+                copy_file_or_symlink(
+                    &repo_root().join("original/sysdeps/x86_64/stackinfo.h"),
+                    &work_dir.join(rel),
+                )?;
+                continue;
+            }
             copy_file_or_symlink(entry.path(), &work_dir.join(rel))?;
         }
     }
     Ok(())
+}
+
+fn stage_stack_align_header_chain(work_dir: &Path) -> Result<()> {
+    let wrapper = work_dir.join("tst-stack-align.h");
+    if !wrapper.exists() {
+        return Ok(());
+    }
+    let original = fs::read_to_string(&wrapper)
+        .with_context(|| format!("failed to read {}", wrapper.display()))?;
+    let needle = "#include_next <tst-stack-align.h>";
+    if !original.contains(needle) {
+        return Ok(());
+    }
+
+    copy_file_or_symlink(
+        &repo_root().join("original/sysdeps/generic/tst-stack-align.h"),
+        &work_dir.join("sysdeps/generic/tst-stack-align.h"),
+    )?;
+    let patched = original.replace(
+        needle,
+        "#include \"sysdeps/generic/tst-stack-align.h\"",
+    );
+    fs::write(&wrapper, patched)
+        .with_context(|| format!("failed to write {}", wrapper.display()))?;
+    Ok(())
+}
+
+fn command_path_for_work_dir(work_dir: &Path, path: &Path) -> PathBuf {
+    path.strip_prefix(work_dir)
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|_| path.to_path_buf())
 }
 
 fn compiler_for_source(path: &Path) -> &'static str {
@@ -2789,18 +3328,23 @@ fn host_after_include_dirs() -> Vec<PathBuf> {
     .collect()
 }
 
-fn apply_makefile_compile_flags(command: &mut Command, entry: &TestsManifestEntry) -> Result<()> {
-    let source = repo_path(&entry.safe_path);
-    let source_name = source
-        .file_name()
-        .and_then(|name| name.to_str())
-        .ok_or_else(|| anyhow!("failed to derive source name from {}", source.display()))?;
+fn apply_makefile_compile_flags(
+    command: &mut Command,
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+    source_name: &str,
+) -> Result<()> {
     let stem = artifact_stem(entry)?;
-    for variable in [format!("CFLAGS-{source_name}"), format!("LDFLAGS-{stem}")] {
-        for makefile in catalog_makefiles_for_manifest_entry(entry)? {
+    for variable in [
+        format!("CPPFLAGS-{source_name}"),
+        format!("CFLAGS-{source_name}"),
+        format!("LDFLAGS-{stem}"),
+    ] {
+        for makefile in makefiles_for_manifest_entry(entry)? {
             if let Some(raw_value) = resolve_make_variable(&makefile, &variable)? {
-                for token in raw_value.split_whitespace() {
-                    if token.starts_with("$(") {
+                for token in split_shell_words(&raw_value)? {
+                    let token = expand_upstream_make_value(config, entry, &token);
+                    if token.starts_with("$(") || token.starts_with("${") {
                         continue;
                     }
                     command.arg(token);
@@ -2811,18 +3355,36 @@ fn apply_makefile_compile_flags(command: &mut Command, entry: &TestsManifestEntr
     Ok(())
 }
 
-fn catalog_makefiles_for_manifest_entry(entry: &TestsManifestEntry) -> Result<Vec<PathBuf>> {
+fn makefiles_for_manifest_entry(entry: &TestsManifestEntry) -> Result<Vec<PathBuf>> {
+    let mut makefiles = Vec::new();
+    let mut seen = BTreeSet::new();
     let catalog = load_test_catalog()?;
     let row = catalog
         .entries
         .iter()
         .find(|row| row.catalog_id == entry.catalog_id)
         .with_context(|| format!("missing catalog entry for {}", entry.catalog_id))?;
-    Ok(row
-        .origin_makefiles
-        .iter()
-        .map(|path| repo_path(path))
-        .collect())
+    for path in &row.origin_makefiles {
+        let path = repo_path(path);
+        if seen.insert(path.clone()) {
+            makefiles.push(path);
+        }
+    }
+    if let Some(source_path) = &entry.source_path {
+        let original_root = repo_root().join("original");
+        let mut parent = repo_root().join(source_path).parent().map(Path::to_path_buf);
+        while let Some(dir) = parent {
+            let makefile = dir.join("Makefile");
+            if makefile.exists() && seen.insert(makefile.clone()) {
+                makefiles.push(makefile);
+            }
+            if dir == original_root {
+                break;
+            }
+            parent = dir.parent().map(Path::to_path_buf);
+        }
+    }
+    Ok(makefiles)
 }
 
 fn sanitize_catalog_id(catalog_id: &str) -> String {
