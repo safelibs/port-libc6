@@ -326,11 +326,8 @@ fn resolve_upstream_install_payload(upstream_root: &Path, install_path: &str) ->
 fn add_safelibs_public_note(output_path: &Path, scratch_root: &Path, tag: &str) -> Result<()> {
     let note_path = scratch_root.join("notes").join(format!("{tag}.txt"));
     let note_text = format!("phase={PHASE_ID}\nartifact={tag}\nkind=phase06-public-cutover\n");
-    fs::write(
-        &note_path,
-        &note_text,
-    )
-    .with_context(|| format!("failed to write {}", note_path.display()))?;
+    fs::write(&note_path, &note_text)
+        .with_context(|| format!("failed to write {}", note_path.display()))?;
     run_command(
         Command::new("objcopy")
             .arg("--remove-section")
@@ -727,6 +724,8 @@ fn sync_safe_tests_tree() -> Result<()> {
         write_text_file(&sentinel, "")?;
     }
 
+    patch_phase_owned_copied_tests(&tests_root)?;
+
     for executable in [
         safe.join("tests/elf/list-tunables"),
         safe.join("tests/scripts/check-c++-types.sh"),
@@ -740,6 +739,20 @@ fn sync_safe_tests_tree() -> Result<()> {
         set_executable_if_present(&executable)?;
     }
 
+    Ok(())
+}
+
+fn patch_phase_owned_copied_tests(tests_root: &Path) -> Result<()> {
+    let tls_atexit = tests_root.join("stdlib/tst-tls-atexit.c");
+    if tls_atexit.exists() {
+        let original = fs::read_to_string(&tls_atexit)
+            .with_context(|| format!("failed to read {}", tls_atexit.display()))?;
+        let patched = original.replace("lm->l_type == lt_loaded && ", "");
+        if patched != original {
+            fs::write(&tls_atexit, patched)
+                .with_context(|| format!("failed to write {}", tls_atexit.display()))?;
+        }
+    }
     Ok(())
 }
 

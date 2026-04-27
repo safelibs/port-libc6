@@ -58,7 +58,7 @@ is_loaded (void)
   struct link_map *lm = (struct link_map *) _r_debug.r_map;
 
   for (; lm; lm = lm->l_next)
-    if (lm->l_type == lt_loaded && lm->l_name
+    if (lm->l_name
 	&& strcmp (basename (DSO_NAME), basename (lm->l_name)) == 0)
       {
 	printf ("%s is still loaded\n", lm->l_name);
