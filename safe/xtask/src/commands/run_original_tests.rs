@@ -2803,6 +2803,47 @@ fn patch_staged_source_for_entry(
                     .with_context(|| format!("failed to write {}", staged_source.display()))?;
             }
         }
+        "tests-special::posix::wordexp-tst::base"
+            if staged_source
+                .file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| name == "wordexp-test.c") =>
+        {
+            let original = fs::read_to_string(staged_source)
+                .with_context(|| format!("failed to read {}", staged_source.display()))?;
+            let patched = original.replace(
+                r#"static void
+command_line_test (const char *words)
+{
+  wordexp_t we;
+  int i;
+  int retval = wordexp (words, &we, 0);
+  printf ("info: wordexp returned %d\n", retval);
+  for (i = 0; i < we.we_wordc; i++)
+    printf ("info: we_wordv[%d] = \"%s\"\n", i, we.we_wordv[i]);
+}
+"#,
+                r#"static void
+command_line_test (const char *words)
+{
+  wordexp_t we = { 0 };
+  int i;
+  int retval = wordexp (words, &we, 0);
+  printf ("wordexp returned %d\n", retval);
+  if (retval == 0)
+    {
+      for (i = 0; i < we.we_wordc; i++)
+        printf ("we_wordv[%d] = \"%s\"\n", i, we.we_wordv[i]);
+      wordfree (&we);
+    }
+}
+"#,
+            );
+            if patched != original {
+                fs::write(staged_source, patched)
+                    .with_context(|| format!("failed to write {}", staged_source.display()))?;
+            }
+        }
         "tests-internal::libio::tst-vtables::base"
         | "tests-internal::libio::tst-vtables-interposed::base" => {
             let replacement = r#"#define _GNU_SOURCE
@@ -3985,16 +4026,53 @@ fn materialize_direct_shell_runtime_helpers(
     Ok(())
 }
 
+fn stage_direct_shell_runtime_script(
+    entry: &TestsManifestEntry,
+    script: &Path,
+    runtime_root: &Path,
+) -> Result<PathBuf> {
+    match entry.catalog_id.as_str() {
+        "tests-special::posix::wordexp-tst::base" => {
+            let staged = runtime_root
+                .join(&entry.subdir)
+                .join(script.file_name().ok_or_else(|| {
+                    anyhow!("failed to derive script name from {}", script.display())
+                })?);
+            copy_executable_file(script, &staged)?;
+            let original = fs::read_to_string(&staged)
+                .with_context(|| format!("failed to read {}", staged.display()))?;
+            let patched = original
+                .replace("result=0", "status=0")
+                .replace(
+                    "${test_program_prefix_before_env} ${run_program_env} IFS=\"$IFS\" \\\n${test_program_prefix_after_env} \\\n${common_objpfx}posix/wordexp-test '${#@} ${#2} *$**' two 3 4 > ${testout}10\ncat <<\"EOF\" | cmp - ${testout}10 || failed=1\nwordexp returned 0\nwe_wordv[0] = \"4\"\nwe_wordv[1] = \"3\"\nwe_wordv[2] = \"*${#@}\"\nwe_wordv[3] = \"${#2}\"\nwe_wordv[4] = \"*$**\"\nwe_wordv[5] = \"two\"\nwe_wordv[6] = \"3\"\nwe_wordv[7] = \"4*\"\nEOF\n\nexit $result\n",
+                    "failed=0\n${test_program_prefix_before_env} ${run_program_env} IFS=\"$IFS\" \\\n${test_program_prefix_after_env} \\\n${common_objpfx}posix/wordexp-test '${#@} ${#2} *$**' two 3 4 > ${testout}10\ncat <<\"EOF\" | cmp - ${testout}10 >> $logfile || failed=1\nwordexp returned 0\nwe_wordv[0] = \"4\"\nwe_wordv[1] = \"3\"\nwe_wordv[2] = \"*${#@}\"\nwe_wordv[3] = \"${#2}\"\nwe_wordv[4] = \"*$**\"\nwe_wordv[5] = \"two\"\nwe_wordv[6] = \"3\"\nwe_wordv[7] = \"4*\"\nEOF\n\nif test $failed -ne 0; then\n  echo '${#@} ${#2} *$** test failed'\n  status=1\nfi\n\nexit $status\n",
+                );
+            if patched != original {
+                fs::write(&staged, patched)
+                    .with_context(|| format!("failed to write {}", staged.display()))?;
+            }
+            Ok(staged)
+        }
+        _ => Ok(script.to_path_buf()),
+    }
+}
+
 fn run_direct_shell_source_entry(
     config: &RunConfig,
     entry: &TestsManifestEntry,
     script: &Path,
 ) -> Result<()> {
     ensure_generated_runtime_assets(config, entry)?;
-    let (objpfx_root, common_objdir) = if requires_direct_shell_runtime_root(entry) {
+    let (objpfx_root, common_objdir, runtime_script) = if requires_direct_shell_runtime_root(entry)
+    {
         let runtime_root = prepare_direct_shell_runtime_root(entry)?;
         materialize_direct_shell_runtime_helpers(config, entry, &runtime_root)?;
-        (runtime_root.join(&entry.subdir), runtime_root)
+        let runtime_script = stage_direct_shell_runtime_script(entry, script, &runtime_root)?;
+        (
+            runtime_root.join(&entry.subdir),
+            runtime_root,
+            runtime_script,
+        )
     } else {
         (
             build_artifact_hints(&config.build_root, entry)
@@ -4002,12 +4080,13 @@ fn run_direct_shell_source_entry(
                 .next()
                 .unwrap_or_else(|| config.build_root.join(&entry.subdir)),
             config.build_root.clone(),
+            script.to_path_buf(),
         )
     };
     let args = resolve_shell_script_recipe_args(
         config,
         entry,
-        script,
+        &runtime_script,
         &objpfx_root,
         &common_objdir,
         Some(&objpfx_root),
@@ -4016,7 +4095,7 @@ fn run_direct_shell_source_entry(
     .with_context(|| format!("missing shell rule for {}", entry.catalog_id))?;
     let current_dir = original_source_context_dir(entry)
         .ok_or_else(|| anyhow!("failed to derive source context for {}", entry.catalog_id))?;
-    run_shell_test_script_in_dir(config, &current_dir, script, &args)
+    run_shell_test_script_in_dir(config, &current_dir, &runtime_script, &args)
 }
 
 fn resolve_shell_script_recipe_args(
