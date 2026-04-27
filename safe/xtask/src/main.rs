@@ -51,6 +51,14 @@ enum Command {
     Check07NetworkPackages(commands::check_07_network_packages::Args),
     #[command(name = "check_07_network_safety")]
     Check07NetworkSafety(commands::check_07_network_safety::Args),
+    #[command(name = "check_08_locale_tests")]
+    Check08LocaleTests(commands::check_08_locale_tests::Args),
+    #[command(name = "check_08_locale_abi")]
+    Check08LocaleAbi(commands::check_08_locale_abi::Args),
+    #[command(name = "check_08_locale_packages")]
+    Check08LocalePackages(commands::check_08_locale_packages::Args),
+    #[command(name = "check_08_locale_safety")]
+    Check08LocaleSafety(commands::check_08_locale_safety::Args),
     RunOriginalTests(commands::run_original_tests::Args),
     CheckAbi(commands::check_abi::Args),
     InstallRoot(commands::install_root::Args),
@@ -88,6 +96,10 @@ fn main() -> Result<()> {
         Command::Check07NetworkAbi(args) => commands::check_07_network_abi::run(args),
         Command::Check07NetworkPackages(args) => commands::check_07_network_packages::run(args),
         Command::Check07NetworkSafety(args) => commands::check_07_network_safety::run(args),
+        Command::Check08LocaleTests(args) => commands::check_08_locale_tests::run(args),
+        Command::Check08LocaleAbi(args) => commands::check_08_locale_abi::run(args),
+        Command::Check08LocalePackages(args) => commands::check_08_locale_packages::run(args),
+        Command::Check08LocaleSafety(args) => commands::check_08_locale_safety::run(args),
         Command::RunOriginalTests(args) => commands::run_original_tests::run(args),
         Command::CheckAbi(args) => commands::check_abi::run(args),
         Command::InstallRoot(args) => commands::install_root::run(args),

@@ -1,5 +1,6 @@
 mod fallback;
 pub mod loader_tools;
+pub mod locale_tools;
 pub mod network_tools;
 pub mod runtime_tools;
 

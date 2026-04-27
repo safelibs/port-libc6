@@ -3340,21 +3340,21 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
       "package": "libc6",
       "path": "/usr/lib64/libBrokenLocale.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libBrokenLocale.so.1",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libBrokenLocale.so.1",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
-      "executable": true,
+      "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "verification": "libc-family-cutover"
     },
     {
       "package": "libc6",
@@ -3366,7 +3366,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -3379,7 +3379,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -3392,7 +3392,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -3431,7 +3431,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -3457,7 +3457,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -3470,7 +3470,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -3483,7 +3483,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -3496,7 +3496,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -3509,7 +3509,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -3535,7 +3535,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -3548,7 +3548,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -3574,7 +3574,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -3600,7 +3600,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -3613,7 +3613,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -3626,7 +3626,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -3639,7 +3639,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -3652,7 +3652,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -3665,7 +3665,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -3678,7 +3678,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -3691,7 +3691,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -3704,7 +3704,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -3717,7 +3717,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -3730,7 +3730,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -3743,7 +3743,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -3756,7 +3756,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     }
   ]

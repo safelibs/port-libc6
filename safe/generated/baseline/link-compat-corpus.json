@@ -5,6 +5,7 @@
       "This corpus is the authoritative relink-compatibility case list for original-object verification.",
       "Phase 6 seeds startup-object, ordinary dynamic, PIE, static, static-PIE, and GLIBC_PRIVATE coverage.",
       "Phase 7 extends the corpus with network-facing libanl, libresolv, and libnss module coverage while keeping the preserved original-object workflow intact.",
+      "Phase 8 extends the corpus with locale, iconv, parser, and libBrokenLocale coverage while keeping the preserved original-object workflow intact.",
       "Later phases must extend this file in place instead of rediscovering cases from work/original-build ad hoc."
     ]
   },
@@ -181,6 +182,72 @@
         "libnss_dns",
         "libnss_files",
         "libnss_hesiod"
+      ],
+      "run_mode": "safe-loader"
+    },
+    {
+      "case_id": "locale-setlocale-newlocale",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "coverage_class": "locale",
+      "object_source_kind": "original_sysroot_fixture",
+      "fixture_source_path": "safe/tests/locale/link-compat-locale.c",
+      "upstream_object_path": null,
+      "original_object_relpath": "locale-setlocale-newlocale/main.o",
+      "compile_args": [],
+      "link_args": [],
+      "required_startfiles": [],
+      "exercised_dsos": [
+        "libc"
+      ],
+      "run_mode": "safe-loader"
+    },
+    {
+      "case_id": "locale-iconv",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "coverage_class": "iconv",
+      "object_source_kind": "original_sysroot_fixture",
+      "fixture_source_path": "safe/tests/iconv/link-compat-iconv.c",
+      "upstream_object_path": null,
+      "original_object_relpath": "locale-iconv/main.o",
+      "compile_args": [],
+      "link_args": [],
+      "required_startfiles": [],
+      "exercised_dsos": [
+        "libc"
+      ],
+      "run_mode": "safe-loader"
+    },
+    {
+      "case_id": "posix-parsers",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "coverage_class": "posix-parsers",
+      "object_source_kind": "original_sysroot_fixture",
+      "fixture_source_path": "safe/tests/posix/link-compat-parsers.c",
+      "upstream_object_path": null,
+      "original_object_relpath": "posix-parsers/main.o",
+      "compile_args": [],
+      "link_args": [],
+      "required_startfiles": [],
+      "exercised_dsos": [
+        "libc"
+      ],
+      "run_mode": "safe-loader"
+    },
+    {
+      "case_id": "locale-libbrokenlocale",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "coverage_class": "libbrokenlocale",
+      "object_source_kind": "original_sysroot_fixture",
+      "fixture_source_path": "safe/tests/locale/link-compat-libbrokenlocale.c",
+      "upstream_object_path": null,
+      "original_object_relpath": "locale-libbrokenlocale/main.o",
+      "compile_args": [],
+      "link_args": [
+        "-lBrokenLocale"
+      ],
+      "required_startfiles": [],
+      "exercised_dsos": [
+        "libBrokenLocale"
       ],
       "run_mode": "safe-loader"
     }

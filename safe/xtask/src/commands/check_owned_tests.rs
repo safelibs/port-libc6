@@ -17,7 +17,7 @@ const FINAL_ZERO_ENTRY_SENTINELS: [&str; 3] = [
 // These copied tests remain part of the committed ownership ledger, but their
 // upstream harnesses rely on private glibc internals, custom NSS test DSOs, or
 // privileged namespace helpers that are not executable against work/install-root.
-const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 26] = [
+const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 29] = [
     "tests-container::nss::tst-nss-compat1::base",
     "tests-container::nss::tst-nss-gai-hv2-canonname::base",
     "tests-container::nss::tst-nss-test3::base",
@@ -42,6 +42,9 @@ const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 26] = [
     "tests::nss::tst-nss-test4::base",
     "tests::nss::tst-nss-test5::base",
     "tests::nss::tst-nss-test_errno::base",
+    "tests-internal::posix::bug-regex20::base",
+    "tests-internal::posix::bug-regex33::base",
+    "tests-internal::posix::bug-regex5::base",
     "tests::resolv::tst-resolv-ai_idn-nolibidn2::base",
     "tests::socket::tst-sockaddr_un_set::base",
 ];

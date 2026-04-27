@@ -9,14 +9,15 @@ use std::process::{Command, Stdio};
 use toml::Value as TomlValue;
 use walkdir::WalkDir;
 
-pub const PHASE_ID: &str = "impl_07_nss_resolver_nscd";
-pub const COMPLETED_PHASES: [&str; 6] = [
+pub const PHASE_ID: &str = "impl_08_locale_iconv_posix_parsers";
+pub const COMPLETED_PHASES: [&str; 7] = [
     "impl_02_hybrid_abi_shell",
     "impl_03_packaging_and_harness",
     "impl_04_loader_startup_secure_exec",
     "impl_05_core_runtime_threads_entropy",
     "impl_06_io_stdio_string_path",
     "impl_07_nss_resolver_nscd",
+    "impl_08_locale_iconv_posix_parsers",
 ];
 pub const REQUIRED_PACKAGES: [&str; 7] = [
     "libc6",

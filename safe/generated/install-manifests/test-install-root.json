@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "phase": "impl_07_nss_resolver_nscd",
+    "phase": "impl_08_locale_iconv_posix_parsers",
     "include_testroot_only": true,
     "package_count": 8,
     "packages": [
@@ -204,8 +204,8 @@
     {
       "package": "libc-bin",
       "path": "/usr/bin/iconv",
-      "source_path": "build/testroot.pristine/usr/bin/iconv",
-      "source_origin": "build_testroot",
+      "source_path": "safe/crates/libc-support-tools/src/locale_tools.rs",
+      "source_origin": "safe_rust",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
@@ -243,8 +243,8 @@
     {
       "package": "libc-bin",
       "path": "/usr/bin/locale",
-      "source_path": "build/testroot.pristine/usr/bin/locale",
-      "source_origin": "build_testroot",
+      "source_path": "safe/crates/libc-support-tools/src/locale_tools.rs",
+      "source_origin": "safe_rust",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
@@ -256,8 +256,8 @@
     {
       "package": "libc-bin",
       "path": "/usr/bin/localedef",
-      "source_path": "build/testroot.pristine/usr/bin/localedef",
-      "source_origin": "build_testroot",
+      "source_path": "safe/crates/libc-support-tools/src/locale_tools.rs",
+      "source_origin": "safe_rust",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
@@ -13536,7 +13536,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -13555,28 +13555,28 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libBrokenLocale.so",
-      "source_path": "build/testroot.pristine/usr/lib64/libBrokenLocale.so",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libBrokenLocale.so.1",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
-      "executable": true,
+      "executable": false,
       "symlink_target": "../../lib64/libBrokenLocale.so.1",
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "verification": "libc-family-cutover"
     },
     {
       "package": "libc6",
       "path": "/usr/lib64/libBrokenLocale.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libBrokenLocale.so.1",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libBrokenLocale.so.1",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
-      "executable": true,
+      "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "verification": "libc-family-cutover"
     },
     {
       "package": "libc6-dev",
@@ -13601,7 +13601,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libanl.so.1",
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -13614,7 +13614,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -13640,7 +13640,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -13653,7 +13653,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -13666,7 +13666,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libc_malloc_debug.so.0",
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -13679,7 +13679,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -13809,7 +13809,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -13861,7 +13861,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -13874,7 +13874,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libnss_compat.so.2",
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -13887,7 +13887,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -13900,7 +13900,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -13913,7 +13913,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -13926,7 +13926,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libnss_hesiod.so.2",
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -13939,7 +13939,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -13978,7 +13978,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -13991,7 +13991,7 @@
       "asset_kind": "generated_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -14017,7 +14017,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libresolv.so.2",
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -14030,7 +14030,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -14069,7 +14069,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libthread_db.so.1",
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -14082,7 +14082,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -14173,7 +14173,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -14186,7 +14186,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -14199,7 +14199,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -14212,7 +14212,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -14225,7 +14225,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -14238,7 +14238,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -14251,7 +14251,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -14264,7 +14264,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -14277,7 +14277,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -14290,7 +14290,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -14303,7 +14303,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -14316,7 +14316,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -14329,7 +14329,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -14360,6 +14360,58 @@
     },
     {
       "package": "libc-bin",
+      "path": "/usr/libexec/safelibs/locale-tools/iconv.backend",
+      "source_path": "build/testroot.pristine/usr/bin/iconv",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "tracked_backend_binary",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "verification": "locale-tools"
+    },
+    {
+      "package": "libc-bin",
+      "path": "/usr/libexec/safelibs/locale-tools/iconvconfig.backend",
+      "source_path": "build/testroot.pristine/usr/sbin/iconvconfig",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "tracked_backend_binary",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "verification": "locale-tools"
+    },
+    {
+      "package": "libc-bin",
+      "path": "/usr/libexec/safelibs/locale-tools/locale.backend",
+      "source_path": "build/testroot.pristine/usr/bin/locale",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "tracked_backend_binary",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "verification": "locale-tools"
+    },
+    {
+      "package": "libc-bin",
+      "path": "/usr/libexec/safelibs/locale-tools/localedef.backend",
+      "source_path": "build/testroot.pristine/usr/bin/localedef",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "tracked_backend_binary",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "verification": "locale-tools"
+    },
+    {
+      "package": "libc-bin",
       "path": "/usr/libexec/safelibs/runtime-tools/pldd.backend",
       "source_path": "build/testroot.pristine/usr/bin/pldd",
       "source_origin": "build_testroot",
@@ -14374,8 +14426,8 @@
     {
       "package": "libc-bin",
       "path": "/usr/sbin/iconvconfig",
-      "source_path": "build/testroot.pristine/usr/sbin/iconvconfig",
-      "source_origin": "build_testroot",
+      "source_path": "safe/crates/libc-support-tools/src/locale_tools.rs",
+      "source_origin": "safe_rust",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
@@ -14400,8 +14452,8 @@
     {
       "package": "locales",
       "path": "/usr/sbin/locale-gen",
-      "source_path": "original/debian/local/usr_sbin/locale-gen",
-      "source_origin": "debian_local",
+      "source_path": "safe/debian/local/usr_sbin/locale-gen",
+      "source_origin": "safe_local",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "script_asset",
@@ -14439,8 +14491,8 @@
     {
       "package": "locales",
       "path": "/usr/sbin/update-locale",
-      "source_path": "original/debian/local/usr_sbin/update-locale",
-      "source_origin": "debian_local",
+      "source_path": "safe/debian/local/usr_sbin/update-locale",
+      "source_origin": "safe_local",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "script_asset",
@@ -14452,8 +14504,8 @@
     {
       "package": "locales",
       "path": "/usr/sbin/validlocale",
-      "source_path": "original/debian/local/usr_sbin/validlocale",
-      "source_origin": "debian_local",
+      "source_path": "safe/debian/local/usr_sbin/validlocale",
+      "source_origin": "safe_local",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "script_asset",
@@ -14474,6 +14526,19 @@
       "symlink_target": null,
       "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "dev-and-time-tools"
+    },
+    {
+      "package": "locales",
+      "path": "/usr/share/i18n/SUPPORTED",
+      "source_path": "safe/generated/localedata/SUPPORTED",
+      "source_origin": "safe/generated/localedata/SUPPORTED",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "data_asset",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "verification": "locale-tools"
     },
     {
       "package": "locales",
@@ -23123,12 +23188,12 @@
     {
       "package": "locales",
       "path": "/usr/share/locales/install-language-pack",
-      "source_path": "original/debian/local/usr_share_locales/install-language-pack",
-      "source_origin": "debian_local",
+      "source_path": "safe/debian/local/usr_share_locales/install-language-pack",
+      "source_origin": "safe_local",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "script_asset",
-      "executable": false,
+      "executable": true,
       "symlink_target": null,
       "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "locale-tools"
@@ -23136,12 +23201,12 @@
     {
       "package": "locales",
       "path": "/usr/share/locales/remove-language-pack",
-      "source_path": "original/debian/local/usr_share_locales/remove-language-pack",
-      "source_origin": "debian_local",
+      "source_path": "safe/debian/local/usr_share_locales/remove-language-pack",
+      "source_origin": "safe_local",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "script_asset",
-      "executable": false,
+      "executable": true,
       "symlink_target": null,
       "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "locale-tools"

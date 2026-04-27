@@ -6336,15 +6336,15 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libBrokenLocale.so",
-      "source_path": "build/testroot.pristine/usr/lib64/libBrokenLocale.so",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libBrokenLocale.so.1",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
-      "executable": true,
+      "executable": false,
       "symlink_target": "../../lib64/libBrokenLocale.so.1",
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "verification": "libc-family-cutover"
     },
     {
       "package": "libc6-dev",
@@ -6369,7 +6369,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libanl.so.1",
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -6395,7 +6395,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -6408,7 +6408,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libc_malloc_debug.so.0",
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -6538,7 +6538,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libnss_compat.so.2",
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -6551,7 +6551,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libnss_hesiod.so.2",
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -6577,7 +6577,7 @@
       "asset_kind": "generated_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -6603,7 +6603,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libresolv.so.2",
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "network-tools"
     },
     {
@@ -6629,7 +6629,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libthread_db.so.1",
-      "owner_phase": "impl_07_nss_resolver_nscd",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {

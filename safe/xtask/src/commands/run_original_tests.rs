@@ -406,6 +406,7 @@ fn run_one(config: &RunConfig, entry: &TestsManifestEntry) -> Result<()> {
         "tests-special::support::tst-support_record_failure-2::base" => {
             run_support_record_failure_script(config)
         }
+        "tests::posix::tst-dir::base" => run_source_backed_tst_dir(config, entry),
         "xtests::resolv::tst-resolv-rotate::base" => {
             let binary = compile_safe_c_test(entry, &config.build_root)?;
             run_host_test_binary(config, &binary, &[], false)
@@ -738,6 +739,10 @@ fn live_test_args(
     binary: &Path,
     config: &RunConfig,
 ) -> Result<Vec<String>> {
+    let objdir = build_artifact_hints(&config.build_root, entry)
+        .into_iter()
+        .next()
+        .unwrap_or_else(|| config.build_root.join(&entry.subdir));
     let loader_restart_args = vec![
         "--".to_string(),
         safe_loader_path(config).display().to_string(),
@@ -745,7 +750,7 @@ fn live_test_args(
         runtime_library_path(config),
         build_root_relative_arg(binary, &config.build_root),
     ];
-    let child_command = host_test_program_command(config, binary, true)?;
+    let child_command = host_test_program_command(config, binary, true);
     match entry.catalog_id.as_str() {
         "tests::elf::tst-audit18::base"
         | "tests::elf::tst-audit19b::base"
@@ -770,7 +775,14 @@ fn live_test_args(
             "--command".to_string(),
             format!("{child_command} --child"),
         ]),
-        _ => Ok(Vec::new()),
+        _ => resolve_upstream_test_args(
+            config,
+            entry,
+            Some(objdir.as_path()),
+            Some(&config.build_root),
+            Some(objdir.as_path()),
+            Some(binary),
+        ),
     }
 }
 
@@ -792,30 +804,32 @@ fn resolve_upstream_test_args(
     config: &RunConfig,
     entry: &TestsManifestEntry,
     objpfx_override: Option<&Path>,
+    common_objdir_override: Option<&Path>,
     staged_subdir: Option<&Path>,
+    binary: Option<&Path>,
 ) -> Result<Vec<String>> {
     let variable = format!("{}-ARGS", manifest_entry_name(entry)?);
     for makefile_path in makefiles_for_manifest_entry(entry)? {
         if let Some(raw_value) = resolve_make_variable(&makefile_path, &variable)? {
-            return Ok(split_shell_words(&raw_value)?
+            let source_dir = upstream_source_context_dir(entry);
+            let expanded = expand_upstream_make_value_with_objpfx(
+                config,
+                entry,
+                objpfx_override,
+                common_objdir_override,
+                binary,
+                &raw_value,
+            );
+            return Ok(split_shell_words(&expanded)?
                 .into_iter()
-                .map(|token| expand_upstream_make_value_with_objpfx(
-                    config,
-                    entry,
-                    objpfx_override,
-                    &token,
-                ))
                 .map(|token| {
-                    if token.starts_with('/') {
-                        return token;
-                    }
-                    if let Some(staged_subdir) = staged_subdir {
-                        let candidate = staged_subdir.join(&token);
-                        if candidate.exists() {
-                            return candidate.display().to_string();
-                        }
-                    }
-                    token
+                    resolve_upstream_arg_token(
+                        config,
+                        entry,
+                        staged_subdir,
+                        source_dir.as_deref(),
+                        &token,
+                    )
                 })
                 .filter(|token| !token.starts_with("$(") && !token.starts_with("${"))
                 .collect());
@@ -833,9 +847,9 @@ fn split_shell_words(value: &str) -> Result<Vec<String>> {
         match quote {
             Some(active) if ch == active => quote = None,
             Some(_) if ch == '\\' => {
-                let next = chars
-                    .next()
-                    .ok_or_else(|| anyhow!("unterminated escape in make variable value: {value}"))?;
+                let next = chars.next().ok_or_else(|| {
+                    anyhow!("unterminated escape in make variable value: {value}")
+                })?;
                 current.push(next);
             }
             Some(_) => current.push(ch),
@@ -846,9 +860,9 @@ fn split_shell_words(value: &str) -> Result<Vec<String>> {
                 }
             }
             None if ch == '\\' => {
-                let next = chars
-                    .next()
-                    .ok_or_else(|| anyhow!("unterminated escape in make variable value: {value}"))?;
+                let next = chars.next().ok_or_else(|| {
+                    anyhow!("unterminated escape in make variable value: {value}")
+                })?;
                 current.push(next);
             }
             None => current.push(ch),
@@ -864,13 +878,23 @@ fn split_shell_words(value: &str) -> Result<Vec<String>> {
 }
 
 fn manifest_entry_name(entry: &TestsManifestEntry) -> Result<&str> {
-    entry.catalog_id
-        .split("::")
-        .nth(2)
-        .ok_or_else(|| anyhow!("failed to derive manifest entry name from {}", entry.catalog_id))
+    entry.catalog_id.split("::").nth(2).ok_or_else(|| {
+        anyhow!(
+            "failed to derive manifest entry name from {}",
+            entry.catalog_id
+        )
+    })
 }
 
 fn resolve_make_variable(path: &Path, variable: &str) -> Result<Option<String>> {
+    let value = resolve_make_variable_shallow(path, variable)?;
+    value
+        .as_deref()
+        .map(|value| expand_make_variable_refs(path, value, 0))
+        .transpose()
+}
+
+fn resolve_make_variable_shallow(path: &Path, variable: &str) -> Result<Option<String>> {
     let mut value: Option<String> = None;
     for line in read_make_logical_lines(path)? {
         let Some((left, op, right)) = split_make_assignment(&line) else {
@@ -892,6 +916,66 @@ fn resolve_make_variable(path: &Path, variable: &str) -> Result<Option<String>> 
         }
     }
     Ok(value)
+}
+
+fn expand_make_variable_refs(path: &Path, value: &str, depth: usize) -> Result<String> {
+    if depth > 8 {
+        bail!(
+            "make variable expansion exceeded recursion limit in {}",
+            path.display()
+        );
+    }
+
+    let mut expanded = String::new();
+    let mut chars = value.chars().peekable();
+    while let Some(ch) = chars.next() {
+        if ch != '$' {
+            expanded.push(ch);
+            continue;
+        }
+
+        let Some(open) = chars.next() else {
+            expanded.push(ch);
+            break;
+        };
+        let close = match open {
+            '(' => ')',
+            '{' => '}',
+            other => {
+                expanded.push('$');
+                expanded.push(other);
+                continue;
+            }
+        };
+
+        let mut name = String::new();
+        let mut terminated = false;
+        for next in chars.by_ref() {
+            if next == close {
+                terminated = true;
+                break;
+            }
+            name.push(next);
+        }
+
+        if !terminated {
+            expanded.push('$');
+            expanded.push(open);
+            expanded.push_str(&name);
+            break;
+        }
+
+        if let Some(nested) = resolve_make_variable_shallow(path, &name)? {
+            expanded.push_str(&expand_make_variable_refs(path, &nested, depth + 1)?);
+        } else {
+            expanded.push('$');
+            expanded.push(open);
+            expanded.push_str(&name);
+            expanded.push(close);
+        }
+    }
+
+    Ok(expanded)
 }
 
 fn read_make_logical_lines(path: &Path) -> Result<Vec<String>> {
@@ -1042,7 +1126,10 @@ fn ensure_generated_locale(config: &RunConfig, locale: &str) -> Result<()> {
     run_test_command(&mut command)
 }
 
-fn ensure_generated_timezone_testdata(config: &RunConfig, entry: &TestsManifestEntry) -> Result<()> {
+fn ensure_generated_timezone_testdata(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+) -> Result<()> {
     if entry.subdir != "timezone" {
         return Ok(());
     }
@@ -1135,36 +1222,58 @@ fn expand_upstream_make_value(
     entry: &TestsManifestEntry,
     value: &str,
 ) -> String {
-    expand_upstream_make_value_with_objpfx(config, entry, None, value)
+    expand_upstream_make_value_with_objpfx(config, entry, None, None, None, value)
 }
 
 fn expand_upstream_make_value_with_objpfx(
     config: &RunConfig,
     entry: &TestsManifestEntry,
     objpfx_override: Option<&Path>,
+    common_objdir_override: Option<&Path>,
+    binary: Option<&Path>,
     value: &str,
 ) -> String {
     let objpfx_root = objpfx_override
         .map(Path::to_path_buf)
         .unwrap_or_else(|| build_artifact_hints(&config.build_root, entry)[0].clone());
     let objpfx = format!("{}/", objpfx_root.display());
-    let common_objpfx = format!("{}/", config.build_root.display());
+    let common_objdir = common_objdir_override
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| config.build_root.clone());
+    let common_objpfx = format!("{}/", common_objdir.display());
+    let host_test_program_cmd = binary
+        .map(|binary| host_test_program_command(config, binary, false))
+        .unwrap_or_else(|| "$(host-test-program-cmd)".to_string());
     value
         .replace("$(objpfx)", &objpfx)
         .replace("${objpfx}", &objpfx)
+        .replace("$(objdir)", &objpfx_root.display().to_string())
+        .replace("${objdir}", &objpfx_root.display().to_string())
         .replace("$(common-objpfx)", &common_objpfx)
         .replace("${common-objpfx}", &common_objpfx)
+        .replace("$(common-objdir)", &common_objdir.display().to_string())
+        .replace("${common-objdir}", &common_objdir.display().to_string())
+        .replace("$(host-test-program-cmd)", &host_test_program_cmd)
+        .replace("${host-test-program-cmd}", &host_test_program_cmd)
         .replace("$(posixrules-file)", "posixrules")
         .replace("${posixrules-file}", "posixrules")
         .replace("$(localtime-file)", "/etc/localtime")
         .replace("${localtime-file}", "/etc/localtime")
         .replace(
             "$(zonedir)",
-            &config.build_root.join("timezone/testdata").display().to_string(),
+            &config
+                .build_root
+                .join("timezone/testdata")
+                .display()
+                .to_string(),
         )
         .replace(
             "${zonedir}",
-            &config.build_root.join("timezone/testdata").display().to_string(),
+            &config
+                .build_root
+                .join("timezone/testdata")
+                .display()
+                .to_string(),
         )
         .replace(
             "$(testdata)",
@@ -1780,11 +1889,7 @@ fn build_root_relative_arg(path: &Path, build_root: &Path) -> String {
     }
 }
 
-fn host_test_program_command(
-    config: &RunConfig,
-    binary: &Path,
-    child_mode: bool,
-) -> Result<String> {
+fn host_test_program_command(config: &RunConfig, binary: &Path, child_mode: bool) -> String {
     let binary_arg = build_root_relative_arg(binary, &config.build_root);
     let mut command = if binary
         .file_name()
@@ -1798,7 +1903,7 @@ fn host_test_program_command(
     if child_mode {
         command.push_str(" --child");
     }
-    Ok(command)
+    command
 }
 
 fn run_test_command(command: &mut Command) -> Result<()> {
@@ -1876,6 +1981,7 @@ fn try_run_source_backed_entry(
 
     let compiled = compile_entry_against_install_root(config, entry)?;
     ensure_generated_runtime_assets(config, entry)?;
+    prepare_script_objpfx_layout(entry, &compiled)?;
     let staged_subdir = compiled.work_dir.join(&entry.subdir);
     let extra_args = resolve_source_backed_test_args(config, entry, &compiled, &staged_subdir)?;
     let current_dir = staged_subdir.clone();
@@ -1950,6 +2056,7 @@ fn try_run_script_generated_source_entry(
         Some("original/stdio-common/tst-printf-bz18872.c"),
     )?;
     ensure_generated_runtime_assets(config, entry)?;
+    prepare_script_objpfx_layout(entry, &compiled)?;
     let staged_subdir = compiled.work_dir.join(&entry.subdir);
     let extra_args = resolve_source_backed_test_args(config, entry, &compiled, &staged_subdir)?;
     Ok(Some(run_host_test_binary_in_dir(
@@ -1963,7 +2070,8 @@ fn try_run_script_generated_source_entry(
 }
 
 fn source_backed_input_path(entry: &TestsManifestEntry) -> Option<PathBuf> {
-    entry.support_paths
+    entry
+        .support_paths
         .iter()
         .find(|path| path.ends_with(".input"))
         .map(repo_path)
@@ -1982,20 +2090,22 @@ fn resolve_source_backed_test_args(
             .map(|path| format!("-idirafter {}", path.display()))
             .collect::<Vec<_>>()
             .join(" ");
-        return Ok(vec![
-            compiler_wrapper.display().to_string(),
-            include_flags,
-        ]);
+        return Ok(vec![compiler_wrapper.display().to_string(), include_flags]);
     }
     resolve_upstream_test_args(
         config,
         entry,
+        Some(staged_subdir),
         Some(&compiled.work_dir),
         Some(staged_subdir),
+        Some(&compiled.binary),
     )
 }
 
-fn prepare_isomac_compiler_wrapper(config: &RunConfig, compiled: &CompiledEntry) -> Result<PathBuf> {
+fn prepare_isomac_compiler_wrapper(
+    config: &RunConfig,
+    compiled: &CompiledEntry,
+) -> Result<PathBuf> {
     let wrapper = compiled.work_dir.join("isomac-cc.sh");
     touch_executable_text(
         &wrapper,
@@ -2178,10 +2288,7 @@ fn staged_dependency_path(
             .parent()
             .ok_or_else(|| anyhow!("{} has no parent directory", staged_source.display()))?
             .to_path_buf(),
-        IncludeKind::Angle if include_path_is_source_like(include) => staged_source
-            .parent()
-            .ok_or_else(|| anyhow!("{} has no parent directory", staged_source.display()))?
-            .to_path_buf(),
+        IncludeKind::Angle if include_path_is_source_like(include) => work_dir.to_path_buf(),
         IncludeKind::Angle
             if include_path
                 .components()
@@ -2252,6 +2359,9 @@ fn resolve_staged_dependency_source(
         .components()
         .any(|component| matches!(component, Component::CurDir | Component::ParentDir));
     if matches!(kind, IncludeKind::Quote) || uses_relative_components {
+        candidates.push(source_dir.join(include));
+    }
+    if include_path_is_source_like(include) {
         candidates.push(source_dir.join(include));
     }
     if prefer_original_wrapper {
@@ -2876,7 +2986,7 @@ fn compile_entry_against_install_root_with_source(
         .with_context(|| format!("failed to create {}", work_dir.display()))?;
     stage_entry_support_paths(entry, &work_dir)?;
     stage_entry_makefiles(entry, &work_dir)?;
-    stage_source_backed_runtime_assets(config, &work_dir)?;
+    stage_source_backed_runtime_assets(config, entry, &work_dir)?;
     stage_internal_header_overlay(config, &work_dir)?;
     let staged_prelude = stage_glibc_source_prelude(config, entry, &work_dir)?;
     let staged_source = stage_source_tree(config, entry, source, &work_dir, source_hint)?;
@@ -3006,11 +3116,11 @@ fn referenced_companion_dsos(entry: &TestsManifestEntry, source: &Path) -> Resul
 
 fn companion_dsos_from_makefiles(entry: &TestsManifestEntry) -> Result<Vec<String>> {
     let stem = artifact_stem(entry)?;
-    let target = format!("$(objpfx){stem}:");
+    let targets = [format!("$(objpfx){stem}:"), format!("$(objpfx){stem}.out:")];
     let mut basenames = BTreeSet::new();
     for makefile in makefiles_for_manifest_entry(entry)? {
         for line in read_make_logical_lines(&makefile)? {
-            let Some(rest) = line.strip_prefix(&target) else {
+            let Some(rest) = targets.iter().find_map(|target| line.strip_prefix(target)) else {
                 continue;
             };
             for token in rest.split_whitespace() {
@@ -3232,7 +3342,11 @@ fn stage_entry_makefiles(entry: &TestsManifestEntry, work_dir: &Path) -> Result<
     Ok(())
 }
 
-fn stage_source_backed_runtime_assets(config: &RunConfig, work_dir: &Path) -> Result<()> {
+fn stage_source_backed_runtime_assets(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+    work_dir: &Path,
+) -> Result<()> {
     let iconv_testdata = config.build_root.join("iconvdata/testdata");
     if iconv_testdata.exists() {
         let target = work_dir.join("iconvdata/testdata");
@@ -3245,7 +3359,90 @@ fn stage_source_backed_runtime_assets(config: &RunConfig, work_dir: &Path) -> Re
                 .with_context(|| format!("failed to create {}", target.display()))?;
         }
     }
+    stage_makefile_generated_assets(entry, work_dir)?;
     Ok(())
+}
+
+fn stage_makefile_generated_assets(entry: &TestsManifestEntry, work_dir: &Path) -> Result<()> {
+    match entry.catalog_id.as_str() {
+        "tests::posix::runptests::base" => materialize_posix_regex_driver_header(
+            work_dir,
+            "ptestcases.h",
+            "PTESTS",
+            "PTESTS2C.sed",
+        )?,
+        "tests::posix::runtests::base" => {
+            materialize_posix_regex_driver_header(work_dir, "testcases.h", "TESTS", "TESTS2C.sed")?
+        }
+        _ => {}
+    }
+
+    for dependency in makefile_out_target_dependencies(entry)? {
+        if dependency != "gconv-modules" {
+            continue;
+        }
+        let source = repo_root().join("original/iconv/test-gconv-modules");
+        let target = work_dir.join("gconv-modules");
+        if !target.exists() {
+            copy_file_or_symlink(&source, &target)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn materialize_posix_regex_driver_header(
+    work_dir: &Path,
+    output_name: &str,
+    input_name: &str,
+    sed_name: &str,
+) -> Result<()> {
+    let target = work_dir.join("posix").join(output_name);
+    if target.exists() {
+        return Ok(());
+    }
+
+    let original_posix = repo_root().join("original/posix");
+    let output = Command::new("sed")
+        .env("LC_ALL", "C")
+        .arg("-f")
+        .arg(original_posix.join(sed_name))
+        .arg(original_posix.join(input_name))
+        .output()
+        .with_context(|| format!("failed to generate {}", target.display()))?;
+    if !output.status.success() {
+        bail!(
+            "failed to generate {}: {}",
+            target.display(),
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+    fs::write(&target, output.stdout)
+        .with_context(|| format!("failed to write {}", target.display()))?;
+    Ok(())
+}
+
+fn makefile_out_target_dependencies(entry: &TestsManifestEntry) -> Result<Vec<String>> {
+    let stem = artifact_stem(entry)?;
+    let target = format!("$(objpfx){stem}.out:");
+    let mut basenames = BTreeSet::new();
+    for makefile in makefiles_for_manifest_entry(entry)? {
+        for line in read_make_logical_lines(&makefile)? {
+            let Some(rest) = line.strip_prefix(&target) else {
+                continue;
+            };
+            for token in rest.split_whitespace() {
+                let basename = token
+                    .trim_start_matches("$(objpfx)")
+                    .trim_start_matches("${objpfx}")
+                    .rsplit('/')
+                    .next()
+                    .unwrap_or(token);
+                basenames.insert(basename.to_string());
+            }
+        }
+    }
+    Ok(basenames.into_iter().collect())
 }
 
 fn stage_internal_header_overlay(config: &RunConfig, work_dir: &Path) -> Result<()> {
@@ -3299,10 +3496,7 @@ fn stage_stack_align_header_chain(work_dir: &Path) -> Result<()> {
         &repo_root().join("original/sysdeps/generic/tst-stack-align.h"),
         &work_dir.join("sysdeps/generic/tst-stack-align.h"),
     )?;
-    let patched = original.replace(
-        needle,
-        "#include \"sysdeps/generic/tst-stack-align.h\"",
-    );
+    let patched = original.replace(needle, "#include \"sysdeps/generic/tst-stack-align.h\"");
     fs::write(&wrapper, patched)
         .with_context(|| format!("failed to write {}", wrapper.display()))?;
     Ok(())
@@ -3375,7 +3569,10 @@ fn makefiles_for_manifest_entry(entry: &TestsManifestEntry) -> Result<Vec<PathBu
     }
     if let Some(source_path) = &entry.source_path {
         let original_root = repo_root().join("original");
-        let mut parent = repo_root().join(source_path).parent().map(Path::to_path_buf);
+        let mut parent = repo_root()
+            .join(source_path)
+            .parent()
+            .map(Path::to_path_buf);
         while let Some(dir) = parent {
             let makefile = dir.join("Makefile");
             if makefile.exists() && seen.insert(makefile.clone()) {
@@ -3471,6 +3668,89 @@ fn prepare_script_objpfx_layout(
     Ok(())
 }
 
+fn upstream_source_context_dir(entry: &TestsManifestEntry) -> Option<PathBuf> {
+    let safe_source = repo_path(&entry.safe_path);
+    if let Some(parent) = safe_source.parent() {
+        if parent.exists() {
+            return Some(parent.to_path_buf());
+        }
+    }
+    entry
+        .source_path
+        .as_ref()
+        .and_then(|path| repo_root().join(path).parent().map(Path::to_path_buf))
+}
+
+fn resolve_upstream_arg_token(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+    staged_subdir: Option<&Path>,
+    source_dir: Option<&Path>,
+    token: &str,
+) -> String {
+    if token.starts_with('/') || token.contains('=') {
+        return token.to_string();
+    }
+
+    let mut candidates = Vec::new();
+    if let Some(staged_subdir) = staged_subdir {
+        candidates.push(staged_subdir.join(token));
+    }
+    if let Some(source_dir) = source_dir {
+        candidates.push(source_dir.join(token));
+    }
+    candidates.push(config.build_root.join(&entry.subdir).join(token));
+    candidates.push(config.build_root.join(token));
+    candidates.push(repo_path(format!("safe/tests/{}/{}", entry.subdir, token)));
+    candidates.push(repo_root().join("original").join(&entry.subdir).join(token));
+    candidates.push(repo_root().join("original").join(token));
+
+    for candidate in candidates {
+        if candidate.exists() {
+            return candidate.display().to_string();
+        }
+    }
+
+    token.to_string()
+}
+
+fn run_source_backed_tst_dir(config: &RunConfig, entry: &TestsManifestEntry) -> Result<()> {
+    let compiled = compile_entry_against_install_root(config, entry)?;
+    prepare_script_objpfx_layout(entry, &compiled)?;
+    let staged_subdir = compiled.work_dir.join(&entry.subdir);
+    let binary_name = compiled.binary.file_name().ok_or_else(|| {
+        anyhow!(
+            "failed to derive binary name from {}",
+            compiled.binary.display()
+        )
+    })?;
+    let staged_binary = staged_subdir.join(binary_name);
+    if staged_binary.exists() {
+        fs::remove_file(&staged_binary)
+            .with_context(|| format!("failed to remove {}", staged_binary.display()))?;
+    }
+    fs::copy(&compiled.binary, &staged_binary)
+        .with_context(|| format!("failed to copy {}", staged_binary.display()))?;
+    let permissions = fs::metadata(&compiled.binary)
+        .with_context(|| format!("failed to stat {}", compiled.binary.display()))?
+        .permissions();
+    fs::set_permissions(&staged_binary, permissions)
+        .with_context(|| format!("failed to chmod {}", staged_binary.display()))?;
+    run_host_test_binary_in_dir(
+        config,
+        &staged_subdir,
+        &staged_binary,
+        &[
+            staged_subdir.display().to_string(),
+            staged_subdir.display().to_string(),
+            compiled.work_dir.display().to_string(),
+            staged_binary.display().to_string(),
+        ],
+        false,
+        None,
+    )
+}
+
 fn safe_loader_prefix_string(config: &RunConfig) -> String {
     format!(
         "{} --library-path {}",
@@ -3548,7 +3828,11 @@ fn socket_consts_cc(config: &RunConfig) -> String {
         "gcc".to_string(),
         format!("--sysroot={}", config.install_root.display()),
         "-I".to_string(),
-        config.install_root.join("usr/include").display().to_string(),
+        config
+            .install_root
+            .join("usr/include")
+            .display()
+            .to_string(),
         "-I".to_string(),
         config.build_root.display().to_string(),
         "-I".to_string(),

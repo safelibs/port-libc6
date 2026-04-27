@@ -1,9 +1,11 @@
 use crate::loader_tools::{
     LDCONFIG_BACKEND_INSTALL_PATH, LDSO_BACKEND_INSTALL_PATH, LOADER_TOOL_BINARY_NAME,
 };
-use crate::network_tools::{
-    GETENT_SOURCE_PATH, NETWORK_TOOL_BINARY_NAME, NSCD_SOURCE_PATH,
+use crate::locale_tools::{
+    ICONVCONFIG_BACKEND_INSTALL_PATH, ICONV_BACKEND_INSTALL_PATH, LOCALEDEF_BACKEND_INSTALL_PATH,
+    LOCALE_BACKEND_INSTALL_PATH, LOCALE_TOOL_BINARY_NAME, LOCALE_TOOL_SOURCE_PATH,
 };
+use crate::network_tools::{GETENT_SOURCE_PATH, NETWORK_TOOL_BINARY_NAME, NSCD_SOURCE_PATH};
 use crate::runtime_tools::{PLDD_BACKEND_INSTALL_PATH, RUNTIME_TOOL_BINARY_NAME};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -48,6 +50,26 @@ const PLDD_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
     source_path: "build/testroot.pristine/usr/bin/pldd",
 }];
 
+const ICONV_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
+    install_path: ICONV_BACKEND_INSTALL_PATH,
+    source_path: "build/testroot.pristine/usr/bin/iconv",
+}];
+
+const ICONVCONFIG_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
+    install_path: ICONVCONFIG_BACKEND_INSTALL_PATH,
+    source_path: "build/testroot.pristine/usr/sbin/iconvconfig",
+}];
+
+const LOCALE_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
+    install_path: LOCALE_BACKEND_INSTALL_PATH,
+    source_path: "build/testroot.pristine/usr/bin/locale",
+}];
+
+const LOCALEDEF_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
+    install_path: LOCALEDEF_BACKEND_INSTALL_PATH,
+    source_path: "build/testroot.pristine/usr/bin/localedef",
+}];
+
 const NO_BACKEND_ASSETS: &[BackendAsset] = &[];
 
 const REQUIRED_TOOLS: &[RequiredTool] = &[
@@ -85,8 +107,10 @@ const REQUIRED_TOOLS: &[RequiredTool] = &[
         entrypoint: "/usr/bin/iconv",
         owner_phase: "impl_08_locale_iconv_posix_parsers",
         verification: "locale-tools",
-        kind: RequiredToolKind::FallbackWrapper {
-            fallback_source_path: "build/testroot.pristine/usr/bin/iconv",
+        kind: RequiredToolKind::RustEntrypoint {
+            binary_name: LOCALE_TOOL_BINARY_NAME,
+            public_source_path: LOCALE_TOOL_SOURCE_PATH,
+            backend_assets: ICONV_BACKEND_ASSETS,
         },
     },
     RequiredTool {
@@ -116,8 +140,10 @@ const REQUIRED_TOOLS: &[RequiredTool] = &[
         entrypoint: "/usr/bin/locale",
         owner_phase: "impl_08_locale_iconv_posix_parsers",
         verification: "locale-tools",
-        kind: RequiredToolKind::FallbackWrapper {
-            fallback_source_path: "build/testroot.pristine/usr/bin/locale",
+        kind: RequiredToolKind::RustEntrypoint {
+            binary_name: LOCALE_TOOL_BINARY_NAME,
+            public_source_path: LOCALE_TOOL_SOURCE_PATH,
+            backend_assets: LOCALE_BACKEND_ASSETS,
         },
     },
     RequiredTool {
@@ -125,8 +151,10 @@ const REQUIRED_TOOLS: &[RequiredTool] = &[
         entrypoint: "/usr/bin/localedef",
         owner_phase: "impl_08_locale_iconv_posix_parsers",
         verification: "locale-tools",
-        kind: RequiredToolKind::FallbackWrapper {
-            fallback_source_path: "build/testroot.pristine/usr/bin/localedef",
+        kind: RequiredToolKind::RustEntrypoint {
+            binary_name: LOCALE_TOOL_BINARY_NAME,
+            public_source_path: LOCALE_TOOL_SOURCE_PATH,
+            backend_assets: LOCALEDEF_BACKEND_ASSETS,
         },
     },
     RequiredTool {
@@ -163,8 +191,10 @@ const REQUIRED_TOOLS: &[RequiredTool] = &[
         entrypoint: "/usr/sbin/iconvconfig",
         owner_phase: "impl_08_locale_iconv_posix_parsers",
         verification: "locale-tools",
-        kind: RequiredToolKind::FallbackWrapper {
-            fallback_source_path: "build/testroot.pristine/usr/sbin/iconvconfig",
+        kind: RequiredToolKind::RustEntrypoint {
+            binary_name: LOCALE_TOOL_BINARY_NAME,
+            public_source_path: LOCALE_TOOL_SOURCE_PATH,
+            backend_assets: ICONVCONFIG_BACKEND_ASSETS,
         },
     },
     RequiredTool {
@@ -185,51 +215,6 @@ const REQUIRED_TOOLS: &[RequiredTool] = &[
         verification: "dev-and-time-tools",
         kind: RequiredToolKind::FallbackWrapper {
             fallback_source_path: "build/testroot.pristine/usr/sbin/zic",
-        },
-    },
-    RequiredTool {
-        package: "locales",
-        entrypoint: "/usr/sbin/locale-gen",
-        owner_phase: "impl_08_locale_iconv_posix_parsers",
-        verification: "locale-tools",
-        kind: RequiredToolKind::FallbackWrapper {
-            fallback_source_path: "safe/debian/local/usr_sbin/locale-gen",
-        },
-    },
-    RequiredTool {
-        package: "locales",
-        entrypoint: "/usr/sbin/update-locale",
-        owner_phase: "impl_08_locale_iconv_posix_parsers",
-        verification: "locale-tools",
-        kind: RequiredToolKind::FallbackWrapper {
-            fallback_source_path: "safe/debian/local/usr_sbin/update-locale",
-        },
-    },
-    RequiredTool {
-        package: "locales",
-        entrypoint: "/usr/sbin/validlocale",
-        owner_phase: "impl_08_locale_iconv_posix_parsers",
-        verification: "locale-tools",
-        kind: RequiredToolKind::FallbackWrapper {
-            fallback_source_path: "safe/debian/local/usr_sbin/validlocale",
-        },
-    },
-    RequiredTool {
-        package: "locales",
-        entrypoint: "/usr/share/locales/install-language-pack",
-        owner_phase: "impl_08_locale_iconv_posix_parsers",
-        verification: "locale-tools",
-        kind: RequiredToolKind::FallbackWrapper {
-            fallback_source_path: "safe/debian/local/usr_share_locales/install-language-pack",
-        },
-    },
-    RequiredTool {
-        package: "locales",
-        entrypoint: "/usr/share/locales/remove-language-pack",
-        owner_phase: "impl_08_locale_iconv_posix_parsers",
-        verification: "locale-tools",
-        kind: RequiredToolKind::FallbackWrapper {
-            fallback_source_path: "safe/debian/local/usr_share_locales/remove-language-pack",
         },
     },
     RequiredTool {

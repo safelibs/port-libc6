@@ -20,9 +20,10 @@ pub fn run(args: Args) -> Result<()> {
         && args.smoke_set != "loader-tools"
         && args.smoke_set != "runtime-tools"
         && args.smoke_set != "network-tools"
+        && args.smoke_set != "locale-tools"
     {
         bail!(
-            "unsupported smoke set {}; expected basic-required-packages, libc-family-cutover, loader-tools, runtime-tools, or network-tools",
+            "unsupported smoke set {}; expected basic-required-packages, libc-family-cutover, loader-tools, runtime-tools, network-tools, or locale-tools",
             args.smoke_set
         );
     }
@@ -309,6 +310,84 @@ smoke_network_tools() {
   fi
 }
 
+smoke_locale_tools() {
+  log "Verifying locale-tool payloads from the committed install manifest"
+  jq -r '.entries[] | select(.verification == "locale-tools" and .shipped_status == "shipped") | [.package, .path] | @tsv' \
+    /workspace/safe/generated/install-manifests/required-packages.json | \
+  while IFS=$'\t' read -r pkg path; do
+    if [ ! -e "$path" ] && [ ! -L "$path" ]; then
+      printf 'missing installed locale-tool payload for %s: %s\n' "$pkg" "$path" >&2
+      exit 1
+    fi
+  done
+
+  log "Checking locale-tool entrypoints and backend inventory"
+  for path in \
+    /usr/bin/iconv \
+    /usr/bin/locale \
+    /usr/bin/localedef \
+    /usr/sbin/iconvconfig \
+    /usr/sbin/locale-gen \
+    /usr/sbin/update-locale \
+    /usr/sbin/validlocale \
+    /usr/share/locales/install-language-pack \
+    /usr/share/locales/remove-language-pack; do
+    test -x "$path"
+  done
+  for path in \
+    /usr/libexec/safelibs/locale-tools/iconv.backend \
+    /usr/libexec/safelibs/locale-tools/iconvconfig.backend \
+    /usr/libexec/safelibs/locale-tools/locale.backend \
+    /usr/libexec/safelibs/locale-tools/localedef.backend; do
+    test -x "$path"
+  done
+  for path in \
+    /usr/libexec/safelibs/fallback/libc-bin/iconv.real \
+    /usr/libexec/safelibs/fallback/libc-bin/locale.real \
+    /usr/libexec/safelibs/fallback/libc-bin/localedef.real \
+    /usr/libexec/safelibs/fallback/libc-bin/iconvconfig.real \
+    /usr/libexec/safelibs/fallback/locales/locale-gen.real \
+    /usr/libexec/safelibs/fallback/locales/update-locale.real \
+    /usr/libexec/safelibs/fallback/locales/validlocale.real \
+    /usr/libexec/safelibs/fallback/locales/install-language-pack.real \
+    /usr/libexec/safelibs/fallback/locales/remove-language-pack.real; do
+    if [ -e "$path" ]; then
+      printf 'phase-08 locale helper still ships fallback payload %s\n' "$path" >&2
+      exit 1
+    fi
+  done
+
+  log "Checking locale helper behavior from the installed packages"
+  printf 'hello world\n' | /usr/bin/iconv -f UTF-8 -t UTF-8 >/tmp/iconv-roundtrip.txt
+  grep -qx 'hello world' /tmp/iconv-roundtrip.txt
+
+  /usr/bin/locale charmap >/tmp/locale-charmap.txt
+  /usr/bin/locale -a >/tmp/locale-list.txt
+  /usr/bin/locale >/tmp/locale-defaults.txt
+  test -s /tmp/locale-charmap.txt
+  test -s /tmp/locale-list.txt
+  test -s /tmp/locale-defaults.txt
+
+  /usr/sbin/iconvconfig --help >/tmp/iconvconfig-help.txt
+  /usr/bin/localedef --help >/tmp/localedef-help.txt
+  test -s /tmp/iconvconfig-help.txt
+  test -s /tmp/localedef-help.txt
+
+  mkdir -p /var/lib/locales/supported.d
+  if ! grep -Eq '^[# ]*en_US.UTF-8 UTF-8$' /etc/locale.gen; then
+    printf '\nen_US.UTF-8 UTF-8\n' >> /etc/locale.gen
+  fi
+  /usr/sbin/locale-gen --keep-existing en_US.UTF-8 >/tmp/locale-gen.txt
+  /usr/bin/locale -a | tr 'A-Z' 'a-z' | grep -qx 'en_us.utf8'
+  /usr/sbin/update-locale LANG=en_US.UTF-8 LANGUAGE=en_US:en >/tmp/update-locale.txt 2>&1 || true
+  grep -Eq '^LANG=en_US.UTF-8$' /etc/locale.conf
+  test -L /etc/default/locale
+  test "$(readlink -f /etc/default/locale)" = "/etc/locale.conf"
+  /usr/sbin/validlocale en_US.UTF-8 >/tmp/validlocale.txt 2>&1
+  /usr/share/locales/install-language-pack en >/tmp/install-language-pack.txt 2>&1
+  /usr/share/locales/remove-language-pack en >/tmp/remove-language-pack.txt 2>&1 || true
+}
+
 smoke_libc_family_cutover() {
   log "Checking libc-family manifest provenance cutover"
   for manifest in \
@@ -317,11 +396,13 @@ smoke_libc_family_cutover() {
     /workspace/safe/generated/install-manifests/required-packages.json; do
     for path in \
       /usr/lib64/ld-linux-x86-64.so.2 \
+      /usr/lib64/libBrokenLocale.so.1 \
       /usr/lib64/libc.so.6 \
       /usr/lib64/libpthread.so.0 \
       /usr/lib64/libthread_db.so.1 \
       /usr/lib64/libc_malloc_debug.so.0 \
       /usr/lib64/libmemusage.so \
+      /usr/lib64/libBrokenLocale.so \
       /usr/lib64/libc.so \
       /usr/lib64/libthread_db.so \
       /usr/lib64/libc_malloc_debug.so; do
@@ -355,11 +436,13 @@ smoke_libc_family_cutover() {
 
   log "Comparing installed public payloads with staged safe-build sources"
   compare_public_payload /workspace/safe/generated/install-manifests/required-packages.json /usr/lib64/ld-linux-x86-64.so.2
+  compare_public_payload /workspace/safe/generated/install-manifests/required-packages.json /usr/lib64/libBrokenLocale.so.1
   compare_public_payload /workspace/safe/generated/install-manifests/required-packages.json /usr/lib64/libc.so.6
   compare_public_payload /workspace/safe/generated/install-manifests/required-packages.json /usr/lib64/libpthread.so.0
   compare_public_payload /workspace/safe/generated/install-manifests/required-packages.json /usr/lib64/libthread_db.so.1
   compare_public_payload /workspace/safe/generated/install-manifests/required-packages.json /usr/lib64/libc_malloc_debug.so.0
   compare_public_payload /workspace/safe/generated/install-manifests/required-packages.json /usr/lib64/libmemusage.so
+  compare_public_payload /workspace/safe/generated/baseline/package-files/libc6-dev.json /usr/lib64/libBrokenLocale.so
   compare_public_payload /workspace/safe/generated/baseline/package-files/libc6-dev.json /usr/lib64/libc.so
   compare_public_payload /workspace/safe/generated/baseline/package-files/libc6-dev.json /usr/lib64/libthread_db.so
   compare_public_payload /workspace/safe/generated/baseline/package-files/libc6-dev.json /usr/lib64/libc_malloc_debug.so
@@ -397,6 +480,9 @@ case "${SAFE_SMOKE_SET}" in
     ;;
   network-tools)
     smoke_network_tools
+    ;;
+  locale-tools)
+    smoke_locale_tools
     ;;
   *)
     printf 'unsupported smoke set in container: %s\n' "${SAFE_SMOKE_SET}" >&2

@@ -1,5 +1,5 @@
 [metadata]
-phase = "impl_07_nss_resolver_nscd"
+phase = "impl_08_locale_iconv_posix_parsers"
 notes = [
     "Status values remain baseline_captured until later implementation phases replace the relevant components under safe/**.",
     "All check-abi --all-dsos targets are seeded here so later phases consume a single committed status ledger.",
@@ -17,6 +17,8 @@ notes = [
     "stage-upstream-build is the only supported way to adopt or recreate safe/work/original-build for relink smokes, package derivation, and upstream-test execution.",
     "Phase 7 extends the safe-built public DSO cutover to the network-facing libc family while keeping explicit private backend inventory for the copied upstream payloads.",
     "The safe test tree carries every phase-7-owned hesiod, inet, nis, nss, resolv, socket, and sysdeps entry from the committed ownership plan together with the shared script rows and the tracked nscd zero-entry sentinel.",
+    "Phase 8 extends the safe-built public DSO cutover to libBrokenLocale, replaces the remaining locale/iconv helper wrappers with Rust frontends or first-class scripts, and keeps explicit backend inventory only where helper binaries still delegate to preserved upstream payloads.",
+    "The safe test tree carries every phase-8-owned conform, iconv, iconvdata, locale, localedata, posix, and sysdeps entry from the committed ownership plan together with the tracked po zero-entry sentinel and shared script rows.",
 ]
 
 [[dso_targets]]
@@ -31,7 +33,7 @@ abi_baseline = "safe/generated/baseline/abi/libBrokenLocale.json"
 component = "locale"
 dso_id = "libBrokenLocale"
 owner_phase = "impl_08_locale_iconv_posix_parsers"
-status = "hybrid_shell_available"
+status = "safe_public_dso_cutover_ported"
 
 [[dso_targets]]
 abi_baseline = "safe/generated/baseline/abi/libanl.json"
@@ -212,7 +214,7 @@ status = "safe_public_dso_cutover_ported"
 [[subsystems]]
 name = "locale-iconv-posix"
 owner_phase = "impl_08_locale_iconv_posix_parsers"
-status = "baseline_captured"
+status = "safe_public_dso_cutover_ported"
 
 [[subsystems]]
 name = "math-aux-dsos"
@@ -230,7 +232,7 @@ status = "safe_public_dso_cutover_ported"
 
 [[package_components]]
 package = "libc-bin"
-status = "loader_runtime_and_network_tools_rust_frontends_ported"
+status = "loader_runtime_network_and_locale_tools_rust_frontends_ported"
 
 [[package_components]]
 package = "libc6-dev"
@@ -242,7 +244,7 @@ status = "deb_packaging_verified"
 
 [[package_components]]
 package = "locales"
-status = "deb_packaging_verified"
+status = "locale_helper_scripts_directly_shipped"
 
 [[package_components]]
 package = "nscd"

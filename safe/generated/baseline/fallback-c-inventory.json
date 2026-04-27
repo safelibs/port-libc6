@@ -3,9 +3,9 @@
     "notes": [
       "This inventory is the single committed ledger of non-Rust source, script, assembly, template, and fallback assets planned under safe/**.",
       "Later phases must update this file in place instead of maintaining ad hoc fallback lists.",
-      "Phase 7 keeps the public libc-family DSOs on the safe build path, removes the temporary getent/nscd wrappers, and limits remaining copied-upstream runtime payloads to explicitly tracked private backend DSOs plus later-phase libc6-dev obligations."
+      "Phase 8 keeps the public libc-family DSOs on the safe build path, removes the temporary locale/iconv helper wrappers, and limits remaining copied-upstream helper payloads to explicitly tracked backend binaries plus later-phase libc6-dev obligations."
     ],
-    "phase": "impl_07_nss_resolver_nscd"
+    "phase": "impl_08_locale_iconv_posix_parsers"
   },
   "entries": [
     {
@@ -174,17 +174,6 @@
       "audit_notes": "Required-package startup or assembly shim carried by the safe port surface."
     },
     {
-      "path": "/usr/lib64/libBrokenLocale.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libBrokenLocale.so.1",
-      "classification": "hybrid_dso_shell",
-      "owning_phase": "impl_02_hybrid_abi_shell",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/lib64/libBrokenLocale.so.1"
-      ],
-      "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-    },
-    {
       "path": "/usr/lib64/libc_nonshared.a",
       "source_path": "build/testroot.pristine/usr/lib64/libc_nonshared.a",
       "classification": "fallback_static_archive",
@@ -309,7 +298,7 @@
       "path": "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2",
       "source_path": "build/testroot.pristine/usr/lib64/ld-linux-x86-64.so.2",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
+      "owning_phase": "impl_08_locale_iconv_posix_parsers",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2"
@@ -320,7 +309,7 @@
       "path": "/usr/libexec/safelibs/backends/libanl.so.1",
       "source_path": "build/testroot.pristine/usr/lib64/libanl.so.1",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
+      "owning_phase": "impl_08_locale_iconv_posix_parsers",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libanl.so.1"
@@ -331,7 +320,7 @@
       "path": "/usr/libexec/safelibs/backends/libc.so.6",
       "source_path": "build/testroot.pristine/usr/lib64/libc.so.6",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
+      "owning_phase": "impl_08_locale_iconv_posix_parsers",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libc.so.6"
@@ -342,7 +331,7 @@
       "path": "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0",
       "source_path": "build/testroot.pristine/usr/lib64/libc_malloc_debug.so.0",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
+      "owning_phase": "impl_08_locale_iconv_posix_parsers",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0"
@@ -353,7 +342,7 @@
       "path": "/usr/libexec/safelibs/backends/libmemusage.so",
       "source_path": "build/testroot.pristine/usr/lib64/libmemusage.so",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
+      "owning_phase": "impl_08_locale_iconv_posix_parsers",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libmemusage.so"
@@ -364,7 +353,7 @@
       "path": "/usr/libexec/safelibs/backends/libnsl.so.1",
       "source_path": "build/testroot.pristine/usr/lib64/libnsl.so.1",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
+      "owning_phase": "impl_08_locale_iconv_posix_parsers",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libnsl.so.1"
@@ -375,7 +364,7 @@
       "path": "/usr/libexec/safelibs/backends/libnss_compat.so.2",
       "source_path": "build/testroot.pristine/usr/lib64/libnss_compat.so.2",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
+      "owning_phase": "impl_08_locale_iconv_posix_parsers",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libnss_compat.so.2"
@@ -386,7 +375,7 @@
       "path": "/usr/libexec/safelibs/backends/libnss_dns.so.2",
       "source_path": "build/testroot.pristine/usr/lib64/libnss_dns.so.2",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
+      "owning_phase": "impl_08_locale_iconv_posix_parsers",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libnss_dns.so.2"
@@ -397,7 +386,7 @@
       "path": "/usr/libexec/safelibs/backends/libnss_files.so.2",
       "source_path": "build/testroot.pristine/usr/lib64/libnss_files.so.2",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
+      "owning_phase": "impl_08_locale_iconv_posix_parsers",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libnss_files.so.2"
@@ -408,7 +397,7 @@
       "path": "/usr/libexec/safelibs/backends/libnss_hesiod.so.2",
       "source_path": "build/testroot.pristine/usr/lib64/libnss_hesiod.so.2",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
+      "owning_phase": "impl_08_locale_iconv_posix_parsers",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libnss_hesiod.so.2"
@@ -419,7 +408,7 @@
       "path": "/usr/libexec/safelibs/backends/libpthread.so.0",
       "source_path": "build/testroot.pristine/usr/lib64/libpthread.so.0",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
+      "owning_phase": "impl_08_locale_iconv_posix_parsers",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libpthread.so.0"
@@ -430,7 +419,7 @@
       "path": "/usr/libexec/safelibs/backends/libresolv.so.2",
       "source_path": "build/testroot.pristine/usr/lib64/libresolv.so.2",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
+      "owning_phase": "impl_08_locale_iconv_posix_parsers",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libresolv.so.2"
@@ -441,7 +430,7 @@
       "path": "/usr/libexec/safelibs/backends/libthread_db.so.1",
       "source_path": "build/testroot.pristine/usr/lib64/libthread_db.so.1",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
+      "owning_phase": "impl_08_locale_iconv_posix_parsers",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libthread_db.so.1"
@@ -469,6 +458,50 @@
         "/usr/libexec/safelibs/loader-tools/ldconfig.backend"
       ],
       "audit_notes": "Rust frontend /usr/sbin/ldconfig delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
+    },
+    {
+      "path": "/usr/libexec/safelibs/locale-tools/iconv.backend",
+      "source_path": "build/testroot.pristine/usr/bin/iconv",
+      "classification": "tracked_backend_binary",
+      "owning_phase": "impl_08_locale_iconv_posix_parsers",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/locale-tools/iconv.backend"
+      ],
+      "audit_notes": "Rust frontend /usr/bin/iconv delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
+    },
+    {
+      "path": "/usr/libexec/safelibs/locale-tools/iconvconfig.backend",
+      "source_path": "build/testroot.pristine/usr/sbin/iconvconfig",
+      "classification": "tracked_backend_binary",
+      "owning_phase": "impl_08_locale_iconv_posix_parsers",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/locale-tools/iconvconfig.backend"
+      ],
+      "audit_notes": "Rust frontend /usr/sbin/iconvconfig delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
+    },
+    {
+      "path": "/usr/libexec/safelibs/locale-tools/locale.backend",
+      "source_path": "build/testroot.pristine/usr/bin/locale",
+      "classification": "tracked_backend_binary",
+      "owning_phase": "impl_08_locale_iconv_posix_parsers",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/locale-tools/locale.backend"
+      ],
+      "audit_notes": "Rust frontend /usr/bin/locale delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
+    },
+    {
+      "path": "/usr/libexec/safelibs/locale-tools/localedef.backend",
+      "source_path": "build/testroot.pristine/usr/bin/localedef",
+      "classification": "tracked_backend_binary",
+      "owning_phase": "impl_08_locale_iconv_posix_parsers",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/locale-tools/localedef.backend"
+      ],
+      "audit_notes": "Rust frontend /usr/bin/localedef delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
     },
     {
       "path": "/usr/libexec/safelibs/runtime-tools/pldd.backend",

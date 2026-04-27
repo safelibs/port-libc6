@@ -1,5 +1,5 @@
 [metadata]
-phase = "impl_07_nss_resolver_nscd"
+phase = "impl_08_locale_iconv_posix_parsers"
 notes = [
     "Required-package baselines remain derived from the checked-in build/testroot.pristine tree, while the committed packaging surface now lives under safe/debian/** and safe/generated/packaging/package-build-manifest.json.",
     "Later phases must consume the committed safe packaging files in place instead of reading undeclared inputs from original/debian/**.",
@@ -9,6 +9,7 @@ notes = [
     "Phase 5 keeps required package manifests in place, switches runtime entrypoints such as pldd to Rust frontends, and explicitly tracks any remaining runtime or loader backend binaries.",
     "Phase 6 keeps required package manifests in place, cuts the first libc-family public DSOs and public libc6-dev link names over to safe-built payloads, and tracks any remaining baseline backend DSOs under explicit private package paths.",
     "Phase 7 keeps required package manifests in place, extends the libc-family public DSO cutover through the network-facing DSOs and link names, and tracks the copied upstream payloads under explicit private backend paths.",
+    "Phase 8 keeps required package manifests in place, extends the libc-family public DSO cutover through libBrokenLocale, ships the locale helper scripts directly from safe/debian/local/**, and tracks only the helper backends that still delegate to preserved upstream locale binaries.",
 ]
 
 [debug_derivation]
@@ -495,13 +496,13 @@ shipped_status = "shipped"
 source_path = "safe/crates/libc-support-tools/src/network_tools.rs"
 
 [[files]]
-asset_kind = "fallback_wrapper"
+asset_kind = "rust_target"
 executable = true
 package = "libc-bin"
 path = "/usr/bin/iconv"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/bin/iconv"
+source_path = "safe/crates/libc-support-tools/src/locale_tools.rs"
 
 [[files]]
 asset_kind = "rust_target"
@@ -522,22 +523,22 @@ shipped_status = "shipped"
 source_path = "safe/crates/libc-support-tools/src/loader_tools.rs"
 
 [[files]]
-asset_kind = "fallback_wrapper"
+asset_kind = "rust_target"
 executable = true
 package = "libc-bin"
 path = "/usr/bin/locale"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/bin/locale"
+source_path = "safe/crates/libc-support-tools/src/locale_tools.rs"
 
 [[files]]
-asset_kind = "fallback_wrapper"
+asset_kind = "rust_target"
 executable = true
 package = "libc-bin"
 path = "/usr/bin/localedef"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/bin/localedef"
+source_path = "safe/crates/libc-support-tools/src/locale_tools.rs"
 
 [[files]]
 asset_kind = "rust_target"
@@ -10737,24 +10738,21 @@ temporary = true
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
-final_cutover_phase = "impl_10_final_fixup_and_audit"
+executable = false
 package = "libc6-dev"
 path = "/usr/lib64/libBrokenLocale.so"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libBrokenLocale.so"
-symlink_target = "../../lib64/libBrokenLocale.so.1"
-temporary = true
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libBrokenLocale.so"
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
+executable = false
 package = "libc6"
 path = "/usr/lib64/libBrokenLocale.so.1"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libBrokenLocale.so.1"
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libBrokenLocale.so.1"
 
 [[files]]
 asset_kind = "data_asset"
@@ -11359,19 +11357,55 @@ source_path = "build/testroot.pristine/usr/sbin/ldconfig"
 asset_kind = "tracked_backend_binary"
 executable = true
 package = "libc-bin"
+path = "/usr/libexec/safelibs/locale-tools/iconv.backend"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/bin/iconv"
+
+[[files]]
+asset_kind = "tracked_backend_binary"
+executable = true
+package = "libc-bin"
+path = "/usr/libexec/safelibs/locale-tools/iconvconfig.backend"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/sbin/iconvconfig"
+
+[[files]]
+asset_kind = "tracked_backend_binary"
+executable = true
+package = "libc-bin"
+path = "/usr/libexec/safelibs/locale-tools/locale.backend"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/bin/locale"
+
+[[files]]
+asset_kind = "tracked_backend_binary"
+executable = true
+package = "libc-bin"
+path = "/usr/libexec/safelibs/locale-tools/localedef.backend"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/bin/localedef"
+
+[[files]]
+asset_kind = "tracked_backend_binary"
+executable = true
+package = "libc-bin"
 path = "/usr/libexec/safelibs/runtime-tools/pldd.backend"
 scope = "required_package"
 shipped_status = "shipped"
 source_path = "build/testroot.pristine/usr/bin/pldd"
 
 [[files]]
-asset_kind = "fallback_wrapper"
+asset_kind = "rust_target"
 executable = true
 package = "libc-bin"
 path = "/usr/sbin/iconvconfig"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/sbin/iconvconfig"
+source_path = "safe/crates/libc-support-tools/src/locale_tools.rs"
 
 [[files]]
 asset_kind = "rust_target"
@@ -11383,7 +11417,7 @@ shipped_status = "shipped"
 source_path = "safe/crates/libc-support-tools/src/loader_tools.rs"
 
 [[files]]
-asset_kind = "fallback_wrapper"
+asset_kind = "script_asset"
 executable = true
 package = "locales"
 path = "/usr/sbin/locale-gen"
@@ -11410,7 +11444,7 @@ shipped_status = "testroot_only"
 source_path = "build/testroot.pristine/usr/sbin/sln"
 
 [[files]]
-asset_kind = "fallback_wrapper"
+asset_kind = "script_asset"
 executable = true
 package = "locales"
 path = "/usr/sbin/update-locale"
@@ -11419,7 +11453,7 @@ shipped_status = "shipped"
 source_path = "safe/debian/local/usr_sbin/update-locale"
 
 [[files]]
-asset_kind = "fallback_wrapper"
+asset_kind = "script_asset"
 executable = true
 package = "locales"
 path = "/usr/sbin/validlocale"
@@ -17422,7 +17456,7 @@ shipped_status = "testroot_only"
 source_path = "build/testroot.pristine/usr/share/locale/zh_TW/LC_MESSAGES/libc.mo"
 
 [[files]]
-asset_kind = "fallback_wrapper"
+asset_kind = "script_asset"
 executable = true
 package = "locales"
 path = "/usr/share/locales/install-language-pack"
@@ -17431,7 +17465,7 @@ shipped_status = "shipped"
 source_path = "safe/debian/local/usr_share_locales/install-language-pack"
 
 [[files]]
-asset_kind = "fallback_wrapper"
+asset_kind = "script_asset"
 executable = true
 package = "locales"
 path = "/usr/share/locales/remove-language-pack"
