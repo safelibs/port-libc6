@@ -4,21 +4,13 @@
 set -euo pipefail
 
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-dist_dir="$repo_root/dist"
-
 # shellcheck source=/dev/null
-[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+. "$repo_root/scripts/lib/build-deb-common.sh"
 
-if [[ -d "$HOME/.cargo/bin" ]]; then
-  case ":$PATH:" in
-    *":$HOME/.cargo/bin:"*) ;;
-    *) export PATH="$HOME/.cargo/bin:$PATH" ;;
-  esac
-fi
-
-rm -rf -- "$dist_dir"
-mkdir -p -- "$dist_dir/debs"
+prepare_rust_env
+prepare_dist_dir "$repo_root"
 
 cd "$repo_root/safe"
-cargo run -p xtask -- package-deb --out "$dist_dir/debs"
-cp -v "$dist_dir"/debs/*.deb "$dist_dir"/
+mkdir -p "$repo_root/dist/debs"
+cargo run -p xtask -- package-deb --out "$repo_root/dist/debs"
+cp -v "$repo_root/dist/debs"/*.deb "$repo_root/dist"/
