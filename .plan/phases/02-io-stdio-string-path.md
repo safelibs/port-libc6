@@ -21,10 +21,12 @@ I/O, Stdio, String, Path, Time, and First Libc-Family Cutover
   - `safe/tests/manifest.toml`
   - `safe/generated/baseline/test-port-plan.json`
   - `safe/generated/baseline/fallback-c-inventory.json`
+  - `safe/generated/security/relevant-cves-index.json`
   - `safe/upstream-compat/*.toml`
   - `safe/scripts/stage-original-build.sh`
 - Existing authoritative inputs that phase 06 must extend in place rather than rediscover or regenerate:
   - `original/**`
+  - `relevant_cves.json`
   - `safe/generated/packaging/package-build-manifest.json`
   - `safe/generated/baseline/test-catalog.json`
 - Existing copied-test roots already materialized before phase 06 and touched again here must be updated in place rather than rematerialized:
@@ -115,6 +117,7 @@ I/O, Stdio, String, Path, Time, and First Libc-Family Cutover
 - With `--all-ported`, it must fail unless all 5,584 manifest entries are marked `ported`, every referenced committed path exists, and the zero-entry sentinels `safe/tests/nscd/.gitkeep`, `safe/tests/po/.gitkeep`, and `safe/tests/manual/.gitkeep` are present and tracked; only then may it execute the full copied corpus for the final phase without relying on `run-original-tests --families all`.
 - It must treat the shared `safe/tests/scripts/**` catalog rows, `safe/tests/top-level/**`, `safe/tests/test-skeleton.c`, `safe/tests/c++-types.data`, and normalized `sysdeps*` destinations as exact owned artifacts instead of inferring ownership from logical subdir names.
 - Extend `install_root.rs` and `package_deb.rs` so package entries can stage Rust-built DSOs from the active build root and track private backend DSOs as `asset_kind = "private_baseline_backend_dso"` under `/usr/libexec/safelibs/backends/**`.
+- Introduce a source origin or equivalent staging rule for build-time Rust DSOs and for later safe-owned `libc6-dev` compatibility objects or archives so the manifests distinguish active-build safe artifacts from the temporary `build_testroot` carryovers that remain phase-10 obligations.
 - After phase 06, `build/testroot.pristine` may remain only as the source of private backend copies and explicitly inventoried temporary `libc6-dev` startup, static, or audit assets that phase 10 has not yet replaced; no public runtime DSO or public `libc6-dev` link-name `.so` may still use `build_testroot`.
 - Continue synthesizing `libpthread_nonshared.a` and preserving the `lib64` mirrors, but record that archive as a generated compatibility asset rather than leaving it implicit outside the manifests.
 - Extend `test_package_install.rs` with a `libc-family-cutover` smoke set that proves the phase-06-owned public runtime DSOs and public `libc6-dev` `.so` link names no longer use `build_testroot` provenance and that the installed package payload matches the staged Rust-built sources.

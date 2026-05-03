@@ -9,10 +9,13 @@ Final Backend Removal, Package Cutover, Top-Level Dependent Harness, and Full Sa
 - Existing authoritative inputs that must now be fully consumed by the final package and harness:
   - `dependents.json`
   - `relevant_cves.json`
+  - `safe/generated/security/relevant-cves-index.json`
   - `test-original.sh`
   - `safe/scripts/build-debs.sh`
   - `safe/scripts/install-safe-repo.sh`
   - `safe/generated/baseline/link-compat-corpus.json`
+  - `safe/generated/baseline/package-files/*.json`
+  - `safe/generated/install-manifests/*.json`
   - `safe/generated/packaging/package-build-manifest.json`
   - `safe/generated/baseline/fallback-c-inventory.json`
   - `safe/upstream-compat/package-scope.toml`
@@ -68,23 +71,37 @@ Final Backend Removal, Package Cutover, Top-Level Dependent Harness, and Full Sa
   - `safe/README.md`
 
 ## Implementation Details
-- Remove the temporary backend-forwarding mechanism from the shipped package payload. The build must now fail if any shipped public DSO would still need a baseline backend export.
-- Private backend DSOs used during phases 06-09 must disappear from the package manifests, install manifests, package-scope ledger, fallback inventory, and installed package filesystem.
-- Extend `safe/xtask/src/commands/audit_safety.rs` with a dedicated final flag such as `--deny-shipped-private-backend-dsos`, and update `safe/upstream-compat/safety-policy.toml` so the strongest mode and a fixed policy gate enforce the same cutoff.
+- Remove the temporary backend-forwarding mechanism from the shipped package payload.
+  - The build must now fail if any shipped public DSO would still need a baseline backend export.
+  - Private backend DSOs used during phases 06-09 must disappear from the package manifests, install manifests, package-scope ledger, fallback inventory, and installed package filesystem.
+  - Extend `safe/xtask/src/commands/audit_safety.rs` with a dedicated final flag such as `--deny-shipped-private-backend-dsos`. That check must fail if any shipped `safe/upstream-compat/package-scope.toml` entry still has `asset_kind = "private_baseline_backend_dso"` or any shipped `safe/generated/baseline/fallback-c-inventory.json` entry still has `classification = "private_baseline_backend_dso"`.
+  - Update `safe/upstream-compat/safety-policy.toml` so the phase-10 `strongest_mode` string includes `--deny-shipped-private-backend-dsos`, and add a fixed policy gate such as `deny_shipped_private_backend_dso_by_phase = "impl_10_final_fixup_and_audit"` so `audit-safety --verify-policy` and the final safety check enforce the same cutoff.
 - Finish the `libc6-dev` code-bearing link-asset cutover.
-- `/usr/lib64/{Mcrt1.o,Scrt1.o,crt1.o,crti.o,crtn.o,gcrt1.o,grcrt1.o,rcrt1.o}` may remain assembly-backed on amd64, but they must come from checked-in safe-owned sources such as `safe/crates/compat-asm/x86_64/**` with final manifest provenance `compat_asm`.
+- `/usr/lib64/{Mcrt1.o,Scrt1.o,crt1.o,crti.o,crtn.o,gcrt1.o,grcrt1.o,rcrt1.o}` may remain assembly-backed on amd64, but they must be emitted from checked-in safe-owned sources such as `safe/crates/compat-asm/x86_64/**` with final manifest provenance `compat_asm`; none may be copied from `build/testroot.pristine`.
 - Replace `/usr/lib64/{libBrokenLocale.a,libanl.a,libc.a,libc_nonshared.a,libdl.a,libg.a,libm-2.39.a,libm.a,libmcheck.a,libmvec.a,libpthread.a,libpthread_nonshared.a,libresolv.a,librt.a,libutil.a}` with safe-owned archives or linker scripts whose members come from Rust-built objects plus the minimum documented asm shims.
-- If `libpthread_nonshared.a` remains empty on amd64, mark it `synthetic_empty_archive` and explain the Debian compatibility requirement in `safe/upstream-compat/package-scope.toml`.
+- If `libpthread_nonshared.a` remains empty on amd64, mark it `synthetic_empty_archive` and explain the Debian compatibility requirement in `safe/upstream-compat/package-scope.toml`. If `libg.a`, `libmcheck.a`, or another archive remains a thin compatibility shell rather than a full Rust archive, record that exact rationale in `safe/upstream-compat/package-scope.toml` and `safe/upstream-compat/safety-policy.toml`.
 - Code-bearing `libc6-dev` DSOs and link names such as `/usr/lib64/libc.so`, `/usr/lib64/libm.so`, `/usr/lib64/libBrokenLocale.so`, `/usr/lib64/libanl.so`, `/usr/lib64/libc_malloc_debug.so`, `/usr/lib64/libmvec.so`, `/usr/lib64/libnss_compat.so`, `/usr/lib64/libnss_hesiod.so`, `/usr/lib64/libresolv.so`, `/usr/lib64/libthread_db.so`, and `/usr/lib64/audit/sotruss-lib.so` must resolve to safe-built artifacts or symlinks to safe-built DSOs. None may keep `source_origin = "build_testroot"`.
-- Any final `build_testroot` entries still permitted in `safe/generated/baseline/package-files/libc6-dev.json` must be non-code headers, data-only files, documentation, or debug helpers with explicit `asset_kind` and safety-policy justification.
-- Update `test-original.sh` so it actually tests the safe port. Ensure `safe/scripts/build-debs.sh` validates or materializes `safe/work/original-build/**`, builds a current release artifact set, and then packages it before the dependent harness runs.
-- Keep the Docker-based dependent smoke model, preserve the current 16 runtime-dependent smoke checks and 3 source-build checks for `strace`, `valgrind`, and `libvirt`, and keep the source-repository setup inside Ubuntu 24.04.
-- Make `safe/scripts/install-safe-repo.sh`, `safe/xtask/src/commands/test_package_install.rs`, and `test-original.sh` consume the same package version source as `safe/generated/packaging/package-build-manifest.json`.
-- Extend `safe/xtask/src/commands/test_package_install.rs` with a final `dev-link-artifacts` smoke set that rejects final code-bearing `libc6-dev` assets with `build_testroot` provenance, byte-compares installed `.o`, `.a`, `.so`, and audit-helper payloads against safe-owned sources, and compiles and runs dynamic, PIE, static, and static-PIE samples that exercise every shipped startfile variant.
-- Extend `safe/xtask/src/commands/test_package_install.rs` with a final `backend-payload-closure` smoke set that fails if any shipped entry still uses `asset_kind = "private_baseline_backend_dso"`, `classification = "private_baseline_backend_dso"`, or a shipped path under `/usr/libexec/safelibs/backends/**`.
-- Finalize the upgraded link-compat verifier so it fails if any relinked original-built object still resolves through a temporary backend payload, requires recompilation against `work/install-root`, or uses a final `libc6-dev` startfile or static archive that still traces to `build_testroot`.
+- Any final `build_testroot` entries still permitted in `safe/generated/baseline/package-files/libc6-dev.json` must be non-code headers, generated-but-data-only files, or documentation or debug helpers whose `asset_kind`, `safe/upstream-compat/package-scope.toml`, and `safe/upstream-compat/safety-policy.toml` entries mark them non-executable and explain why copying them is acceptable.
+- Update `test-original.sh` so it actually tests the safe port.
+  - `safe/scripts/build-debs.sh` must explicitly run `cargo run -p xtask -- stage-upstream-build --source ../original --build work/original-build` and then `cargo run -p xtask -- build --target amd64 --profile release` before `package-deb`, unless `package-deb` itself is upgraded to enforce those same two prerequisites internally. The final workflow must not assume the ignored staged upstream tree already exists.
+  - Keep the Docker-based dependent smoke model.
+  - Inside the container, call `safe/scripts/install-safe-repo.sh` before installing `libc6`, `libc6-dev`, `libc6-dbg`, `libc-bin`, `libc-dev-bin`, `locales`, and `nscd`.
+  - Preserve the current 16 runtime-dependent smoke checks and 3 source-build checks for `strace`, `valgrind`, and `libvirt`.
+  - Keep the source-repository setup from the current script so source builds still happen inside Ubuntu 24.04.
+- Make the package-install and dependent-harness path use the same package version source.
+  - `safe/scripts/install-safe-repo.sh`, `safe/xtask/src/commands/test_package_install.rs`, and `test-original.sh` must derive or receive the expected package version from `safe/generated/packaging/package-build-manifest.json` or the same shared helper used by `package_deb.rs`.
+- Extend `safe/xtask/src/commands/test_package_install.rs` with a final `dev-link-artifacts` smoke set.
+  - It must inspect `safe/generated/baseline/package-files/libc6-dev.json`, `safe/generated/install-manifests/required-packages.json`, and `safe/upstream-compat/package-scope.toml`, fail if any final code-bearing `libc6-dev` asset still uses `build_testroot` provenance, and byte-compare installed `.o`, `.a`, `.so`, and audit-helper payloads against the safe-owned `source_path` entries recorded in the manifests.
+  - Inside the container, it must compile and run at least one dynamic, PIE, static, and static-PIE sample against the installed `libc6-dev` payload, and it must explicitly exercise every shipped startfile variant (`Mcrt1.o`, `Scrt1.o`, `crt1.o`, `gcrt1.o`, `grcrt1.o`, `rcrt1.o`, `crti.o`, and `crtn.o`) either through compiler-driver flags or direct linker invocations.
+- Extend `safe/xtask/src/commands/test_package_install.rs` with a final `backend-payload-closure` smoke set.
+  - It must inspect `safe/generated/baseline/package-files/*.json`, `safe/generated/install-manifests/required-packages.json`, `safe/generated/install-manifests/test-install-root.json`, `safe/upstream-compat/package-scope.toml`, and `safe/generated/baseline/fallback-c-inventory.json`, and fail if any shipped entry still uses `asset_kind = "private_baseline_backend_dso"`, `classification = "private_baseline_backend_dso"`, or a shipped path under `/usr/libexec/safelibs/backends/**`.
+  - Inside the container, after installing the final packages, it must fail if any backend DSO remains installed under `/usr/libexec/safelibs/backends/**` or if any non-public DSO payload still byte-matches a manifest entry marked `private_baseline_backend_dso`.
+- Finalize the upgraded link-compat verifier against the no-backend end state.
+  - `safe/xtask/src/commands/link_compat_smoke.rs` must now fail if any relinked original-built object still resolves through a temporary backend payload, requires recompilation against `work/install-root`, or uses a final `libc6-dev` startfile or static archive that still traces to `build_testroot`.
+  - The final smoke corpus must be the committed cumulative `safe/generated/baseline/link-compat-corpus.json`. By the end of phase 10 it must cover dynamic, PIE, static, static-PIE, startup-object, profiling-startfile, and `GLIBC_PRIVATE` cases using preserved original-built `.o` inputs, and it should include representative original test objects from the staged upstream build where available.
 - Clean up package metadata so the final package set remains internally consistent and still limited to the required seven-package surface unless a checker proves expansion is necessary.
 - Close every remaining open CVE row or mark it `not-applicable` with a concrete package-scope rationale.
+- Ensure the final safety policy’s strongest mode passes without exceptions.
 
 ## Verification Phases
 ### `check_10_workspace_unit_tests`
@@ -188,9 +205,10 @@ cargo run -p xtask -- audit-safety \
 - `check-abi --all-dsos` passes.
 - `check-owned-tests --all-ported` proves that all 5,584 catalog rows are marked `ported`, the zero-entry sentinels are present, and the executable corpus passes.
 - Every `.deb` smoke bucket passes, including `backend-payload-closure` and `dev-link-artifacts`.
-- `backend-payload-closure` proves the manifests, ledgers, and installed package filesystem no longer ship any `private_baseline_backend_dso` payload.
+- `backend-payload-closure` proves the manifests, ledgers, and installed package filesystem no longer ship any `private_baseline_backend_dso` payload, and it fails if any backend DSO remains installed or any non-public DSO payload still byte-matches a manifest entry marked `private_baseline_backend_dso`.
 - The updated root-level `./test-original.sh` passes end to end.
-- `audit-safety` passes with both `--deny-shipped-temporary-fallback-binaries` and `--deny-shipped-private-backend-dsos`.
+- `audit-safety` passes with both `--deny-shipped-temporary-fallback-binaries` and `--deny-shipped-private-backend-dsos`, and the final private-backend check fails if any shipped package-scope row still uses `asset_kind = "private_baseline_backend_dso"` or any shipped fallback-inventory row still uses `classification = "private_baseline_backend_dso"`.
+- `safe/upstream-compat/safety-policy.toml` carries `deny_shipped_private_backend_dso_by_phase = "impl_10_final_fixup_and_audit"`, the phase-10 `strongest_mode` includes `--deny-shipped-private-backend-dsos`, and `audit-safety --verify-policy` plus `check_10_final_safety` enforce the same cutoff.
 - `link-compat-smoke` passes by relinking the cumulative committed cases from `safe/generated/baseline/link-compat-corpus.json`, not by recompiling them against the safe headers or DSOs, and it fails if any final `libc6-dev` startfile or static archive still comes from `build_testroot`.
 - No shipped package or install manifest row, package-scope entry, fallback-inventory entry, or installed filesystem path remains under `/usr/libexec/safelibs/backends/**`.
 - The final `libc6-dev` manifest contains no code-bearing `build_testroot` entries; any remaining `build_testroot` rows are non-code and explicitly justified in `safe/upstream-compat/package-scope.toml` and `safe/upstream-compat/safety-policy.toml`.

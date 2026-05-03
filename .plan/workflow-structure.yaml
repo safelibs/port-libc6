@@ -15,6 +15,7 @@ phases:
       - safe/crates/**
       - safe/xtask/**
       - safe/generated/**
+      - safe/generated/security/relevant-cves-index.json
       - safe/tests/**
       - safe/debian/**
       - safe/upstream-compat/*.toml
@@ -31,11 +32,29 @@ phases:
     bounce_target: impl_05a_commit_prepared_safe_frontier
     required_preexisting_inputs:
       - original/**
+      - safe/.gitignore
+      - safe/Cargo.toml
+      - safe/Cargo.lock
+      - safe/README.md
+      - safe/rust-toolchain.toml
+      - safe/crates/**
+      - safe/xtask/**
       - safe/generated/baseline/committed-safe-frontier.txt
+      - safe/generated/baseline/abi/*.json
+      - safe/generated/version-scripts/*.map
       - safe/generated/baseline/package-files/*.json
       - safe/generated/install-manifests/*.json
       - safe/generated/packaging/package-build-manifest.json
+      - safe/generated/baseline/test-catalog.json
+      - safe/generated/baseline/test-port-plan.json
+      - safe/generated/baseline/fallback-c-inventory.json
+      - safe/generated/security/relevant-cves-index.json
+      - safe/tests/**
+      - safe/debian/**
       - safe/upstream-compat/*.toml
+      - safe/upstream-tests/README.md
+      - safe/scripts/build-debs.sh
+      - safe/scripts/install-safe-repo.sh
       - safe/scripts/stage-original-build.sh
   - order: 3
     id: impl_06_io_stdio_string_path
@@ -43,6 +62,7 @@ phases:
     bounce_target: null
     required_preexisting_inputs:
       - original/**
+      - relevant_cves.json
       - safe/scripts/stage-original-build.sh
       - safe/xtask/src/common.rs
       - safe/xtask/src/commands/build.rs
@@ -60,6 +80,7 @@ phases:
       - safe/generated/baseline/test-catalog.json
       - safe/generated/baseline/test-port-plan.json
       - safe/generated/baseline/fallback-c-inventory.json
+      - safe/generated/security/relevant-cves-index.json
       - safe/tests/manifest.toml
       - safe/tests/support/**
       - safe/tests/support/glibcpp.py
@@ -114,8 +135,17 @@ phases:
       - safe/tests/test-skeleton.c
       - safe/tests/c++-types.data
       - safe/tests/scripts/**
+      - safe/tests/stdio-common/**
       - safe/tests/libio/**
       - safe/tests/stdlib/**
+      - safe/tests/string/**
+      - safe/tests/io/**
+      - safe/tests/time/**
+      - safe/tests/dirent/**
+      - safe/tests/assert/**
+      - safe/tests/ctype/**
+      - safe/tests/termios/**
+      - safe/tests/timezone/**
       - safe/tests/sysdeps/**
       - safe/tests/sysdeps-x86_64/**
       - safe/tests/sysdeps-linux-x86_64/**
@@ -146,6 +176,7 @@ phases:
       - safe/scripts/stage-original-build.sh
       - safe/scripts/install-safe-repo.sh
       - safe/generated/baseline/package-files/libc6.json
+      - safe/generated/baseline/package-files/libc-bin.json
       - safe/generated/baseline/package-files/libc6-dev.json
       - safe/generated/baseline/package-files/libc6-dbg.json
       - safe/generated/install-manifests/required-packages.json
@@ -160,6 +191,7 @@ phases:
     bounce_target: impl_06_io_stdio_string_path
     required_preexisting_inputs:
       - safe/generated/baseline/fallback-c-inventory.json
+      - safe/generated/security/relevant-cves-index.json
       - safe/upstream-compat/cve-status.toml
       - safe/upstream-compat/package-scope.toml
       - safe/upstream-compat/safety-policy.toml
@@ -172,6 +204,7 @@ phases:
       - original/**
       - dependents.json
       - relevant_cves.json
+      - safe/generated/security/relevant-cves-index.json
       - safe/scripts/stage-original-build.sh
       - safe/generated/baseline/link-compat-corpus.json
       - safe/generated/baseline/test-catalog.json
@@ -224,7 +257,12 @@ phases:
       - safe/tests/test-skeleton.c
       - safe/tests/c++-types.data
       - safe/tests/scripts/**
+      - safe/tests/hesiod/**
+      - safe/tests/inet/**
+      - safe/tests/nis/**
+      - safe/tests/nss/**
       - safe/tests/resolv/**
+      - safe/tests/socket/**
       - safe/tests/sysdeps/**
       - safe/tests/nscd/.gitkeep
       - safe/xtask/src/commands/check_owned_tests.rs
@@ -244,6 +282,7 @@ phases:
       - safe/generated/baseline/abi/libnss_files.json
       - safe/generated/baseline/abi/libnss_hesiod.json
       - safe/generated/baseline/abi/libresolv.json
+      - safe/generated/baseline/abi/libc.json
       - safe/xtask/src/commands/link_compat_smoke.rs
   - order: 12
     id: check_07_network_packages
@@ -254,6 +293,8 @@ phases:
       - safe/scripts/stage-original-build.sh
       - safe/scripts/install-safe-repo.sh
       - safe/generated/baseline/package-files/libc6.json
+      - safe/generated/baseline/package-files/libc6-dev.json
+      - safe/generated/baseline/package-files/libc6-dbg.json
       - safe/generated/baseline/package-files/libc-bin.json
       - safe/generated/baseline/package-files/nscd.json
       - safe/generated/install-manifests/required-packages.json
@@ -268,6 +309,7 @@ phases:
     bounce_target: impl_07_nss_resolver_nscd
     required_preexisting_inputs:
       - safe/generated/baseline/fallback-c-inventory.json
+      - safe/generated/security/relevant-cves-index.json
       - safe/upstream-compat/cve-status.toml
       - safe/upstream-compat/package-scope.toml
       - safe/upstream-compat/safety-policy.toml
@@ -279,6 +321,7 @@ phases:
     required_preexisting_inputs:
       - original/**
       - relevant_cves.json
+      - safe/generated/security/relevant-cves-index.json
       - safe/scripts/stage-original-build.sh
       - safe/generated/baseline/link-compat-corpus.json
       - safe/generated/baseline/test-catalog.json
@@ -326,6 +369,12 @@ phases:
       - safe/tests/test-skeleton.c
       - safe/tests/c++-types.data
       - safe/tests/scripts/**
+      - safe/tests/conform/**
+      - safe/tests/posix/**
+      - safe/tests/localedata/**
+      - safe/tests/iconvdata/**
+      - safe/tests/iconv/**
+      - safe/tests/locale/**
       - safe/tests/sysdeps/**
       - safe/tests/sysdeps-x86_64/**
       - safe/tests/sysdeps-linux-x86_64/**
@@ -353,7 +402,10 @@ phases:
       - safe/scripts/stage-original-build.sh
       - safe/scripts/install-safe-repo.sh
       - safe/generated/baseline/package-files/libc6.json
+      - safe/generated/baseline/package-files/libc6-dev.json
+      - safe/generated/baseline/package-files/libc6-dbg.json
       - safe/generated/baseline/package-files/libc-bin.json
+      - safe/generated/baseline/package-files/nscd.json
       - safe/generated/baseline/package-files/locales.json
       - safe/generated/install-manifests/required-packages.json
       - safe/generated/install-manifests/test-install-root.json
@@ -367,6 +419,7 @@ phases:
     bounce_target: impl_08_locale_iconv_posix_parsers
     required_preexisting_inputs:
       - safe/generated/baseline/fallback-c-inventory.json
+      - safe/generated/security/relevant-cves-index.json
       - safe/upstream-compat/cve-status.toml
       - safe/upstream-compat/package-scope.toml
       - safe/upstream-compat/safety-policy.toml
@@ -378,6 +431,7 @@ phases:
     required_preexisting_inputs:
       - original/**
       - relevant_cves.json
+      - safe/generated/security/relevant-cves-index.json
       - safe/scripts/stage-original-build.sh
       - safe/generated/baseline/link-compat-corpus.json
       - safe/generated/baseline/test-catalog.json
@@ -429,6 +483,22 @@ phases:
       - safe/tests/test-skeleton.c
       - safe/tests/c++-types.data
       - safe/tests/scripts/**
+      - safe/tests/argp/**
+      - safe/tests/catgets/**
+      - safe/tests/debug/**
+      - safe/tests/dlfcn/**
+      - safe/tests/gmon/**
+      - safe/tests/gnulib/**
+      - safe/tests/intl/**
+      - safe/tests/login/**
+      - safe/tests/math/**
+      - safe/tests/mathvec/**
+      - safe/tests/resource/**
+      - safe/tests/rt/**
+      - safe/tests/sunrpc/**
+      - safe/tests/sysvipc/**
+      - safe/tests/wcsmbs/**
+      - safe/tests/wctype/**
       - safe/tests/sysdeps/**
       - safe/tests/sysdeps-x86_64/**
       - safe/tests/manual/.gitkeep
@@ -448,6 +518,7 @@ phases:
       - safe/generated/baseline/abi/libpcprofile.json
       - safe/generated/baseline/abi/librt.json
       - safe/generated/baseline/abi/libutil.json
+      - safe/generated/baseline/abi/libc.json
       - safe/xtask/src/commands/link_compat_smoke.rs
   - order: 22
     id: check_09_math_packages
@@ -458,8 +529,12 @@ phases:
       - safe/scripts/stage-original-build.sh
       - safe/scripts/install-safe-repo.sh
       - safe/generated/baseline/package-files/libc6.json
+      - safe/generated/baseline/package-files/libc6-dev.json
+      - safe/generated/baseline/package-files/libc6-dbg.json
       - safe/generated/baseline/package-files/libc-bin.json
       - safe/generated/baseline/package-files/libc-dev-bin.json
+      - safe/generated/baseline/package-files/nscd.json
+      - safe/generated/baseline/package-files/locales.json
       - safe/generated/install-manifests/required-packages.json
       - safe/generated/install-manifests/test-install-root.json
       - safe/generated/packaging/package-build-manifest.json
@@ -472,6 +547,7 @@ phases:
     bounce_target: impl_09_math_and_aux_dsos
     required_preexisting_inputs:
       - safe/generated/baseline/fallback-c-inventory.json
+      - safe/generated/security/relevant-cves-index.json
       - safe/upstream-compat/cve-status.toml
       - safe/upstream-compat/package-scope.toml
       - safe/upstream-compat/safety-policy.toml
@@ -484,6 +560,7 @@ phases:
       - original/**
       - dependents.json
       - relevant_cves.json
+      - safe/generated/security/relevant-cves-index.json
       - test-original.sh
       - safe/scripts/stage-original-build.sh
       - safe/scripts/build-debs.sh
@@ -506,6 +583,57 @@ phases:
       - safe/tests/test-skeleton.c
       - safe/tests/c++-types.data
       - safe/tests/scripts/**
+      - safe/tests/core/**
+      - safe/tests/csu/**
+      - safe/tests/elf/**
+      - safe/tests/libio/**
+      - safe/tests/malloc/**
+      - safe/tests/misc/**
+      - safe/tests/nptl/**
+      - safe/tests/nptl_db/**
+      - safe/tests/resolv/**
+      - safe/tests/setjmp/**
+      - safe/tests/signal/**
+      - safe/tests/stdlib/**
+      - safe/tests/assert/**
+      - safe/tests/ctype/**
+      - safe/tests/dirent/**
+      - safe/tests/io/**
+      - safe/tests/stdio-common/**
+      - safe/tests/string/**
+      - safe/tests/termios/**
+      - safe/tests/time/**
+      - safe/tests/timezone/**
+      - safe/tests/hesiod/**
+      - safe/tests/inet/**
+      - safe/tests/nis/**
+      - safe/tests/nss/**
+      - safe/tests/socket/**
+      - safe/tests/conform/**
+      - safe/tests/iconv/**
+      - safe/tests/iconvdata/**
+      - safe/tests/locale/**
+      - safe/tests/localedata/**
+      - safe/tests/posix/**
+      - safe/tests/argp/**
+      - safe/tests/catgets/**
+      - safe/tests/debug/**
+      - safe/tests/dlfcn/**
+      - safe/tests/gmon/**
+      - safe/tests/gnulib/**
+      - safe/tests/intl/**
+      - safe/tests/login/**
+      - safe/tests/math/**
+      - safe/tests/mathvec/**
+      - safe/tests/resource/**
+      - safe/tests/rt/**
+      - safe/tests/sunrpc/**
+      - safe/tests/sysvipc/**
+      - safe/tests/wcsmbs/**
+      - safe/tests/wctype/**
+      - safe/tests/sysdeps/**
+      - safe/tests/sysdeps-x86_64/**
+      - safe/tests/sysdeps-linux-x86_64/**
       - safe/tests/nscd/.gitkeep
       - safe/tests/po/.gitkeep
       - safe/tests/manual/.gitkeep
@@ -554,6 +682,57 @@ phases:
       - safe/tests/test-skeleton.c
       - safe/tests/c++-types.data
       - safe/tests/scripts/**
+      - safe/tests/core/**
+      - safe/tests/csu/**
+      - safe/tests/elf/**
+      - safe/tests/libio/**
+      - safe/tests/malloc/**
+      - safe/tests/misc/**
+      - safe/tests/nptl/**
+      - safe/tests/nptl_db/**
+      - safe/tests/resolv/**
+      - safe/tests/setjmp/**
+      - safe/tests/signal/**
+      - safe/tests/stdlib/**
+      - safe/tests/assert/**
+      - safe/tests/ctype/**
+      - safe/tests/dirent/**
+      - safe/tests/io/**
+      - safe/tests/stdio-common/**
+      - safe/tests/string/**
+      - safe/tests/termios/**
+      - safe/tests/time/**
+      - safe/tests/timezone/**
+      - safe/tests/hesiod/**
+      - safe/tests/inet/**
+      - safe/tests/nis/**
+      - safe/tests/nss/**
+      - safe/tests/socket/**
+      - safe/tests/conform/**
+      - safe/tests/iconv/**
+      - safe/tests/iconvdata/**
+      - safe/tests/locale/**
+      - safe/tests/localedata/**
+      - safe/tests/posix/**
+      - safe/tests/argp/**
+      - safe/tests/catgets/**
+      - safe/tests/debug/**
+      - safe/tests/dlfcn/**
+      - safe/tests/gmon/**
+      - safe/tests/gnulib/**
+      - safe/tests/intl/**
+      - safe/tests/login/**
+      - safe/tests/math/**
+      - safe/tests/mathvec/**
+      - safe/tests/resource/**
+      - safe/tests/rt/**
+      - safe/tests/sunrpc/**
+      - safe/tests/sysvipc/**
+      - safe/tests/wcsmbs/**
+      - safe/tests/wctype/**
+      - safe/tests/sysdeps/**
+      - safe/tests/sysdeps-x86_64/**
+      - safe/tests/sysdeps-linux-x86_64/**
       - safe/tests/nscd/.gitkeep
       - safe/tests/po/.gitkeep
       - safe/tests/manual/.gitkeep
@@ -593,6 +772,7 @@ phases:
     bounce_target: impl_10_final_fixup_and_audit
     required_preexisting_inputs:
       - safe/generated/baseline/fallback-c-inventory.json
+      - safe/generated/security/relevant-cves-index.json
       - safe/generated/baseline/package-files/*.json
       - safe/generated/install-manifests/*.json
       - safe/upstream-compat/package-scope.toml

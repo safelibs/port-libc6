@@ -21,6 +21,7 @@ Math, Wide-Char, Dlfcn/Rt/Util/Debug/Sunrpc, and Remaining Helper-Tool Cutover
   - `safe/generated/install-manifests/test-install-root.json`
   - `safe/tests/manifest.toml`
   - `relevant_cves.json`
+  - `safe/generated/security/relevant-cves-index.json`
 - Existing authoritative build, package, and test inputs that phase 09 must extend in place rather than rediscover:
   - `original/**`
   - `safe/scripts/stage-original-build.sh`

@@ -22,6 +22,7 @@ NSS, Resolver, Inet/Socket Glue, and Nscd Client/Tool Cutover
   - `safe/generated/install-manifests/test-install-root.json`
   - `dependents.json`
   - `relevant_cves.json`
+  - `safe/generated/security/relevant-cves-index.json`
 - Existing authoritative build, package, and test inputs that phase 07 must extend in place rather than rediscover:
   - `original/**`
   - `safe/scripts/stage-original-build.sh`
@@ -38,6 +39,7 @@ NSS, Resolver, Inet/Socket Glue, and Nscd Client/Tool Cutover
 ## New Outputs
 - Rust-backed `libresolv`, `libanl`, `libnsl`, and `libnss_*` public DSOs or DSO veneers that run phase-owned symbols in Rust and forward the remainder to private baseline backends.
 - A Rust or first-class shipped implementation for `/usr/bin/getent` and `/usr/sbin/nscd`, eliminating those temporary fallback wrappers.
+- Updated committed relink fixtures, referenced by `safe/generated/baseline/link-compat-corpus.json`, for the phase-07 `libresolv`, `libnss_*`, and `libanl` original-sysroot object cases.
 - Ported tests for the 156 phase-owned `hesiod`, `inet`, `nis`, `nss`, `resolv`, `socket`, `safe/tests/sysdeps/**`, and shared `safe/tests/scripts/{check-wrapper-headers.py,check-obsolete-constructs.py}` entries.
 - Updated network package manifests, install manifests, and closed or dispositioned CVE rows for resolver, NSS, and nscd-client issues.
 
@@ -49,6 +51,7 @@ NSS, Resolver, Inet/Socket Glue, and Nscd Client/Tool Cutover
   - `safe/xtask/src/commands/link_compat_smoke.rs`
   - `safe/xtask/src/commands/test_package_install.rs`
   - `safe/generated/baseline/link-compat-corpus.json`
+  - the committed relink fixtures referenced by `safe/generated/baseline/link-compat-corpus.json` for the phase-07 `libresolv`, `libnss_*`, and `libanl` original-sysroot cases
   - `safe/generated/baseline/package-files/libc6.json`
   - `safe/generated/baseline/package-files/libc-bin.json`
   - `safe/generated/baseline/package-files/nscd.json`
@@ -87,6 +90,7 @@ NSS, Resolver, Inet/Socket Glue, and Nscd Client/Tool Cutover
 - Whenever this phase changes a shipped DSO, NSS module, helper binary, service unit, or configuration-file path, update `safe/generated/install-manifests/required-packages.json` and `safe/generated/install-manifests/test-install-root.json` in the same commit as the corresponding `safe/generated/baseline/package-files/*.json` edits.
 - Keep `safe/xtask/src/commands/link_compat_smoke.rs` authoritative for link compatibility as the network DSOs move off baseline payloads.
 - Extend `safe/generated/baseline/link-compat-corpus.json` in place with phase-07-owned `libresolv`, `libnss_*`, and `libanl` relink cases, recording owner phase, object source kind, fixture source when needed, preserved-object path, coverage class, and exercised surfaces.
+- Add or refresh only the committed relink fixtures referenced by that manifest for `libresolv`, `libnss_*`, and `libanl` objects originally built against the original sysroot.
 - Continue requiring the relink step to consume preserved original-built objects instead of recompiling against `work/install-root`.
 - Implement resolver parsing and answer validation in Rust with explicit defenses for non-answer-section confusion in reverse lookups, invalid reverse-DNS hostnames, numeric-host parsing corner cases, `if_nametoindex` or `getaddrinfo` interaction, and stub-resolver malformed-message handling.
 - Replace the library-side nscd client shared-memory reads with a snapshot or generation-checked design that cannot observe torn cross-process state.
@@ -162,6 +166,7 @@ cargo run -p xtask -- audit-safety \
 - `getent` and `nscd` no longer ship as temporary fallback wrappers in `safe/crates/libc-support-tools/src/fallback.rs`.
 - The network DSOs pass `check-abi`.
 - The phase-07 relink smoke still uses the committed phase-06 and phase-07 entries in `safe/generated/baseline/link-compat-corpus.json` and passes after the `libresolv` and `libnss_*` cutover.
+- Any phase-07 relink-fixture changes are limited to the committed fixtures referenced by `safe/generated/baseline/link-compat-corpus.json` for the `libresolv`, `libnss_*`, and `libanl` original-sysroot cases.
 - `check-owned-tests --owner-phase impl_07_nss_resolver_nscd` proves that every phase-owned catalog row is materialized, marked `ported`, and that the executable subset passes under the Rust-backed install root.
 - The tracked `safe/tests/nscd/.gitkeep` sentinel remains explicitly accounted for even though that destination has no executable `run-original-tests` coverage.
 - The package verifier reruns `basic-required-packages`, `libc-family-cutover`, `loader-tools`, `runtime-tools`, and `network-tools`, so required-package and debug coherence plus earlier installed surfaces stay live after the network DSO cutover.

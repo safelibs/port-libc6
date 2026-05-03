@@ -14,6 +14,7 @@ Commit Prepared Safe Frontier
   - `safe/crates/**`
   - `safe/xtask/**`
   - `safe/generated/**`
+  - `safe/generated/security/relevant-cves-index.json`
   - `safe/tests/**`
   - `safe/debian/**`
   - `safe/upstream-compat/*.toml`
@@ -62,7 +63,7 @@ Commit Prepared Safe Frontier
 - Create and commit `safe/scripts/stage-original-build.sh` from the existing upstream-build staging logic and use that helper before the landing verifier runs any command that depends on `safe/work/original-build/**`.
 - `safe/scripts/stage-original-build.sh` must be idempotent and must keep the fixed interface `./scripts/stage-original-build.sh --source ../original --build work/original-build`.
 - When validating an existing `safe/work/original-build/**` tree, check at least `testroot.pristine/install.stamp`, `elf/ld-linux-x86-64.so.2`, `testrun.sh`, `iconvdata`, and `localedata`, then return success without rebuilding if those invariants hold.
-- If validation fails or the tree is absent, delete and recreate only `safe/work/original-build/**`, write `configparms` for the safe baseline install layout, run out-of-tree `../original/configure` with the committed flags, then run `make -j$(nproc)` followed by `make testroot.pristine/install.stamp`.
+- If validation fails or the tree is absent, delete and recreate only `safe/work/original-build/**`, write `configparms` for the safe baseline install layout (`bindir=/usr/bin`, `rootsbindir=/usr/sbin`, `sbindir=/usr/sbin`, `libdir=/usr/lib64`, `slibdir=/usr/lib64`, `rtlddir=/usr/lib64`, `libexecdir=/usr/libexec`, `includedir=/usr/include`, `complocaledir=/usr/lib/locale`, `localedir=/usr/share/locale`, `i18ndir=/usr/share/i18n`, and `vardbdir=/var/db`), run out-of-tree `../original/configure` with at least `--prefix=/usr --disable-werror --disable-crypt --without-selinux --enable-bind-now --enable-fortify-source --enable-stack-protector=strong --with-timeoutfactor=25`, then run `make -j$(nproc)` followed by `make testroot.pristine/install.stamp`.
 - Do not call `ingest-baseline`, do not rewrite committed `safe/generated/**` authorities, and do not commit `safe/work/**`.
 - Generate `safe/generated/baseline/committed-safe-frontier.txt` from the normalized landed tree as a sorted newline-delimited list of every intentionally tracked file under `safe/**`, excluding only `safe/work/**`, `safe/target/**`, `safe/upstream-tests/build/**`, and the deleted Python cache artifacts.
 - Do not satisfy this phase by hiding prepared content behind new ignore rules. The committed frontier must include the prepared root metadata files, placeholder crate roots, `safe/xtask/**`, every authoritative `safe/generated/**` file, `safe/tests/**`, `safe/debian/**`, `safe/upstream-compat/*.toml`, `safe/upstream-tests/README.md`, and `safe/scripts/**`.
