@@ -25,3 +25,7 @@ path = "src/bin/safe-network-tool.rs"
 [[bin]]
 name = "safe-locale-tool"
 path = "src/bin/safe-locale-tool.rs"
+
+[[bin]]
+name = "safe-aux-tool"
+path = "src/bin/safe-aux-tool.rs"

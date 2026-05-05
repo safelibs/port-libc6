@@ -1,12 +1,13 @@
 {
   "metadata": {
-    "phase": "impl_07_nss_resolver_nscd",
+    "phase": "impl_09_math_and_aux_dsos",
     "notes": [
       "This corpus is the authoritative relink-compatibility case list for original-object verification.",
       "Phase 6 seeds startup-object, ordinary dynamic, PIE, static, static-PIE, and GLIBC_PRIVATE coverage.",
       "Phase 7 extends the corpus with network-facing libanl, libresolv, and libnss module coverage while keeping the preserved original-object workflow intact.",
       "Phase 8 extends the corpus with locale, iconv, parser, and libBrokenLocale coverage while keeping the preserved original-object workflow intact.",
-      "Later phases must extend this file in place instead of rediscovering cases from work/original-build ad hoc."
+      "Later phases must extend this file in place instead of rediscovering cases from work/original-build ad hoc.",
+      "Phase 9 extends the corpus with libdl, libm, librt, and libutil coverage while keeping the preserved original-object workflow intact."
     ]
   },
   "cases": [
@@ -248,6 +249,78 @@
       "required_startfiles": [],
       "exercised_dsos": [
         "libBrokenLocale"
+      ],
+      "run_mode": "safe-loader"
+    },
+    {
+      "case_id": "aux-libdl",
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "coverage_class": "aux-libdl",
+      "object_source_kind": "original_sysroot_fixture",
+      "fixture_source_path": "safe/tests/dlfcn/link-compat-libdl.c",
+      "upstream_object_path": null,
+      "original_object_relpath": "aux-libdl/main.o",
+      "compile_args": [],
+      "link_args": [
+        "-ldl"
+      ],
+      "required_startfiles": [],
+      "exercised_dsos": [
+        "libdl"
+      ],
+      "run_mode": "safe-loader"
+    },
+    {
+      "case_id": "math-libm",
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "coverage_class": "math-libm",
+      "object_source_kind": "original_sysroot_fixture",
+      "fixture_source_path": "safe/tests/math/link-compat-libm.c",
+      "upstream_object_path": null,
+      "original_object_relpath": "math-libm/main.o",
+      "compile_args": [],
+      "link_args": [
+        "-lm"
+      ],
+      "required_startfiles": [],
+      "exercised_dsos": [
+        "libm"
+      ],
+      "run_mode": "safe-loader"
+    },
+    {
+      "case_id": "rt-librt",
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "coverage_class": "rt-librt",
+      "object_source_kind": "original_sysroot_fixture",
+      "fixture_source_path": "safe/tests/rt/link-compat-librt.c",
+      "upstream_object_path": null,
+      "original_object_relpath": "rt-librt/main.o",
+      "compile_args": [],
+      "link_args": [
+        "-lrt"
+      ],
+      "required_startfiles": [],
+      "exercised_dsos": [
+        "librt"
+      ],
+      "run_mode": "safe-loader"
+    },
+    {
+      "case_id": "login-libutil",
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "coverage_class": "login-libutil",
+      "object_source_kind": "original_sysroot_fixture",
+      "fixture_source_path": "safe/tests/login/link-compat-libutil.c",
+      "upstream_object_path": null,
+      "original_object_relpath": "login-libutil/main.o",
+      "compile_args": [],
+      "link_args": [
+        "-lutil"
+      ],
+      "required_startfiles": [],
+      "exercised_dsos": [
+        "libutil"
       ],
       "run_mode": "safe-loader"
     }

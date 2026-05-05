@@ -1,19 +1,4 @@
 {
-  "entries": [
-    {
-      "asset_kind": "rust_target",
-      "executable": true,
-      "owner_phase": "impl_09_math_and_aux_dsos",
-      "package": "libc-dev-bin",
-      "path": "/usr/bin/gencat",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "source_origin": "build_testroot",
-      "source_path": "build/testroot.pristine/usr/bin/gencat",
-      "symlink_target": null,
-      "verification": "dev-and-time-tools"
-    }
-  ],
   "metadata": {
     "generated_from": [
       "build/testroot.pristine",
@@ -28,5 +13,33 @@
     "package": "libc-dev-bin",
     "phase": "impl_01_safe_bootstrap",
     "scope": "required_package"
-  }
+  },
+  "entries": [
+    {
+      "package": "libc-dev-bin",
+      "path": "/usr/bin/gencat",
+      "source_path": "safe/crates/libc-support-tools/src/aux_tools.rs",
+      "source_origin": "safe_rust",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "rust_target",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "verification": "dev-and-time-tools"
+    },
+    {
+      "package": "libc-dev-bin",
+      "path": "/usr/libexec/safelibs/aux-tools/gencat.backend",
+      "source_path": "build/testroot.pristine/usr/bin/gencat",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "tracked_backend_binary",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "verification": "dev-and-time-tools"
+    }
+  ]
 }

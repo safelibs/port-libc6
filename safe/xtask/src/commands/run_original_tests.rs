@@ -2106,6 +2106,7 @@ fn try_run_source_backed_entry(
     }
 
     let compiled = compile_entry_against_install_root(config, entry)?;
+    let runtime_config = config_with_compiled_runtime_path(config, &compiled)?;
     ensure_generated_runtime_assets(config, entry)?;
     prepare_script_objpfx_layout(entry, &compiled)?;
     let staged_subdir = compiled.work_dir.join(&entry.subdir);
@@ -2119,7 +2120,7 @@ fn try_run_source_backed_entry(
         .cloned()
     {
         return Ok(Some(run_entry_support_script(
-            config,
+            &runtime_config,
             entry,
             &compiled,
             &repo_path(script),
@@ -2128,7 +2129,7 @@ fn try_run_source_backed_entry(
 
     let result = if entry.family == "tests-static" {
         run_host_test_binary_in_dir(
-            config,
+            &runtime_config,
             &current_dir,
             &compiled.binary,
             &extra_args,
@@ -2137,7 +2138,7 @@ fn try_run_source_backed_entry(
         )
     } else {
         run_host_test_binary_in_dir(
-            config,
+            &runtime_config,
             &current_dir,
             &compiled.binary,
             &extra_args,
@@ -2181,12 +2182,13 @@ fn try_run_script_generated_source_entry(
         &generated_source,
         Some("original/stdio-common/tst-printf-bz18872.c"),
     )?;
+    let runtime_config = config_with_compiled_runtime_path(config, &compiled)?;
     ensure_generated_runtime_assets(config, entry)?;
     prepare_script_objpfx_layout(entry, &compiled)?;
     let staged_subdir = compiled.work_dir.join(&entry.subdir);
     let extra_args = resolve_source_backed_test_args(config, entry, &compiled, &staged_subdir)?;
     Ok(Some(run_host_test_binary_in_dir(
-        config,
+        &runtime_config,
         &staged_subdir,
         &compiled.binary,
         &extra_args,
@@ -3178,7 +3180,7 @@ fn compile_entry_against_install_root_with_source(
     patch_staged_source_for_entry(entry, &staged_source, &work_dir)?;
     patch_internal_test_staged_headers(entry, &work_dir)?;
     stage_stack_align_header_chain(&work_dir)?;
-    let linked_companion_basenames = companion_dsos_from_makefiles(entry)?;
+    let linked_companion_basenames = linked_companion_dsos_from_makefiles(entry)?;
     let companion_dsos = compile_companion_dsos(config, entry, source, &work_dir)?;
     let has_companion_dsos = !companion_dsos.is_empty();
     let linked_companion_dsos: Vec<PathBuf> = companion_dsos
@@ -3214,8 +3216,6 @@ fn compile_entry_against_install_root_with_source(
         .arg("-I")
         .arg(&work_dir.join(&entry.subdir))
         .arg("-I")
-        .arg(&include_root)
-        .arg("-I")
         .arg(&config.build_root)
         .arg("-I")
         .arg(config.build_root.join("support"))
@@ -3223,6 +3223,8 @@ fn compile_entry_against_install_root_with_source(
         .arg(config.build_root.join("elf"))
         .arg("-I")
         .arg(config.build_root.join("nptl"));
+    add_staged_source_include_dirs(&mut command, &work_dir, &staged_source);
+    command.arg("-I").arg(&include_root);
     apply_glibc_source_cppflags(&mut command, entry, staged_prelude.as_deref());
     for include_dir in host_after_include_dirs() {
         command.arg("-idirafter").arg(include_dir);
@@ -3240,7 +3242,7 @@ fn compile_entry_against_install_root_with_source(
             .arg(format!("-Wl,-rpath-link,{}", lib_root.display()))
             .arg("-L")
             .arg(&lib_root);
-        if !linked_companion_dsos.is_empty() {
+        if has_companion_dsos {
             command
                 .arg(format!("-Wl,-rpath,{}", work_dir.display()))
                 .arg(format!("-Wl,-rpath-link,{}", work_dir.display()))
@@ -3264,6 +3266,53 @@ fn compile_entry_against_install_root_with_source(
         .arg(&binary);
     run_test_command(&mut command)?;
     Ok(CompiledEntry { work_dir, binary })
+}
+
+fn add_staged_source_include_dirs(command: &mut Command, work_dir: &Path, staged_source: &Path) {
+    let mut include_dirs = Vec::new();
+    if let Some(parent) = staged_source.parent() {
+        include_dirs.push(parent.to_path_buf());
+    }
+    if let Ok(relative) = staged_source.strip_prefix(work_dir) {
+        let mut current = work_dir.to_path_buf();
+        for component in relative.components() {
+            let std::path::Component::Normal(part) = component else {
+                continue;
+            };
+            current.push(part);
+            if current == staged_source {
+                break;
+            }
+            include_dirs.push(current.clone());
+        }
+    }
+    include_dirs.sort();
+    include_dirs.dedup();
+    for include_dir in include_dirs {
+        command.arg("-I").arg(include_dir);
+    }
+}
+
+fn config_with_compiled_runtime_path(
+    config: &RunConfig,
+    compiled: &CompiledEntry,
+) -> Result<RunConfig> {
+    let mut adjusted = config.clone();
+    let mut libraries = vec![compiled.work_dir.display().to_string()];
+    if let Some(existing) = adjusted
+        .entry_env
+        .iter()
+        .find_map(|(key, value)| (key == "LD_LIBRARY_PATH").then_some(value.clone()))
+    {
+        libraries.push(existing);
+    }
+    adjusted
+        .entry_env
+        .retain(|(key, _)| key != "LD_LIBRARY_PATH");
+    adjusted
+        .entry_env
+        .push(("LD_LIBRARY_PATH".to_string(), libraries.join(":")));
+    Ok(adjusted)
 }
 
 fn compile_companion_dsos(
@@ -3302,6 +3351,19 @@ fn referenced_companion_dsos(entry: &TestsManifestEntry, source: &Path) -> Resul
 fn companion_dsos_from_makefiles(entry: &TestsManifestEntry) -> Result<Vec<String>> {
     let stem = artifact_stem(entry)?;
     let targets = [format!("$(objpfx){stem}:"), format!("$(objpfx){stem}.out:")];
+    collect_makefile_companion_dsos(entry, &targets)
+}
+
+fn linked_companion_dsos_from_makefiles(entry: &TestsManifestEntry) -> Result<Vec<String>> {
+    let stem = artifact_stem(entry)?;
+    let targets = [format!("$(objpfx){stem}:")];
+    collect_makefile_companion_dsos(entry, &targets)
+}
+
+fn collect_makefile_companion_dsos(
+    entry: &TestsManifestEntry,
+    targets: &[String],
+) -> Result<Vec<String>> {
     let mut basenames = BTreeSet::new();
     for makefile in makefiles_for_manifest_entry(entry)? {
         for line in read_make_logical_lines(&makefile)? {
@@ -3315,9 +3377,7 @@ fn companion_dsos_from_makefiles(entry: &TestsManifestEntry) -> Result<Vec<Strin
                     .rsplit('/')
                     .next()
                     .unwrap_or(token);
-                if basename.ends_with(".so")
-                    && (basename.starts_with("tst-") || basename.starts_with("test-"))
-                {
+                if basename.ends_with(".so") {
                     basenames.insert(basename.to_string());
                 }
             }
@@ -3449,8 +3509,6 @@ fn compile_shared_entry_support(
         .arg("-I")
         .arg(work_dir.join(&entry.subdir))
         .arg("-I")
-        .arg(&include_root)
-        .arg("-I")
         .arg(&config.build_root)
         .arg("-I")
         .arg(config.build_root.join("support"))
@@ -3458,6 +3516,8 @@ fn compile_shared_entry_support(
         .arg(config.build_root.join("elf"))
         .arg("-I")
         .arg(config.build_root.join("nptl"));
+    add_staged_source_include_dirs(&mut command, work_dir, &staged_source);
+    command.arg("-I").arg(&include_root);
     apply_glibc_source_cppflags(&mut command, entry, staged_prelude.as_deref());
     for include_dir in host_after_include_dirs() {
         command.arg("-idirafter").arg(include_dir);
@@ -3465,8 +3525,12 @@ fn compile_shared_entry_support(
     command
         .arg(format!("-Wl,-rpath,{}", lib_root.display()))
         .arg(format!("-Wl,-rpath-link,{}", lib_root.display()))
+        .arg(format!("-Wl,-rpath,{}", work_dir.display()))
+        .arg(format!("-Wl,-rpath-link,{}", work_dir.display()))
         .arg("-L")
         .arg(&lib_root)
+        .arg("-L")
+        .arg(work_dir)
         .arg(command_path_for_work_dir(work_dir, &staged_source))
         .arg(config.build_root.join("support/libsupport_nonshared.a"))
         .arg("-ldl")

@@ -101,8 +101,8 @@ fn query_keyed_file(path: &str, keys: &[String], key_field: usize) -> Result<()>
 }
 
 fn query_services(keys: &[String]) -> Result<()> {
-    let contents = fs::read_to_string("/etc/services")
-        .context("failed to read database /etc/services")?;
+    let contents =
+        fs::read_to_string("/etc/services").context("failed to read database /etc/services")?;
     let mut matches = Vec::new();
     for raw_line in contents.lines() {
         let line = raw_line.trim();
@@ -116,7 +116,10 @@ fn query_services(keys: &[String]) -> Result<()> {
         let fields = line.split_whitespace().collect::<Vec<_>>();
         let name = fields.first().copied().unwrap_or_default();
         let port = fields.get(1).copied().unwrap_or_default();
-        if keys.iter().any(|candidate| candidate == name || candidate == port) {
+        if keys
+            .iter()
+            .any(|candidate| candidate == name || candidate == port)
+        {
             matches.push(line.to_string());
         }
     }
@@ -229,8 +232,7 @@ fn print_nscd_help() {
 }
 
 fn run_nscd_loop() -> Result<()> {
-    fs::create_dir_all(NSCD_RUN_DIR)
-        .with_context(|| format!("failed to create {NSCD_RUN_DIR}"))?;
+    fs::create_dir_all(NSCD_RUN_DIR).with_context(|| format!("failed to create {NSCD_RUN_DIR}"))?;
     fs::create_dir_all(NSCD_CACHE_DIR)
         .with_context(|| format!("failed to create {NSCD_CACHE_DIR}"))?;
     fs::create_dir_all(NSCD_INVALIDATION_DIR)

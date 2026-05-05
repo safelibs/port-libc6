@@ -3,9 +3,9 @@
     "notes": [
       "This inventory is the single committed ledger of non-Rust source, script, assembly, template, and fallback assets planned under safe/**.",
       "Later phases must update this file in place instead of maintaining ad hoc fallback lists.",
-      "Phase 8 keeps the public libc-family DSOs on the safe build path, removes the temporary locale/iconv helper wrappers, and limits remaining copied-upstream helper payloads to explicitly tracked backend binaries plus later-phase libc6-dev obligations."
+      "Phase 9 keeps the public libc-family DSOs on the safe build path through the remaining math and auxiliary DSOs, removes the temporary dev/time helper wrappers, and limits remaining copied-upstream payloads to explicitly tracked backend binaries plus later-phase libc6-dev obligations."
     ],
-    "phase": "impl_08_locale_iconv_posix_parsers"
+    "phase": "impl_09_math_and_aux_dsos"
   },
   "entries": [
     {
@@ -185,39 +185,6 @@
       "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
     },
     {
-      "path": "/usr/lib64/libdl.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libdl.so.2",
-      "classification": "hybrid_dso_shell",
-      "owning_phase": "impl_02_hybrid_abi_shell",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/lib64/libdl.so.2"
-      ],
-      "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-    },
-    {
-      "path": "/usr/lib64/libm.so",
-      "source_path": "build/testroot.pristine/usr/lib64/libm.so",
-      "classification": "hybrid_dso_shell",
-      "owning_phase": "impl_02_hybrid_abi_shell",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/lib64/libm.so"
-      ],
-      "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-    },
-    {
-      "path": "/usr/lib64/libm.so.6",
-      "source_path": "build/testroot.pristine/usr/lib64/libm.so.6",
-      "classification": "hybrid_dso_shell",
-      "owning_phase": "impl_02_hybrid_abi_shell",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/lib64/libm.so.6"
-      ],
-      "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-    },
-    {
       "path": "/usr/lib64/libmcheck.a",
       "source_path": "build/testroot.pristine/usr/lib64/libmcheck.a",
       "classification": "fallback_static_archive",
@@ -225,61 +192,6 @@
       "shipped": true,
       "package_scope_refs": [
         "/usr/lib64/libmcheck.a"
-      ],
-      "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-    },
-    {
-      "path": "/usr/lib64/libmvec.so",
-      "source_path": "build/testroot.pristine/usr/lib64/libmvec.so",
-      "classification": "hybrid_dso_shell",
-      "owning_phase": "impl_02_hybrid_abi_shell",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/lib64/libmvec.so"
-      ],
-      "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-    },
-    {
-      "path": "/usr/lib64/libmvec.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libmvec.so.1",
-      "classification": "hybrid_dso_shell",
-      "owning_phase": "impl_02_hybrid_abi_shell",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/lib64/libmvec.so.1"
-      ],
-      "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-    },
-    {
-      "path": "/usr/lib64/libpcprofile.so",
-      "source_path": "build/testroot.pristine/usr/lib64/libpcprofile.so",
-      "classification": "hybrid_dso_shell",
-      "owning_phase": "impl_02_hybrid_abi_shell",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/lib64/libpcprofile.so"
-      ],
-      "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-    },
-    {
-      "path": "/usr/lib64/librt.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/librt.so.1",
-      "classification": "hybrid_dso_shell",
-      "owning_phase": "impl_02_hybrid_abi_shell",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/lib64/librt.so.1"
-      ],
-      "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-    },
-    {
-      "path": "/usr/lib64/libutil.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libutil.so.1",
-      "classification": "hybrid_dso_shell",
-      "owning_phase": "impl_02_hybrid_abi_shell",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/lib64/libutil.so.1"
       ],
       "audit_notes": "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
     },
@@ -295,10 +207,65 @@
       "audit_notes": "Required-package startup or assembly shim carried by the safe port surface."
     },
     {
+      "path": "/usr/libexec/safelibs/aux-tools/gencat.backend",
+      "source_path": "build/testroot.pristine/usr/bin/gencat",
+      "classification": "tracked_backend_binary",
+      "owning_phase": "impl_09_math_and_aux_dsos",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/aux-tools/gencat.backend"
+      ],
+      "audit_notes": "Rust frontend /usr/bin/gencat delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
+    },
+    {
+      "path": "/usr/libexec/safelibs/aux-tools/getconf.backend",
+      "source_path": "build/testroot.pristine/usr/bin/getconf",
+      "classification": "tracked_backend_binary",
+      "owning_phase": "impl_09_math_and_aux_dsos",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/aux-tools/getconf.backend"
+      ],
+      "audit_notes": "Rust frontend /usr/bin/getconf delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
+    },
+    {
+      "path": "/usr/libexec/safelibs/aux-tools/tzselect.backend",
+      "source_path": "original/timezone/tzselect.ksh",
+      "classification": "tracked_backend_binary",
+      "owning_phase": "impl_09_math_and_aux_dsos",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/aux-tools/tzselect.backend"
+      ],
+      "audit_notes": "Rust frontend /usr/bin/tzselect delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
+    },
+    {
+      "path": "/usr/libexec/safelibs/aux-tools/zdump.backend",
+      "source_path": "build/testroot.pristine/usr/bin/zdump",
+      "classification": "tracked_backend_binary",
+      "owning_phase": "impl_09_math_and_aux_dsos",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/aux-tools/zdump.backend"
+      ],
+      "audit_notes": "Rust frontend /usr/bin/zdump delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
+    },
+    {
+      "path": "/usr/libexec/safelibs/aux-tools/zic.backend",
+      "source_path": "build/testroot.pristine/usr/sbin/zic",
+      "classification": "tracked_backend_binary",
+      "owning_phase": "impl_09_math_and_aux_dsos",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/aux-tools/zic.backend"
+      ],
+      "audit_notes": "Rust frontend /usr/sbin/zic delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
+    },
+    {
       "path": "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2",
       "source_path": "build/testroot.pristine/usr/lib64/ld-linux-x86-64.so.2",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
+      "owning_phase": "impl_09_math_and_aux_dsos",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2"
@@ -309,7 +276,7 @@
       "path": "/usr/libexec/safelibs/backends/libanl.so.1",
       "source_path": "build/testroot.pristine/usr/lib64/libanl.so.1",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
+      "owning_phase": "impl_09_math_and_aux_dsos",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libanl.so.1"
@@ -320,7 +287,7 @@
       "path": "/usr/libexec/safelibs/backends/libc.so.6",
       "source_path": "build/testroot.pristine/usr/lib64/libc.so.6",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
+      "owning_phase": "impl_09_math_and_aux_dsos",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libc.so.6"
@@ -331,7 +298,7 @@
       "path": "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0",
       "source_path": "build/testroot.pristine/usr/lib64/libc_malloc_debug.so.0",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
+      "owning_phase": "impl_09_math_and_aux_dsos",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0"
@@ -339,10 +306,32 @@
       "audit_notes": "Private baseline libc_malloc_debug copy retained only as an explicitly inventoried backend payload while the public malloc-debug path comes from the safe build root."
     },
     {
+      "path": "/usr/libexec/safelibs/backends/libdl.so.2",
+      "source_path": "build/testroot.pristine/usr/lib64/libdl.so.2",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_09_math_and_aux_dsos",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/libdl.so.2"
+      ],
+      "audit_notes": "Private copied upstream libdl payload retained only as an explicitly inventoried backend while the public dlfcn-facing DSO path comes from the safe build root."
+    },
+    {
+      "path": "/usr/libexec/safelibs/backends/libm.so.6",
+      "source_path": "build/testroot.pristine/usr/lib64/libm.so.6",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_09_math_and_aux_dsos",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/libm.so.6"
+      ],
+      "audit_notes": "Private copied upstream libm payload retained only as an explicitly inventoried backend while the public math DSO path comes from the safe build root."
+    },
+    {
       "path": "/usr/libexec/safelibs/backends/libmemusage.so",
       "source_path": "build/testroot.pristine/usr/lib64/libmemusage.so",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
+      "owning_phase": "impl_09_math_and_aux_dsos",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libmemusage.so"
@@ -350,10 +339,21 @@
       "audit_notes": "Private baseline libmemusage copy retained only as an explicitly inventoried backend payload while the public memusage path comes from the safe build root."
     },
     {
+      "path": "/usr/libexec/safelibs/backends/libmvec.so.1",
+      "source_path": "build/testroot.pristine/usr/lib64/libmvec.so.1",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_09_math_and_aux_dsos",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/libmvec.so.1"
+      ],
+      "audit_notes": "Private copied upstream libmvec payload retained only as an explicitly inventoried backend while the public vector math DSO path comes from the safe build root."
+    },
+    {
       "path": "/usr/libexec/safelibs/backends/libnsl.so.1",
       "source_path": "build/testroot.pristine/usr/lib64/libnsl.so.1",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
+      "owning_phase": "impl_09_math_and_aux_dsos",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libnsl.so.1"
@@ -364,7 +364,7 @@
       "path": "/usr/libexec/safelibs/backends/libnss_compat.so.2",
       "source_path": "build/testroot.pristine/usr/lib64/libnss_compat.so.2",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
+      "owning_phase": "impl_09_math_and_aux_dsos",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libnss_compat.so.2"
@@ -375,7 +375,7 @@
       "path": "/usr/libexec/safelibs/backends/libnss_dns.so.2",
       "source_path": "build/testroot.pristine/usr/lib64/libnss_dns.so.2",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
+      "owning_phase": "impl_09_math_and_aux_dsos",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libnss_dns.so.2"
@@ -386,7 +386,7 @@
       "path": "/usr/libexec/safelibs/backends/libnss_files.so.2",
       "source_path": "build/testroot.pristine/usr/lib64/libnss_files.so.2",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
+      "owning_phase": "impl_09_math_and_aux_dsos",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libnss_files.so.2"
@@ -397,7 +397,7 @@
       "path": "/usr/libexec/safelibs/backends/libnss_hesiod.so.2",
       "source_path": "build/testroot.pristine/usr/lib64/libnss_hesiod.so.2",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
+      "owning_phase": "impl_09_math_and_aux_dsos",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libnss_hesiod.so.2"
@@ -405,10 +405,21 @@
       "audit_notes": "Private copied upstream libnss_hesiod payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
     },
     {
+      "path": "/usr/libexec/safelibs/backends/libpcprofile.so",
+      "source_path": "build/testroot.pristine/usr/lib64/libpcprofile.so",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_09_math_and_aux_dsos",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/libpcprofile.so"
+      ],
+      "audit_notes": "Private copied upstream libpcprofile payload retained only as an explicitly inventoried backend while the public profiling DSO path comes from the safe build root."
+    },
+    {
       "path": "/usr/libexec/safelibs/backends/libpthread.so.0",
       "source_path": "build/testroot.pristine/usr/lib64/libpthread.so.0",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
+      "owning_phase": "impl_09_math_and_aux_dsos",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libpthread.so.0"
@@ -419,7 +430,7 @@
       "path": "/usr/libexec/safelibs/backends/libresolv.so.2",
       "source_path": "build/testroot.pristine/usr/lib64/libresolv.so.2",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
+      "owning_phase": "impl_09_math_and_aux_dsos",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libresolv.so.2"
@@ -427,15 +438,37 @@
       "audit_notes": "Private copied upstream libresolv payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
     },
     {
+      "path": "/usr/libexec/safelibs/backends/librt.so.1",
+      "source_path": "build/testroot.pristine/usr/lib64/librt.so.1",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_09_math_and_aux_dsos",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/librt.so.1"
+      ],
+      "audit_notes": "Private copied upstream librt payload retained only as an explicitly inventoried backend while the public realtime DSO path comes from the safe build root."
+    },
+    {
       "path": "/usr/libexec/safelibs/backends/libthread_db.so.1",
       "source_path": "build/testroot.pristine/usr/lib64/libthread_db.so.1",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
+      "owning_phase": "impl_09_math_and_aux_dsos",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libthread_db.so.1"
       ],
       "audit_notes": "Private baseline libthread_db copy retained only as an explicitly inventoried backend payload while the public libthread_db path comes from the safe build root."
+    },
+    {
+      "path": "/usr/libexec/safelibs/backends/libutil.so.1",
+      "source_path": "build/testroot.pristine/usr/lib64/libutil.so.1",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_09_math_and_aux_dsos",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/libutil.so.1"
+      ],
+      "audit_notes": "Private copied upstream libutil payload retained only as an explicitly inventoried backend while the public login/helper DSO path comes from the safe build root."
     },
     {
       "path": "/usr/libexec/safelibs/loader-tools/ld.so.backend",

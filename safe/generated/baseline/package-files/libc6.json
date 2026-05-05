@@ -3340,7 +3340,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "libc-family-cutover"
     },
     {
@@ -3353,7 +3353,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "libc-family-cutover"
     },
     {
@@ -3366,7 +3366,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "network-tools"
     },
     {
@@ -3379,7 +3379,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "libc-family-cutover"
     },
     {
@@ -3392,34 +3392,34 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "libc-family-cutover"
     },
     {
       "package": "libc6",
       "path": "/usr/lib64/libdl.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libdl.so.2",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libdl.so.2",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
-      "executable": true,
+      "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "verification": "dev-and-time-tools"
     },
     {
       "package": "libc6",
       "path": "/usr/lib64/libm.so.6",
-      "source_path": "build/testroot.pristine/usr/lib64/libm.so.6",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libm.so.6",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
-      "executable": true,
+      "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "verification": "dev-and-time-tools"
     },
     {
       "package": "libc6",
@@ -3431,21 +3431,21 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "libc-family-cutover"
     },
     {
       "package": "libc6",
       "path": "/usr/lib64/libmvec.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libmvec.so.1",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libmvec.so.1",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
-      "executable": true,
+      "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "verification": "dev-and-time-tools"
     },
     {
       "package": "libc6",
@@ -3457,7 +3457,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "network-tools"
     },
     {
@@ -3470,7 +3470,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "network-tools"
     },
     {
@@ -3483,7 +3483,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "network-tools"
     },
     {
@@ -3496,7 +3496,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "network-tools"
     },
     {
@@ -3509,21 +3509,21 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "network-tools"
     },
     {
       "package": "libc6",
       "path": "/usr/lib64/libpcprofile.so",
-      "source_path": "build/testroot.pristine/usr/lib64/libpcprofile.so",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libpcprofile.so",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
-      "executable": true,
+      "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "verification": "dev-and-time-tools"
     },
     {
       "package": "libc6",
@@ -3535,7 +3535,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "libc-family-cutover"
     },
     {
@@ -3548,21 +3548,21 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "network-tools"
     },
     {
       "package": "libc6",
       "path": "/usr/lib64/librt.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/librt.so.1",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/librt.so.1",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
-      "executable": true,
+      "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "verification": "dev-and-time-tools"
     },
     {
       "package": "libc6",
@@ -3574,21 +3574,21 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "libc-family-cutover"
     },
     {
       "package": "libc6",
       "path": "/usr/lib64/libutil.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libutil.so.1",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libutil.so.1",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
-      "executable": true,
+      "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "verification": "dev-and-time-tools"
     },
     {
       "package": "libc6",
@@ -3600,7 +3600,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "libc-family-cutover"
     },
     {
@@ -3613,7 +3613,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "network-tools"
     },
     {
@@ -3626,7 +3626,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "libc-family-cutover"
     },
     {
@@ -3639,8 +3639,34 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "libc-family-cutover"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/libdl.so.2",
+      "source_path": "build/testroot.pristine/usr/lib64/libdl.so.2",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "verification": "dev-and-time-tools"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/libm.so.6",
+      "source_path": "build/testroot.pristine/usr/lib64/libm.so.6",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "verification": "dev-and-time-tools"
     },
     {
       "package": "libc6",
@@ -3652,8 +3678,21 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "libc-family-cutover"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/libmvec.so.1",
+      "source_path": "build/testroot.pristine/usr/lib64/libmvec.so.1",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "verification": "dev-and-time-tools"
     },
     {
       "package": "libc6",
@@ -3665,7 +3704,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "network-tools"
     },
     {
@@ -3678,7 +3717,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "network-tools"
     },
     {
@@ -3691,7 +3730,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "network-tools"
     },
     {
@@ -3704,7 +3743,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "network-tools"
     },
     {
@@ -3717,8 +3756,21 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "network-tools"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/libpcprofile.so",
+      "source_path": "build/testroot.pristine/usr/lib64/libpcprofile.so",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "verification": "dev-and-time-tools"
     },
     {
       "package": "libc6",
@@ -3730,7 +3782,7 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "libc-family-cutover"
     },
     {
@@ -3743,8 +3795,21 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "network-tools"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/librt.so.1",
+      "source_path": "build/testroot.pristine/usr/lib64/librt.so.1",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "verification": "dev-and-time-tools"
     },
     {
       "package": "libc6",
@@ -3756,8 +3821,21 @@
       "asset_kind": "private_baseline_backend_dso",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "libc-family-cutover"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/libutil.so.1",
+      "source_path": "build/testroot.pristine/usr/lib64/libutil.so.1",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_09_math_and_aux_dsos",
+      "verification": "dev-and-time-tools"
     }
   ]
 }

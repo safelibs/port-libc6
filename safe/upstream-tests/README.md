@@ -8,7 +8,7 @@ against the checked-in upstream build outputs while the runtime remains hybrid.
   harness and smoke checks.
 - `cargo run -p xtask -- run-original-tests ...` populates that build tree from
   the committed safe test sources and the checked-in upstream build artifacts.
-- Phase 8 extends that committed test tree with conform, iconv, iconvdata,
-  locale, localedata, posix, and shared sysdeps-owned coverage without
-  inventing a parallel workflow.
+- Phase 9 extends that committed test tree with the remaining math, aux-DSO,
+  wide-character, and shared sysdeps-owned coverage without inventing a
+  parallel workflow.
 

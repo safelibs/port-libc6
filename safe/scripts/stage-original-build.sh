@@ -102,4 +102,7 @@ mkdir -p "$BUILD_DIR/testroot.pristine/usr/include/gnu"
 cp "$BUILD_DIR/gnu/lib-names-64.h" "$BUILD_DIR/testroot.pristine/usr/include/gnu/lib-names-64.h"
 cp "$BUILD_DIR/gnu/lib-names.h" "$BUILD_DIR/testroot.pristine/usr/include/gnu/lib-names.h"
 
-make -C "$SOURCE_DIR" objdir="$BUILD_DIR" "$INSTALL_STAMP"
+(
+  cd "$BUILD_DIR"
+  make testroot.pristine/install.stamp
+)

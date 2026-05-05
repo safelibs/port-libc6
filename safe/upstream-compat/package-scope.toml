@@ -1,5 +1,5 @@
 [metadata]
-phase = "impl_08_locale_iconv_posix_parsers"
+phase = "impl_09_math_and_aux_dsos"
 notes = [
     "Required-package baselines remain derived from the checked-in build/testroot.pristine tree, while the committed packaging surface now lives under safe/debian/** and safe/generated/packaging/package-build-manifest.json.",
     "Later phases must consume the committed safe packaging files in place instead of reading undeclared inputs from original/debian/**.",
@@ -10,6 +10,7 @@ notes = [
     "Phase 6 keeps required package manifests in place, cuts the first libc-family public DSOs and public libc6-dev link names over to safe-built payloads, and tracks any remaining baseline backend DSOs under explicit private package paths.",
     "Phase 7 keeps required package manifests in place, extends the libc-family public DSO cutover through the network-facing DSOs and link names, and tracks the copied upstream payloads under explicit private backend paths.",
     "Phase 8 keeps required package manifests in place, extends the libc-family public DSO cutover through libBrokenLocale, ships the locale helper scripts directly from safe/debian/local/**, and tracks only the helper backends that still delegate to preserved upstream locale binaries.",
+    "Phase 9 keeps required package manifests in place, extends the libc-family public DSO cutover through libdl, libm, libmvec, libpcprofile, librt, and libutil, ships the remaining dev/time entrypoints as Rust frontends, and tracks only the temporary backend DSOs plus helper backends still delegated to preserved upstream payloads.",
 ]
 
 [debug_derivation]
@@ -469,22 +470,22 @@ shipped_status = "testroot_only"
 source_path = "build/testroot.pristine/install.stamp"
 
 [[files]]
-asset_kind = "fallback_wrapper"
+asset_kind = "rust_target"
 executable = true
 package = "libc-dev-bin"
 path = "/usr/bin/gencat"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/bin/gencat"
+source_path = "safe/crates/libc-support-tools/src/aux_tools.rs"
 
 [[files]]
-asset_kind = "fallback_wrapper"
+asset_kind = "rust_target"
 executable = true
 package = "libc-bin"
 path = "/usr/bin/getconf"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/bin/getconf"
+source_path = "safe/crates/libc-support-tools/src/aux_tools.rs"
 
 [[files]]
 asset_kind = "rust_target"
@@ -595,13 +596,13 @@ shipped_status = "shipped"
 source_path = "build/testroot.pristine/usr/bin/sprof"
 
 [[files]]
-asset_kind = "fallback_wrapper"
+asset_kind = "rust_target"
 executable = true
 package = "libc-bin"
 path = "/usr/bin/tzselect"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/bin/tzselect"
+source_path = "safe/crates/libc-support-tools/src/aux_tools.rs"
 
 [[files]]
 asset_kind = "script_asset"
@@ -613,13 +614,13 @@ shipped_status = "testroot_only"
 source_path = "build/testroot.pristine/usr/bin/xtrace"
 
 [[files]]
-asset_kind = "fallback_wrapper"
+asset_kind = "rust_target"
 executable = true
 package = "libc-bin"
 path = "/usr/bin/zdump"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/bin/zdump"
+source_path = "safe/crates/libc-support-tools/src/aux_tools.rs"
 
 [[files]]
 asset_kind = "data_asset"
@@ -10854,12 +10855,12 @@ temporary = true
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
+executable = false
 package = "libc6"
 path = "/usr/lib64/libdl.so.2"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libdl.so.2"
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libdl.so.2"
 
 [[files]]
 asset_kind = "data_asset"
@@ -10897,22 +10898,20 @@ temporary = true
 [[files]]
 asset_kind = "rust_target"
 executable = false
-final_cutover_phase = "impl_10_final_fixup_and_audit"
 package = "libc6-dev"
 path = "/usr/lib64/libm.so"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libm.so"
-temporary = true
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libm.so"
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
+executable = false
 package = "libc6"
 path = "/usr/lib64/libm.so.6"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libm.so.6"
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libm.so.6"
 
 [[files]]
 asset_kind = "rust_target"
@@ -10947,24 +10946,21 @@ temporary = true
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
-final_cutover_phase = "impl_10_final_fixup_and_audit"
+executable = false
 package = "libc6-dev"
 path = "/usr/lib64/libmvec.so"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libmvec.so"
-symlink_target = "../../lib64/libmvec.so.1"
-temporary = true
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libmvec.so.1"
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
+executable = false
 package = "libc6"
 path = "/usr/lib64/libmvec.so.1"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libmvec.so.1"
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libmvec.so.1"
 
 [[files]]
 asset_kind = "rust_target"
@@ -11031,12 +11027,12 @@ source_path = "safe/work/libc-family-build/amd64/usr/lib64/libnss_hesiod.so.2"
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
+executable = false
 package = "libc6"
 path = "/usr/lib64/libpcprofile.so"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libpcprofile.so"
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libpcprofile.so"
 
 [[files]]
 asset_kind = "data_asset"
@@ -11109,12 +11105,12 @@ temporary = true
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
+executable = false
 package = "libc6"
 path = "/usr/lib64/librt.so.1"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/librt.so.1"
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/librt.so.1"
 
 [[files]]
 asset_kind = "rust_target"
@@ -11147,12 +11143,12 @@ temporary = true
 
 [[files]]
 asset_kind = "rust_target"
-executable = true
+executable = false
 package = "libc6"
 path = "/usr/lib64/libutil.so.1"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/lib64/libutil.so.1"
+source_path = "safe/work/libc-family-build/amd64/usr/lib64/libutil.so.1"
 
 [[files]]
 asset_kind = "asm_shim"
@@ -11191,6 +11187,51 @@ path = "/usr/libexec/getconf/XBS5_LP64_OFF64"
 scope = "testroot_only"
 shipped_status = "testroot_only"
 source_path = "build/testroot.pristine/usr/libexec/getconf/XBS5_LP64_OFF64"
+
+[[files]]
+asset_kind = "tracked_backend_binary"
+executable = true
+package = "libc-dev-bin"
+path = "/usr/libexec/safelibs/aux-tools/gencat.backend"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/bin/gencat"
+
+[[files]]
+asset_kind = "tracked_backend_binary"
+executable = true
+package = "libc-bin"
+path = "/usr/libexec/safelibs/aux-tools/getconf.backend"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/bin/getconf"
+
+[[files]]
+asset_kind = "tracked_backend_binary"
+executable = true
+package = "libc-bin"
+path = "/usr/libexec/safelibs/aux-tools/tzselect.backend"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "original/timezone/tzselect.ksh"
+
+[[files]]
+asset_kind = "tracked_backend_binary"
+executable = true
+package = "libc-bin"
+path = "/usr/libexec/safelibs/aux-tools/zdump.backend"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/bin/zdump"
+
+[[files]]
+asset_kind = "tracked_backend_binary"
+executable = true
+package = "libc-bin"
+path = "/usr/libexec/safelibs/aux-tools/zic.backend"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/sbin/zic"
 
 [[files]]
 asset_kind = "private_baseline_backend_dso"
@@ -11241,10 +11282,43 @@ asset_kind = "private_baseline_backend_dso"
 executable = false
 final_cutover_phase = "impl_10_final_fixup_and_audit"
 package = "libc6"
+path = "/usr/libexec/safelibs/backends/libdl.so.2"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/libdl.so.2"
+temporary = true
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+final_cutover_phase = "impl_10_final_fixup_and_audit"
+package = "libc6"
+path = "/usr/libexec/safelibs/backends/libm.so.6"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/libm.so.6"
+temporary = true
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+final_cutover_phase = "impl_10_final_fixup_and_audit"
+package = "libc6"
 path = "/usr/libexec/safelibs/backends/libmemusage.so"
 scope = "required_package"
 shipped_status = "shipped"
 source_path = "build/testroot.pristine/usr/lib64/libmemusage.so"
+temporary = true
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+final_cutover_phase = "impl_10_final_fixup_and_audit"
+package = "libc6"
+path = "/usr/libexec/safelibs/backends/libmvec.so.1"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/libmvec.so.1"
 temporary = true
 
 [[files]]
@@ -11307,6 +11381,17 @@ asset_kind = "private_baseline_backend_dso"
 executable = false
 final_cutover_phase = "impl_10_final_fixup_and_audit"
 package = "libc6"
+path = "/usr/libexec/safelibs/backends/libpcprofile.so"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/libpcprofile.so"
+temporary = true
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+final_cutover_phase = "impl_10_final_fixup_and_audit"
+package = "libc6"
 path = "/usr/libexec/safelibs/backends/libpthread.so.0"
 scope = "required_package"
 shipped_status = "shipped"
@@ -11329,10 +11414,32 @@ asset_kind = "private_baseline_backend_dso"
 executable = false
 final_cutover_phase = "impl_10_final_fixup_and_audit"
 package = "libc6"
+path = "/usr/libexec/safelibs/backends/librt.so.1"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/librt.so.1"
+temporary = true
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+final_cutover_phase = "impl_10_final_fixup_and_audit"
+package = "libc6"
 path = "/usr/libexec/safelibs/backends/libthread_db.so.1"
 scope = "required_package"
 shipped_status = "shipped"
 source_path = "build/testroot.pristine/usr/lib64/libthread_db.so.1"
+temporary = true
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+final_cutover_phase = "impl_10_final_fixup_and_audit"
+package = "libc6"
+path = "/usr/libexec/safelibs/backends/libutil.so.1"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/libutil.so.1"
 temporary = true
 
 [[files]]
@@ -11462,13 +11569,13 @@ shipped_status = "shipped"
 source_path = "safe/debian/local/usr_sbin/validlocale"
 
 [[files]]
-asset_kind = "fallback_wrapper"
+asset_kind = "rust_target"
 executable = true
 package = "libc-bin"
 path = "/usr/sbin/zic"
 scope = "required_package"
 shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/sbin/zic"
+source_path = "safe/crates/libc-support-tools/src/aux_tools.rs"
 
 [[files]]
 asset_kind = "data_asset"

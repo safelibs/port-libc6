@@ -21,9 +21,10 @@ pub fn run(args: Args) -> Result<()> {
         && args.smoke_set != "runtime-tools"
         && args.smoke_set != "network-tools"
         && args.smoke_set != "locale-tools"
+        && args.smoke_set != "dev-and-time-tools"
     {
         bail!(
-            "unsupported smoke set {}; expected basic-required-packages, libc-family-cutover, loader-tools, runtime-tools, network-tools, or locale-tools",
+            "unsupported smoke set {}; expected basic-required-packages, libc-family-cutover, loader-tools, runtime-tools, network-tools, locale-tools, or dev-and-time-tools",
             args.smoke_set
         );
     }
@@ -451,6 +452,123 @@ smoke_libc_family_cutover() {
   smoke_runtime_tools
 }
 
+smoke_dev_and_time_tools() {
+  log "Verifying phase-09 payloads from the committed install manifest"
+  jq -r '.entries[] | select(.verification == "dev-and-time-tools" and .shipped_status == "shipped") | [.package, .path] | @tsv' \
+    /workspace/safe/generated/install-manifests/required-packages.json | \
+  while IFS=$'\t' read -r pkg path; do
+    if [ ! -e "$path" ] && [ ! -L "$path" ]; then
+      printf 'missing installed phase-09 payload for %s: %s\n' "$pkg" "$path" >&2
+      exit 1
+    fi
+  done
+
+  log "Checking remaining aux-DSO public provenance"
+  for manifest in \
+    /workspace/safe/generated/baseline/package-files/libc6.json \
+    /workspace/safe/generated/baseline/package-files/libc6-dev.json \
+    /workspace/safe/generated/install-manifests/required-packages.json; do
+    for path in \
+      /usr/lib64/libdl.so.2 \
+      /usr/lib64/libm.so.6 \
+      /usr/lib64/libmvec.so.1 \
+      /usr/lib64/libpcprofile.so \
+      /usr/lib64/librt.so.1 \
+      /usr/lib64/libutil.so.1 \
+      /usr/lib64/libm.so \
+      /usr/lib64/libmvec.so; do
+      if jq -e --arg path "$path" '.entries[] | select(.path == $path)' "$manifest" >/dev/null; then
+        origin=$(manifest_entry_field "$manifest" "$path" source_origin)
+        source_path=$(manifest_entry_field "$manifest" "$path" source_path)
+        if [ "$origin" = "build_testroot" ]; then
+          printf 'public phase-09 payload %s still uses build_testroot origin in %s\n' "$path" "$manifest" >&2
+          exit 1
+        fi
+        case "$source_path" in
+          build/testroot.pristine/usr/lib64/*)
+            printf 'public phase-09 payload %s still points at baseline public source %s in %s\n' "$path" "$source_path" "$manifest" >&2
+            exit 1
+            ;;
+        esac
+      fi
+    done
+  done
+
+  log "Checking explicit aux-DSO backend inventory"
+  for path in \
+    /usr/libexec/safelibs/backends/libdl.so.2 \
+    /usr/libexec/safelibs/backends/libm.so.6 \
+    /usr/libexec/safelibs/backends/libmvec.so.1 \
+    /usr/libexec/safelibs/backends/libpcprofile.so \
+    /usr/libexec/safelibs/backends/librt.so.1 \
+    /usr/libexec/safelibs/backends/libutil.so.1; do
+    test -f "$path"
+  done
+
+  log "Comparing installed remaining public payloads with staged safe-build sources"
+  for path in \
+    /usr/lib64/libdl.so.2 \
+    /usr/lib64/libm.so.6 \
+    /usr/lib64/libmvec.so.1 \
+    /usr/lib64/libpcprofile.so \
+    /usr/lib64/librt.so.1 \
+    /usr/lib64/libutil.so.1; do
+    compare_public_payload /workspace/safe/generated/install-manifests/required-packages.json "$path"
+  done
+  compare_public_payload /workspace/safe/generated/baseline/package-files/libc6-dev.json /usr/lib64/libm.so
+  compare_public_payload /workspace/safe/generated/baseline/package-files/libc6-dev.json /usr/lib64/libmvec.so
+
+  log "Checking dev/time helper entrypoints and backend inventory"
+  for path in \
+    /usr/bin/gencat \
+    /usr/bin/getconf \
+    /usr/bin/tzselect \
+    /usr/bin/zdump \
+    /usr/sbin/zic; do
+    test -x "$path"
+  done
+  for path in \
+    /usr/libexec/safelibs/aux-tools/gencat.backend \
+    /usr/libexec/safelibs/aux-tools/getconf.backend \
+    /usr/libexec/safelibs/aux-tools/tzselect.backend \
+    /usr/libexec/safelibs/aux-tools/zdump.backend \
+    /usr/libexec/safelibs/aux-tools/zic.backend; do
+    test -x "$path"
+  done
+  for path in \
+    /usr/libexec/safelibs/fallback/libc-dev-bin/gencat.real \
+    /usr/libexec/safelibs/fallback/libc-bin/getconf.real \
+    /usr/libexec/safelibs/fallback/libc-bin/tzselect.real \
+    /usr/libexec/safelibs/fallback/libc-bin/zdump.real \
+    /usr/libexec/safelibs/fallback/libc-bin/zic.real; do
+    if [ -e "$path" ]; then
+      printf 'phase-09 helper still ships fallback payload %s\n' "$path" >&2
+      exit 1
+    fi
+  done
+
+  log "Checking dev/time helper behavior from the installed packages"
+  cat >/tmp/messages.msg <<'EOF'
+$set 1
+1 hello
+EOF
+  /usr/bin/gencat /tmp/messages.cat /tmp/messages.msg
+  test -s /tmp/messages.cat
+  strings /tmp/messages.cat | grep -q 'hello'
+
+  /usr/bin/getconf GNU_LIBC_VERSION >/tmp/getconf-glibc.txt
+  /usr/bin/getconf PATH >/tmp/getconf-path.txt
+  test -s /tmp/getconf-glibc.txt
+  test -s /tmp/getconf-path.txt
+
+  /usr/bin/tzselect --help >/tmp/tzselect-help.txt
+  /usr/bin/zdump --help >/tmp/zdump-help.txt
+  /usr/sbin/zic --help >/tmp/zic-help.txt
+  test -s /tmp/tzselect-help.txt
+  test -s /tmp/zdump-help.txt
+  test -s /tmp/zic-help.txt
+}
+
 log "Updating base package indexes"
 apt-get update
 
@@ -483,6 +601,9 @@ case "${SAFE_SMOKE_SET}" in
     ;;
   locale-tools)
     smoke_locale_tools
+    ;;
+  dev-and-time-tools)
+    smoke_dev_and_time_tools
     ;;
   *)
     printf 'unsupported smoke set in container: %s\n' "${SAFE_SMOKE_SET}" >&2

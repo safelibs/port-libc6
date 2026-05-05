@@ -1,3 +1,8 @@
+use crate::aux_tools::{
+    AUX_TOOL_BINARY_NAME, AUX_TOOL_SOURCE_PATH, GENCAT_BACKEND_INSTALL_PATH,
+    GETCONF_BACKEND_INSTALL_PATH, TZSELECT_BACKEND_INSTALL_PATH, ZDUMP_BACKEND_INSTALL_PATH,
+    ZIC_BACKEND_INSTALL_PATH,
+};
 use crate::loader_tools::{
     LDCONFIG_BACKEND_INSTALL_PATH, LDSO_BACKEND_INSTALL_PATH, LOADER_TOOL_BINARY_NAME,
 };
@@ -70,6 +75,31 @@ const LOCALEDEF_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
     source_path: "build/testroot.pristine/usr/bin/localedef",
 }];
 
+const GENCAT_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
+    install_path: GENCAT_BACKEND_INSTALL_PATH,
+    source_path: "build/testroot.pristine/usr/bin/gencat",
+}];
+
+const GETCONF_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
+    install_path: GETCONF_BACKEND_INSTALL_PATH,
+    source_path: "build/testroot.pristine/usr/bin/getconf",
+}];
+
+const TZSELECT_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
+    install_path: TZSELECT_BACKEND_INSTALL_PATH,
+    source_path: "original/timezone/tzselect.ksh",
+}];
+
+const ZDUMP_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
+    install_path: ZDUMP_BACKEND_INSTALL_PATH,
+    source_path: "build/testroot.pristine/usr/bin/zdump",
+}];
+
+const ZIC_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
+    install_path: ZIC_BACKEND_INSTALL_PATH,
+    source_path: "build/testroot.pristine/usr/sbin/zic",
+}];
+
 const NO_BACKEND_ASSETS: &[BackendAsset] = &[];
 
 const REQUIRED_TOOLS: &[RequiredTool] = &[
@@ -78,8 +108,10 @@ const REQUIRED_TOOLS: &[RequiredTool] = &[
         entrypoint: "/usr/bin/gencat",
         owner_phase: "impl_09_math_and_aux_dsos",
         verification: "dev-and-time-tools",
-        kind: RequiredToolKind::FallbackWrapper {
-            fallback_source_path: "build/testroot.pristine/usr/bin/gencat",
+        kind: RequiredToolKind::RustEntrypoint {
+            binary_name: AUX_TOOL_BINARY_NAME,
+            public_source_path: AUX_TOOL_SOURCE_PATH,
+            backend_assets: GENCAT_BACKEND_ASSETS,
         },
     },
     RequiredTool {
@@ -87,8 +119,10 @@ const REQUIRED_TOOLS: &[RequiredTool] = &[
         entrypoint: "/usr/bin/getconf",
         owner_phase: "impl_09_math_and_aux_dsos",
         verification: "dev-and-time-tools",
-        kind: RequiredToolKind::FallbackWrapper {
-            fallback_source_path: "build/testroot.pristine/usr/bin/getconf",
+        kind: RequiredToolKind::RustEntrypoint {
+            binary_name: AUX_TOOL_BINARY_NAME,
+            public_source_path: AUX_TOOL_SOURCE_PATH,
+            backend_assets: GETCONF_BACKEND_ASSETS,
         },
     },
     RequiredTool {
@@ -173,8 +207,10 @@ const REQUIRED_TOOLS: &[RequiredTool] = &[
         entrypoint: "/usr/bin/tzselect",
         owner_phase: "impl_09_math_and_aux_dsos",
         verification: "dev-and-time-tools",
-        kind: RequiredToolKind::FallbackWrapper {
-            fallback_source_path: "build/testroot.pristine/usr/bin/tzselect",
+        kind: RequiredToolKind::RustEntrypoint {
+            binary_name: AUX_TOOL_BINARY_NAME,
+            public_source_path: AUX_TOOL_SOURCE_PATH,
+            backend_assets: TZSELECT_BACKEND_ASSETS,
         },
     },
     RequiredTool {
@@ -182,8 +218,10 @@ const REQUIRED_TOOLS: &[RequiredTool] = &[
         entrypoint: "/usr/bin/zdump",
         owner_phase: "impl_09_math_and_aux_dsos",
         verification: "dev-and-time-tools",
-        kind: RequiredToolKind::FallbackWrapper {
-            fallback_source_path: "build/testroot.pristine/usr/bin/zdump",
+        kind: RequiredToolKind::RustEntrypoint {
+            binary_name: AUX_TOOL_BINARY_NAME,
+            public_source_path: AUX_TOOL_SOURCE_PATH,
+            backend_assets: ZDUMP_BACKEND_ASSETS,
         },
     },
     RequiredTool {
@@ -213,8 +251,10 @@ const REQUIRED_TOOLS: &[RequiredTool] = &[
         entrypoint: "/usr/sbin/zic",
         owner_phase: "impl_09_math_and_aux_dsos",
         verification: "dev-and-time-tools",
-        kind: RequiredToolKind::FallbackWrapper {
-            fallback_source_path: "build/testroot.pristine/usr/sbin/zic",
+        kind: RequiredToolKind::RustEntrypoint {
+            binary_name: AUX_TOOL_BINARY_NAME,
+            public_source_path: AUX_TOOL_SOURCE_PATH,
+            backend_assets: ZIC_BACKEND_ASSETS,
         },
     },
     RequiredTool {

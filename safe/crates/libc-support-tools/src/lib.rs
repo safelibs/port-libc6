@@ -1,3 +1,4 @@
+pub mod aux_tools;
 mod fallback;
 pub mod loader_tools;
 pub mod locale_tools;

@@ -59,6 +59,14 @@ enum Command {
     Check08LocalePackages(commands::check_08_locale_packages::Args),
     #[command(name = "check_08_locale_safety")]
     Check08LocaleSafety(commands::check_08_locale_safety::Args),
+    #[command(name = "check_09_math_tests")]
+    Check09MathTests(commands::check_09_math_tests::Args),
+    #[command(name = "check_09_math_abi")]
+    Check09MathAbi(commands::check_09_math_abi::Args),
+    #[command(name = "check_09_math_packages")]
+    Check09MathPackages(commands::check_09_math_packages::Args),
+    #[command(name = "check_09_math_safety")]
+    Check09MathSafety(commands::check_09_math_safety::Args),
     RunOriginalTests(commands::run_original_tests::Args),
     CheckAbi(commands::check_abi::Args),
     InstallRoot(commands::install_root::Args),
@@ -100,6 +108,10 @@ fn main() -> Result<()> {
         Command::Check08LocaleAbi(args) => commands::check_08_locale_abi::run(args),
         Command::Check08LocalePackages(args) => commands::check_08_locale_packages::run(args),
         Command::Check08LocaleSafety(args) => commands::check_08_locale_safety::run(args),
+        Command::Check09MathTests(args) => commands::check_09_math_tests::run(args),
+        Command::Check09MathAbi(args) => commands::check_09_math_abi::run(args),
+        Command::Check09MathPackages(args) => commands::check_09_math_packages::run(args),
+        Command::Check09MathSafety(args) => commands::check_09_math_safety::run(args),
         Command::RunOriginalTests(args) => commands::run_original_tests::run(args),
         Command::CheckAbi(args) => commands::check_abi::run(args),
         Command::InstallRoot(args) => commands::install_root::run(args),

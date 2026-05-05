@@ -6,7 +6,8 @@ by the safe libc port.
 - `safe/tests/support/**` mirrors the committed upstream support subtree.
 - `safe/tests/manifest.toml` is the authoritative phase ownership ledger for the
   copied tests.
-- Phase 8 adds the conform, iconv, iconvdata, locale, localedata, posix, and
+- Phase 9 adds the remaining argp, catgets, debug, dlfcn, gmon, gnulib, intl,
+  login, math, mathvec, resource, rt, sunrpc, sysvipc, wcsmbs, wctype, and
   shared sysdeps entries while preserving the earlier committed phase ownership
   in place.
 

@@ -20,18 +20,24 @@ use std::process::{Command, Stdio};
 use toml::Value as TomlValue;
 
 const PHASE_EXTRA_NOTES: [&str; 4] = [
-    "Phase 8 extends the safe-built public DSO cutover to libBrokenLocale, replaces the remaining locale/iconv helper wrappers with Rust frontends or first-class scripts, and keeps explicit backend inventory only where helper binaries still delegate to preserved upstream payloads.",
-    "The safe test tree carries every phase-8-owned conform, iconv, iconvdata, locale, localedata, posix, and sysdeps entry from the committed ownership plan together with the tracked po zero-entry sentinel and shared script rows.",
+    "Phase 9 extends the safe-built public DSO cutover through libdl, libm, libmvec, libpcprofile, librt, and libutil, replaces the remaining math/dev/time helper wrappers with Rust frontends, and keeps explicit backend inventory only for the temporary backend DSOs and helper payloads that remain phase-10 cleanup.",
+    "The safe test tree carries every phase-9-owned argp, catgets, debug, dlfcn, gmon, gnulib, intl, login, math, mathvec, resource, rt, sunrpc, sysvipc, wcsmbs, wctype, and normalized sysdeps entry from the committed ownership plan together with the tracked manual zero-entry sentinel and shared script rows.",
     "check-owned-tests validates exact ownership completeness against the committed test catalog and test-port plan before it executes ported rows.",
     "stage-upstream-build is the only supported way to adopt or recreate safe/work/original-build for relink smokes, package derivation, and upstream-test execution.",
 ];
 
-const PUBLIC_CUTOVER_DSOS: [&str; 14] = [
+const PUBLIC_CUTOVER_DSOS: [&str; 20] = [
     "ld.so",
     "libBrokenLocale",
     "libc",
+    "libdl",
+    "libm",
+    "libmvec",
+    "libpcprofile",
     "libpthread",
+    "librt",
     "libthread_db",
+    "libutil",
     "libc_malloc_debug",
     "libmemusage",
     "libanl",
@@ -68,6 +74,17 @@ const PHASE_07_PUBLIC_DEV_LINKNAMES: [&str; 4] = [
     "/usr/lib64/libnss_hesiod.so",
     "/usr/lib64/libresolv.so",
 ];
+
+const PHASE_09_PRIVATE_BACKEND_DSOS: [&str; 6] = [
+    "/usr/libexec/safelibs/backends/libdl.so.2",
+    "/usr/libexec/safelibs/backends/libm.so.6",
+    "/usr/libexec/safelibs/backends/libmvec.so.1",
+    "/usr/libexec/safelibs/backends/libpcprofile.so",
+    "/usr/libexec/safelibs/backends/librt.so.1",
+    "/usr/libexec/safelibs/backends/libutil.so.1",
+];
+
+const PHASE_09_PUBLIC_DEV_LINKNAMES: [&str; 2] = ["/usr/lib64/libm.so", "/usr/lib64/libmvec.so"];
 
 const LOCALE_HELPER_SCRIPTS: [(&str, &str, bool); 5] = [
     (
@@ -351,6 +368,8 @@ fn copy_public_cutover_dev_linknames(artifact_root: &Path, scratch_root: &Path) 
     for (tag, install_path) in [
         ("libbrokenlocale-linkname", "/usr/lib64/libBrokenLocale.so"),
         ("libc-linkname", "/usr/lib64/libc.so"),
+        ("libm-linkname", "/usr/lib64/libm.so"),
+        ("libmvec-linkname", "/usr/lib64/libmvec.so"),
         ("libthread-db-linkname", "/usr/lib64/libthread_db.so"),
         (
             "libc-malloc-debug-linkname",
@@ -1063,9 +1082,9 @@ against the checked-in upstream build outputs while the runtime remains hybrid.
   harness and smoke checks.
 - `cargo run -p xtask -- run-original-tests ...` populates that build tree from
   the committed safe test sources and the checked-in upstream build artifacts.
-- Phase 8 extends that committed test tree with conform, iconv, iconvdata,
-  locale, localedata, posix, and shared sysdeps-owned coverage without
-  inventing a parallel workflow.
+- Phase 9 extends that committed test tree with the remaining math, aux-DSO,
+  wide-character, and shared sysdeps-owned coverage without inventing a
+  parallel workflow.
 "#,
     )?;
     write_text_file(
@@ -1078,7 +1097,8 @@ by the safe libc port.
 - `safe/tests/support/**` mirrors the committed upstream support subtree.
 - `safe/tests/manifest.toml` is the authoritative phase ownership ledger for the
   copied tests.
-- Phase 8 adds the conform, iconv, iconvdata, locale, localedata, posix, and
+- Phase 9 adds the remaining argp, catgets, debug, dlfcn, gmon, gnulib, intl,
+  login, math, mathvec, resource, rt, sunrpc, sysvipc, wcsmbs, wctype, and
   shared sysdeps entries while preserving the earlier committed phase ownership
   in place.
 "#,
@@ -1096,7 +1116,7 @@ every other stdlib catalog entry is phase-6-owned.
     let crate_readmes = [
         (
             "safe/crates/libc6/README.md",
-            "# libc6 Runtime Port\n\nPhase 8 keeps the startup port in place, carries the low-level runtime exports under `safe/crates/libc6/src/sys/**`, and extends the safe-built public DSO cutover through libBrokenLocale while the locale and iconv helper entrypoints move onto committed Rust frontends.",
+            "# libc6 Runtime Port\n\nPhase 9 keeps the startup port in place, carries the low-level runtime exports under `safe/crates/libc6/src/sys/**`, and extends the safe-built public DSO cutover through libdl, libm, libmvec, libpcprofile, librt, and libutil while the remaining dev/time helper entrypoints move onto committed Rust frontends.",
         ),
         (
             "safe/crates/ldso/README.md",
@@ -1104,19 +1124,19 @@ every other stdlib catalog entry is phase-6-owned.
         ),
         (
             "safe/crates/core-runtime/README.md",
-            "# core-runtime\n\nPhase 8 keeps low-level syscall wrappers, errno and TLS state, futex helpers, allocator entrypoints, signal bookkeeping, and entropy interfaces under `safe/crates/core-runtime/src/**` while the libc-family package cutover extends through libBrokenLocale and the locale helper surfaces.",
+            "# core-runtime\n\nPhase 9 keeps low-level syscall wrappers, errno and TLS state, futex helpers, allocator entrypoints, signal bookkeeping, and entropy interfaces under `safe/crates/core-runtime/src/**` while the libc-family package cutover extends through the remaining math and auxiliary DSO surfaces.",
         ),
         (
             "safe/crates/libpthread/README.md",
-            "# libpthread Runtime State\n\nPhase 8 keeps the Rust-side pthread bookkeeping, futex-backed synchronization helpers, and setxid coordination under `safe/crates/libpthread/src/**` while later locale and math cutovers reuse the same safe-built packaging path.",
+            "# libpthread Runtime State\n\nPhase 9 keeps the Rust-side pthread bookkeeping, futex-backed synchronization helpers, and setxid coordination under `safe/crates/libpthread/src/**` while the remaining math and auxiliary DSO cutovers reuse the same safe-built packaging path.",
         ),
         (
             "safe/crates/libthread-db/README.md",
-            "# libthread-db Surface\n\nPhase 8 records the debugger-facing proc-service and thread-db surface under `safe/crates/libthread-db/src/**` while later libc-family cutovers continue to reuse the same safe build path.",
+            "# libthread-db Surface\n\nPhase 9 records the debugger-facing proc-service and thread-db surface under `safe/crates/libthread-db/src/**` while the remaining libc-family cutovers continue to reuse the same safe build path.",
         ),
         (
             "safe/crates/aux-dsos/README.md",
-            "# Hybrid Aux DSOs\n\nPhase 2 tracks the auxiliary runtime DSOs and modules through generated version scripts and fallback-backed install manifests.",
+            "# Hybrid Aux DSOs\n\nPhase 9 tracks the remaining math and auxiliary DSOs through generated version scripts, safe-build public provenance, and explicit private backend inventory for the final cleanup phase.",
         ),
         (
             "safe/crates/compat-asm/x86_64/README.md",
@@ -1190,6 +1210,7 @@ fn refresh_port_status() -> Result<()> {
             "io-string-stdio" => "safe_public_dso_cutover_ported",
             "nss-resolver-nscd" => "safe_public_dso_cutover_ported",
             "locale-iconv-posix" => "safe_public_dso_cutover_ported",
+            "math-aux-dsos" => "safe_public_dso_cutover_ported",
             _ => continue,
         };
         item.insert("status".to_string(), TomlValue::String(status.to_string()));
@@ -1203,8 +1224,14 @@ fn refresh_port_status() -> Result<()> {
             item.insert(
                 "status".to_string(),
                 TomlValue::String(
-                    "loader_runtime_network_and_locale_tools_rust_frontends_ported".to_string(),
+                    "loader_runtime_network_locale_and_time_tools_rust_frontends_ported"
+                        .to_string(),
                 ),
+            );
+        } else if package == "libc-dev-bin" {
+            item.insert(
+                "status".to_string(),
+                TomlValue::String("dev_tools_rust_frontends_ported".to_string()),
             );
         } else if package == "locales" {
             item.insert(
@@ -1231,7 +1258,7 @@ fn refresh_package_scope() -> Result<()> {
     let mut doc: PackageScopeDoc =
         load_current_or_head_doc("safe/upstream-compat/package-scope.toml")?;
     doc.metadata.phase = PHASE_ID.to_string();
-    let note = "Phase 8 keeps required package manifests in place, extends the libc-family public DSO cutover through libBrokenLocale, ships the locale helper scripts directly from safe/debian/local/**, and tracks only the helper backends that still delegate to preserved upstream locale binaries.";
+    let note = "Phase 9 keeps required package manifests in place, extends the libc-family public DSO cutover through libdl, libm, libmvec, libpcprofile, librt, and libutil, ships the remaining dev/time entrypoints as Rust frontends, and tracks only the temporary backend DSOs plus helper backends still delegated to preserved upstream payloads.";
     if !doc.metadata.notes.iter().any(|entry| entry == note) {
         doc.metadata.notes.push(note.to_string());
     }
@@ -1254,7 +1281,7 @@ fn refresh_cve_status() -> Result<()> {
     let path = safe_root().join("upstream-compat/cve-status.toml");
     let mut doc: CveStatusDoc = load_current_or_head_doc("safe/upstream-compat/cve-status.toml")?;
     doc.metadata.phase = PHASE_ID.to_string();
-    let note = "Phase 8 updates the locale, iconv, regex, glob, fnmatch, wordexp, and libBrokenLocale CVE dispositions after the locale helper cutover and libBrokenLocale public provenance update.";
+    let note = "Phase 9 updates the math, aux-DSO, sunrpc, x32, and remaining helper-tool CVE dispositions after the libdl/libm/libmvec/libpcprofile/librt/libutil public provenance cutover and the dev/time helper frontend cutover.";
     if !doc.metadata.notes.iter().any(|entry| entry == note) {
         doc.metadata.notes.push(note.to_string());
     }
@@ -1265,6 +1292,15 @@ fn refresh_cve_status() -> Result<()> {
         } else if entry.component == "iconv state machine" {
             entry.status = "open".to_string();
             entry.rationale = "Phase 8 replaces the public iconv, iconvconfig, localedef, and locale entrypoints with committed Rust frontends and removes the temporary wrapper packaging path, but the phase still carries explicit backend binaries for the conversion and locale compiler engines. The shipped interface and maintainer-script flow are now phase-owned; direct hardening of the conversion state machines remains open until those backend bodies are replaced.".to_string();
+        } else if entry.component == "memcmp x32" {
+            entry.status = "not-applicable".to_string();
+            entry.rationale = "The delivered workspace remains amd64-only and does not ship the x32 ABI. Phase 9 ports the x32-owned sysdeps test rows into the committed safe test tree, but the vulnerable x32 runtime surface is outside the required-package output.".to_string();
+        } else if entry.component == "sunrpc svc_run" {
+            entry.status = "open".to_string();
+            entry.rationale = "Phase 9 ports the remaining sunrpc-owned test tree and moves the auxiliary DSO/package surface onto the safe-build public provenance path, but the shipped sunrpc implementation body still comes from the preserved upstream libc payload in this workspace. Direct hardening of the svc_run loop remains open until that body is replaced.".to_string();
+        } else if matches!(entry.component.as_str(), "addmntent" | "mntent encoding") {
+            entry.status = "open".to_string();
+            entry.rationale = "Phase 9 ports the remaining login/resource-adjacent test ownership and keeps the public libc-family provenance on the safe-build path, but the legacy mntent parsing implementation still comes from the preserved upstream runtime payload in this workspace. Bug-class-specific hardening remains open until that parser body is replaced.".to_string();
         } else if matches!(
             entry.component.as_str(),
             "fnmatch" | "regex compiler" | "regex engine" | "wordexp" | "glob"
@@ -1316,7 +1352,7 @@ fn refresh_safety_policy() -> Result<()> {
         metadata.insert(
             "phase_note".to_string(),
             TomlValue::String(
-                "Phase 8 keeps the reviewed unsafe and fallback policy entries in sync while libBrokenLocale and the locale helper entrypoints move off temporary wrappers and onto the safe build path or direct checked-in scripts.".to_string(),
+                "Phase 9 keeps the reviewed unsafe and fallback policy entries in sync while libdl/libm/libmvec/libpcprofile/librt/libutil move onto the safe-build public provenance path and the remaining dev/time helper entrypoints move off temporary wrappers and onto Rust frontends.".to_string(),
             ),
         );
     }
@@ -1325,7 +1361,7 @@ fn refresh_safety_policy() -> Result<()> {
             .entry("notes")
             .or_insert_with(|| TomlValue::Array(Vec::new()));
         if let Some(notes) = notes.as_array_mut() {
-            let note = "Phase 8 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope tracks the preserved locale helper backends explicitly.";
+            let note = "Phase 9 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope tracks the temporary math/aux DSO backends plus preserved helper backends explicitly.";
             if !notes
                 .iter()
                 .filter_map(TomlValue::as_str)
@@ -1391,6 +1427,12 @@ fn refresh_fallback_inventory() -> Result<()> {
                 | "/usr/lib64/libthread_db.so.1"
                 | "/usr/lib64/libc_malloc_debug.so.0"
                 | "/usr/lib64/libmemusage.so"
+                | "/usr/lib64/libdl.so.2"
+                | "/usr/lib64/libm.so.6"
+                | "/usr/lib64/libmvec.so.1"
+                | "/usr/lib64/libpcprofile.so"
+                | "/usr/lib64/librt.so.1"
+                | "/usr/lib64/libutil.so.1"
                 | "/usr/lib64/libanl.so.1"
                 | "/usr/lib64/libnsl.so.1"
                 | "/usr/lib64/libnss_compat.so.2"
@@ -1403,6 +1445,8 @@ fn refresh_fallback_inventory() -> Result<()> {
                 | "/usr/lib64/libBrokenLocale.so"
                 | "/usr/lib64/libthread_db.so"
                 | "/usr/lib64/libc_malloc_debug.so"
+                | "/usr/lib64/libm.so"
+                | "/usr/lib64/libmvec.so"
                 | "/usr/lib64/libanl.so"
                 | "/usr/lib64/libnss_compat.so"
                 | "/usr/lib64/libnss_hesiod.so"
@@ -1413,6 +1457,12 @@ fn refresh_fallback_inventory() -> Result<()> {
                 | "/usr/libexec/safelibs/backends/libthread_db.so.1"
                 | "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0"
                 | "/usr/libexec/safelibs/backends/libmemusage.so"
+                | "/usr/libexec/safelibs/backends/libdl.so.2"
+                | "/usr/libexec/safelibs/backends/libm.so.6"
+                | "/usr/libexec/safelibs/backends/libmvec.so.1"
+                | "/usr/libexec/safelibs/backends/libpcprofile.so"
+                | "/usr/libexec/safelibs/backends/librt.so.1"
+                | "/usr/libexec/safelibs/backends/libutil.so.1"
                 | "/usr/libexec/safelibs/backends/libanl.so.1"
                 | "/usr/libexec/safelibs/backends/libnsl.so.1"
                 | "/usr/libexec/safelibs/backends/libnss_compat.so.2"
@@ -1469,6 +1519,30 @@ fn refresh_fallback_inventory() -> Result<()> {
             "Private baseline libmemusage copy retained only as an explicitly inventoried backend payload while the public memusage path comes from the safe build root.",
         ),
         (
+            "/usr/libexec/safelibs/backends/libdl.so.2",
+            "Private copied upstream libdl payload retained only as an explicitly inventoried backend while the public dlfcn-facing DSO path comes from the safe build root.",
+        ),
+        (
+            "/usr/libexec/safelibs/backends/libm.so.6",
+            "Private copied upstream libm payload retained only as an explicitly inventoried backend while the public math DSO path comes from the safe build root.",
+        ),
+        (
+            "/usr/libexec/safelibs/backends/libmvec.so.1",
+            "Private copied upstream libmvec payload retained only as an explicitly inventoried backend while the public vector math DSO path comes from the safe build root.",
+        ),
+        (
+            "/usr/libexec/safelibs/backends/libpcprofile.so",
+            "Private copied upstream libpcprofile payload retained only as an explicitly inventoried backend while the public profiling DSO path comes from the safe build root.",
+        ),
+        (
+            "/usr/libexec/safelibs/backends/librt.so.1",
+            "Private copied upstream librt payload retained only as an explicitly inventoried backend while the public realtime DSO path comes from the safe build root.",
+        ),
+        (
+            "/usr/libexec/safelibs/backends/libutil.so.1",
+            "Private copied upstream libutil payload retained only as an explicitly inventoried backend while the public login/helper DSO path comes from the safe build root.",
+        ),
+        (
             "/usr/libexec/safelibs/backends/libanl.so.1",
             "Private copied upstream libanl payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root.",
         ),
@@ -1515,7 +1589,7 @@ fn refresh_fallback_inventory() -> Result<()> {
         "notes": [
             "This inventory is the single committed ledger of non-Rust source, script, assembly, template, and fallback assets planned under safe/**.",
             "Later phases must update this file in place instead of maintaining ad hoc fallback lists.",
-            "Phase 8 keeps the public libc-family DSOs on the safe build path, removes the temporary locale/iconv helper wrappers, and limits remaining copied-upstream helper payloads to explicitly tracked backend binaries plus later-phase libc6-dev obligations."
+            "Phase 9 keeps the public libc-family DSOs on the safe build path through the remaining math and auxiliary DSOs, removes the temporary dev/time helper wrappers, and limits remaining copied-upstream payloads to explicitly tracked backend binaries plus later-phase libc6-dev obligations."
         ],
         "phase": PHASE_ID
     });
@@ -1579,19 +1653,23 @@ fn normalize_libc_family_package_manifests() -> Result<()> {
             },
         );
     }
-    libc6
-        .entries
-        .sort_by(|left, right| left.path.cmp(&right.path));
+    normalize_package_entries(&mut libc6.entries);
     write_pretty_json(&libc6_path, &libc6)?;
 
     for path in [
         "/usr/lib64/libanl.so.1",
+        "/usr/lib64/libdl.so.2",
+        "/usr/lib64/libm.so.6",
+        "/usr/lib64/libmvec.so.1",
         "/usr/lib64/libnsl.so.1",
         "/usr/lib64/libnss_compat.so.2",
         "/usr/lib64/libnss_dns.so.2",
         "/usr/lib64/libnss_files.so.2",
         "/usr/lib64/libnss_hesiod.so.2",
+        "/usr/lib64/libpcprofile.so",
         "/usr/lib64/libresolv.so.2",
+        "/usr/lib64/librt.so.1",
+        "/usr/lib64/libutil.so.1",
     ] {
         upsert_package_entry(
             &mut libc6.entries,
@@ -1606,11 +1684,23 @@ fn normalize_libc_family_package_manifests() -> Result<()> {
                 executable: false,
                 symlink_target: None,
                 owner_phase: Some(PHASE_ID.to_string()),
-                verification: Some("network-tools".to_string()),
+                verification: Some(match path {
+                    "/usr/lib64/libanl.so.1"
+                    | "/usr/lib64/libnsl.so.1"
+                    | "/usr/lib64/libnss_compat.so.2"
+                    | "/usr/lib64/libnss_dns.so.2"
+                    | "/usr/lib64/libnss_files.so.2"
+                    | "/usr/lib64/libnss_hesiod.so.2"
+                    | "/usr/lib64/libresolv.so.2" => "network-tools".to_string(),
+                    _ => "dev-and-time-tools".to_string(),
+                }),
             },
         );
     }
-    for path in PHASE_07_PRIVATE_BACKEND_DSOS {
+    for path in PHASE_07_PRIVATE_BACKEND_DSOS
+        .iter()
+        .chain(PHASE_09_PRIVATE_BACKEND_DSOS.iter())
+    {
         let source_install_path = path.replace("/usr/libexec/safelibs/backends", "/usr/lib64");
         upsert_package_entry(
             &mut libc6.entries,
@@ -1625,13 +1715,22 @@ fn normalize_libc_family_package_manifests() -> Result<()> {
                 executable: false,
                 symlink_target: None,
                 owner_phase: Some(PHASE_ID.to_string()),
-                verification: Some("network-tools".to_string()),
+                verification: Some(match *path {
+                    "/usr/libexec/safelibs/backends/libanl.so.1"
+                    | "/usr/libexec/safelibs/backends/libnsl.so.1"
+                    | "/usr/libexec/safelibs/backends/libnss_compat.so.2"
+                    | "/usr/libexec/safelibs/backends/libnss_dns.so.2"
+                    | "/usr/libexec/safelibs/backends/libnss_files.so.2"
+                    | "/usr/libexec/safelibs/backends/libnss_hesiod.so.2"
+                    | "/usr/libexec/safelibs/backends/libresolv.so.2" => {
+                        "network-tools".to_string()
+                    }
+                    _ => "dev-and-time-tools".to_string(),
+                }),
             },
         );
     }
-    libc6
-        .entries
-        .sort_by(|left, right| left.path.cmp(&right.path));
+    normalize_package_entries(&mut libc6.entries);
     write_pretty_json(&libc6_path, &libc6)?;
 
     let libc6_dev_path = safe_root().join("generated/baseline/package-files/libc6-dev.json");
@@ -1694,28 +1793,35 @@ fn normalize_libc_family_package_manifests() -> Result<()> {
             verification: Some("libc-family-cutover".to_string()),
         },
     );
-    libc6_dev
-        .entries
-        .sort_by(|left, right| left.path.cmp(&right.path));
+    normalize_package_entries(&mut libc6_dev.entries);
     write_pretty_json(&libc6_dev_path, &libc6_dev)?;
 
-    for path in PHASE_07_PUBLIC_DEV_LINKNAMES {
+    for path in PHASE_07_PUBLIC_DEV_LINKNAMES
+        .iter()
+        .chain(PHASE_09_PUBLIC_DEV_LINKNAMES.iter())
+    {
         upsert_package_entry(
             &mut libc6_dev.entries,
             PackageEntry {
                 package: "libc6-dev".to_string(),
                 path: path.to_string(),
-                source_path: Some(public_build_source_path(&build_root, path)),
+                source_path: Some(match *path {
+                    "/usr/lib64/libmvec.so" => {
+                        public_build_source_path(&build_root, "/usr/lib64/libmvec.so.1")
+                    }
+                    _ => public_build_source_path(&build_root, path),
+                }),
                 source_origin: "safe_build".to_string(),
                 scope: "required_package".to_string(),
                 shipped_status: "shipped".to_string(),
                 asset_kind: "rust_target".to_string(),
                 executable: false,
-                symlink_target: match path {
+                symlink_target: match *path {
                     "/usr/lib64/libBrokenLocale.so" => {
                         Some("../../lib64/libBrokenLocale.so.1".to_string())
                     }
                     "/usr/lib64/libanl.so" => Some("../../lib64/libanl.so.1".to_string()),
+                    "/usr/lib64/libmvec.so" => Some("../../lib64/libmvec.so.1".to_string()),
                     "/usr/lib64/libnss_compat.so" => {
                         Some("../../lib64/libnss_compat.so.2".to_string())
                     }
@@ -1726,13 +1832,17 @@ fn normalize_libc_family_package_manifests() -> Result<()> {
                     _ => None,
                 },
                 owner_phase: Some(PHASE_ID.to_string()),
-                verification: Some("network-tools".to_string()),
+                verification: Some(match *path {
+                    "/usr/lib64/libanl.so"
+                    | "/usr/lib64/libnss_compat.so"
+                    | "/usr/lib64/libnss_hesiod.so"
+                    | "/usr/lib64/libresolv.so" => "network-tools".to_string(),
+                    _ => "dev-and-time-tools".to_string(),
+                }),
             },
         );
     }
-    libc6_dev
-        .entries
-        .sort_by(|left, right| left.path.cmp(&right.path));
+    normalize_package_entries(&mut libc6_dev.entries);
     write_pretty_json(&libc6_dev_path, &libc6_dev)?;
 
     Ok(())
@@ -1793,7 +1903,13 @@ fn normalize_tool_package_manifests() -> Result<()> {
                     package: tool.package.to_string(),
                     path: backend.install_path.to_string(),
                     source_path: Some(backend.source_path.to_string()),
-                    source_origin: "build_testroot".to_string(),
+                    source_origin: if backend.source_path.starts_with("build/") {
+                        "build_testroot".to_string()
+                    } else if backend.source_path.starts_with("original/") {
+                        "source_tree".to_string()
+                    } else {
+                        "safe_local".to_string()
+                    },
                     scope: "required_package".to_string(),
                     shipped_status: "shipped".to_string(),
                     asset_kind: "tracked_backend_binary".to_string(),
@@ -1807,9 +1923,7 @@ fn normalize_tool_package_manifests() -> Result<()> {
     }
 
     for (package, mut manifest) in manifests {
-        manifest
-            .entries
-            .sort_by(|left, right| left.path.cmp(&right.path));
+        normalize_package_entries(&mut manifest.entries);
         write_pretty_json(
             &safe_root().join(format!("generated/baseline/package-files/{package}.json")),
             &manifest,
@@ -1825,8 +1939,14 @@ fn update_package_scope_libc_family_files(files: &mut Vec<TomlValue>) -> Result<
         "/usr/lib64/ld-linux-x86-64.so.2",
         "/usr/lib64/libBrokenLocale.so.1",
         "/usr/lib64/libc.so.6",
+        "/usr/lib64/libdl.so.2",
+        "/usr/lib64/libm.so.6",
+        "/usr/lib64/libmvec.so.1",
+        "/usr/lib64/libpcprofile.so",
         "/usr/lib64/libpthread.so.0",
+        "/usr/lib64/librt.so.1",
         "/usr/lib64/libthread_db.so.1",
+        "/usr/lib64/libutil.so.1",
         "/usr/lib64/libc_malloc_debug.so.0",
         "/usr/lib64/libmemusage.so",
         "/usr/lib64/libanl.so.1",
@@ -1860,6 +1980,8 @@ fn update_package_scope_libc_family_files(files: &mut Vec<TomlValue>) -> Result<
     for path in [
         "/usr/lib64/libBrokenLocale.so",
         "/usr/lib64/libc.so",
+        "/usr/lib64/libm.so",
+        "/usr/lib64/libmvec.so",
         "/usr/lib64/libthread_db.so",
         "/usr/lib64/libc_malloc_debug.so",
         "/usr/lib64/libanl.so",
@@ -1871,7 +1993,12 @@ fn update_package_scope_libc_family_files(files: &mut Vec<TomlValue>) -> Result<
             files,
             path,
             "libc6-dev",
-            &public_build_source_path(&build_root, path),
+            &match path {
+                "/usr/lib64/libmvec.so" => {
+                    public_build_source_path(&build_root, "/usr/lib64/libmvec.so.1")
+                }
+                _ => public_build_source_path(&build_root, path),
+            },
             "rust_target",
             false,
             "required_package",
@@ -1882,6 +2009,7 @@ fn update_package_scope_libc_family_files(files: &mut Vec<TomlValue>) -> Result<
     for path in PHASE_06_PRIVATE_BACKEND_DSOS
         .iter()
         .chain(PHASE_07_PRIVATE_BACKEND_DSOS.iter())
+        .chain(PHASE_09_PRIVATE_BACKEND_DSOS.iter())
     {
         let source_install_path = path.replace("/usr/libexec/safelibs/backends", "/usr/lib64");
         upsert_package_scope_file(
@@ -2000,9 +2128,7 @@ fn normalize_locale_script_package_manifest() -> Result<()> {
             },
         );
     }
-    manifest
-        .entries
-        .sort_by(|left, right| left.path.cmp(&right.path));
+    normalize_package_entries(&mut manifest.entries);
     write_pretty_json(&path, &manifest)
 }
 
@@ -2128,4 +2254,12 @@ fn upsert_package_entry(entries: &mut Vec<PackageEntry>, new_entry: PackageEntry
     } else {
         entries.push(new_entry);
     }
+}
+
+fn normalize_package_entries(entries: &mut Vec<PackageEntry>) {
+    let mut by_path = BTreeMap::new();
+    for entry in std::mem::take(entries) {
+        by_path.insert(entry.path.clone(), entry);
+    }
+    *entries = by_path.into_values().collect();
 }

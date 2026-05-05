@@ -18,9 +18,10 @@ notes = [
     "Phase 6 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope tracks any remaining private baseline backend DSOs.",
     "Phase 7 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope tracks the copied upstream network backends explicitly.",
     "Phase 8 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope tracks the preserved locale helper backends explicitly.",
+    "Phase 9 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope tracks the temporary math/aux DSO backends plus preserved helper backends explicitly.",
 ]
-phase = "impl_08_locale_iconv_posix_parsers"
-phase_note = "Phase 8 keeps the reviewed unsafe and fallback policy entries in sync while libBrokenLocale and the locale helper entrypoints move off temporary wrappers and onto the safe build path or direct checked-in scripts."
+phase = "impl_09_math_and_aux_dsos"
+phase_note = "Phase 9 keeps the reviewed unsafe and fallback policy entries in sync while libdl/libm/libmvec/libpcprofile/librt/libutil move onto the safe-build public provenance path and the remaining dev/time helper entrypoints move off temporary wrappers and onto Rust frontends."
 purpose = "Authoritative policy schema for unsafe Rust reviews, tracked non-Rust fallbacks, and cross-manifest safety validation."
 
 [phase_modes.impl_01_safe_bootstrap]
@@ -209,73 +210,9 @@ shipped = true
 
 [[reviewed_fallback_entries]]
 audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-classification = "hybrid_dso_shell"
-owning_phase = "impl_02_hybrid_abi_shell"
-path = "/usr/lib64/libdl.so.2"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-classification = "hybrid_dso_shell"
-owning_phase = "impl_02_hybrid_abi_shell"
-path = "/usr/lib64/libm.so"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-classification = "hybrid_dso_shell"
-owning_phase = "impl_02_hybrid_abi_shell"
-path = "/usr/lib64/libm.so.6"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
 classification = "fallback_static_archive"
 owning_phase = "impl_02_hybrid_abi_shell"
 path = "/usr/lib64/libmcheck.a"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-classification = "hybrid_dso_shell"
-owning_phase = "impl_02_hybrid_abi_shell"
-path = "/usr/lib64/libmvec.so"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-classification = "hybrid_dso_shell"
-owning_phase = "impl_02_hybrid_abi_shell"
-path = "/usr/lib64/libmvec.so.1"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-classification = "hybrid_dso_shell"
-owning_phase = "impl_02_hybrid_abi_shell"
-path = "/usr/lib64/libpcprofile.so"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-classification = "hybrid_dso_shell"
-owning_phase = "impl_02_hybrid_abi_shell"
-path = "/usr/lib64/librt.so.1"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Phase-2 hybrid shell or fallback-backed install-root artifact staged from the committed baseline build outputs."
-classification = "hybrid_dso_shell"
-owning_phase = "impl_02_hybrid_abi_shell"
-path = "/usr/lib64/libutil.so.1"
 reviewer = "phase-5-auto-review"
 shipped = true
 
@@ -288,9 +225,49 @@ reviewer = "phase-5-auto-review"
 shipped = true
 
 [[reviewed_fallback_entries]]
+audit_notes = "Rust frontend /usr/bin/gencat delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
+classification = "tracked_backend_binary"
+owning_phase = "impl_09_math_and_aux_dsos"
+path = "/usr/libexec/safelibs/aux-tools/gencat.backend"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
+audit_notes = "Rust frontend /usr/bin/getconf delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
+classification = "tracked_backend_binary"
+owning_phase = "impl_09_math_and_aux_dsos"
+path = "/usr/libexec/safelibs/aux-tools/getconf.backend"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
+audit_notes = "Rust frontend /usr/bin/tzselect delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
+classification = "tracked_backend_binary"
+owning_phase = "impl_09_math_and_aux_dsos"
+path = "/usr/libexec/safelibs/aux-tools/tzselect.backend"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
+audit_notes = "Rust frontend /usr/bin/zdump delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
+classification = "tracked_backend_binary"
+owning_phase = "impl_09_math_and_aux_dsos"
+path = "/usr/libexec/safelibs/aux-tools/zdump.backend"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
+audit_notes = "Rust frontend /usr/sbin/zic delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
+classification = "tracked_backend_binary"
+owning_phase = "impl_09_math_and_aux_dsos"
+path = "/usr/libexec/safelibs/aux-tools/zic.backend"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
 audit_notes = "Private baseline loader copy retained only as an explicitly inventoried backend payload while the public loader path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_08_locale_iconv_posix_parsers"
+owning_phase = "impl_09_math_and_aux_dsos"
 path = "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2"
 reviewer = "phase-5-auto-review"
 shipped = true
@@ -298,7 +275,7 @@ shipped = true
 [[reviewed_fallback_entries]]
 audit_notes = "Private copied upstream libanl payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_08_locale_iconv_posix_parsers"
+owning_phase = "impl_09_math_and_aux_dsos"
 path = "/usr/libexec/safelibs/backends/libanl.so.1"
 reviewer = "phase-5-auto-review"
 shipped = true
@@ -306,7 +283,7 @@ shipped = true
 [[reviewed_fallback_entries]]
 audit_notes = "Private baseline libc copy retained only as an explicitly inventoried backend payload while the public libc path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_08_locale_iconv_posix_parsers"
+owning_phase = "impl_09_math_and_aux_dsos"
 path = "/usr/libexec/safelibs/backends/libc.so.6"
 reviewer = "phase-5-auto-review"
 shipped = true
@@ -314,23 +291,47 @@ shipped = true
 [[reviewed_fallback_entries]]
 audit_notes = "Private baseline libc_malloc_debug copy retained only as an explicitly inventoried backend payload while the public malloc-debug path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_08_locale_iconv_posix_parsers"
+owning_phase = "impl_09_math_and_aux_dsos"
 path = "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
+audit_notes = "Private copied upstream libdl payload retained only as an explicitly inventoried backend while the public dlfcn-facing DSO path comes from the safe build root."
+classification = "private_baseline_backend_dso"
+owning_phase = "impl_09_math_and_aux_dsos"
+path = "/usr/libexec/safelibs/backends/libdl.so.2"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
+audit_notes = "Private copied upstream libm payload retained only as an explicitly inventoried backend while the public math DSO path comes from the safe build root."
+classification = "private_baseline_backend_dso"
+owning_phase = "impl_09_math_and_aux_dsos"
+path = "/usr/libexec/safelibs/backends/libm.so.6"
 reviewer = "phase-5-auto-review"
 shipped = true
 
 [[reviewed_fallback_entries]]
 audit_notes = "Private baseline libmemusage copy retained only as an explicitly inventoried backend payload while the public memusage path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_08_locale_iconv_posix_parsers"
+owning_phase = "impl_09_math_and_aux_dsos"
 path = "/usr/libexec/safelibs/backends/libmemusage.so"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
+audit_notes = "Private copied upstream libmvec payload retained only as an explicitly inventoried backend while the public vector math DSO path comes from the safe build root."
+classification = "private_baseline_backend_dso"
+owning_phase = "impl_09_math_and_aux_dsos"
+path = "/usr/libexec/safelibs/backends/libmvec.so.1"
 reviewer = "phase-5-auto-review"
 shipped = true
 
 [[reviewed_fallback_entries]]
 audit_notes = "Private copied upstream libnsl payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_08_locale_iconv_posix_parsers"
+owning_phase = "impl_09_math_and_aux_dsos"
 path = "/usr/libexec/safelibs/backends/libnsl.so.1"
 reviewer = "phase-5-auto-review"
 shipped = true
@@ -338,7 +339,7 @@ shipped = true
 [[reviewed_fallback_entries]]
 audit_notes = "Private copied upstream libnss_compat payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_08_locale_iconv_posix_parsers"
+owning_phase = "impl_09_math_and_aux_dsos"
 path = "/usr/libexec/safelibs/backends/libnss_compat.so.2"
 reviewer = "phase-5-auto-review"
 shipped = true
@@ -346,7 +347,7 @@ shipped = true
 [[reviewed_fallback_entries]]
 audit_notes = "Private copied upstream libnss_dns payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_08_locale_iconv_posix_parsers"
+owning_phase = "impl_09_math_and_aux_dsos"
 path = "/usr/libexec/safelibs/backends/libnss_dns.so.2"
 reviewer = "phase-5-auto-review"
 shipped = true
@@ -354,7 +355,7 @@ shipped = true
 [[reviewed_fallback_entries]]
 audit_notes = "Private copied upstream libnss_files payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_08_locale_iconv_posix_parsers"
+owning_phase = "impl_09_math_and_aux_dsos"
 path = "/usr/libexec/safelibs/backends/libnss_files.so.2"
 reviewer = "phase-5-auto-review"
 shipped = true
@@ -362,15 +363,23 @@ shipped = true
 [[reviewed_fallback_entries]]
 audit_notes = "Private copied upstream libnss_hesiod payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_08_locale_iconv_posix_parsers"
+owning_phase = "impl_09_math_and_aux_dsos"
 path = "/usr/libexec/safelibs/backends/libnss_hesiod.so.2"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
+audit_notes = "Private copied upstream libpcprofile payload retained only as an explicitly inventoried backend while the public profiling DSO path comes from the safe build root."
+classification = "private_baseline_backend_dso"
+owning_phase = "impl_09_math_and_aux_dsos"
+path = "/usr/libexec/safelibs/backends/libpcprofile.so"
 reviewer = "phase-5-auto-review"
 shipped = true
 
 [[reviewed_fallback_entries]]
 audit_notes = "Private baseline libpthread copy retained only as an explicitly inventoried backend payload while the public libpthread path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_08_locale_iconv_posix_parsers"
+owning_phase = "impl_09_math_and_aux_dsos"
 path = "/usr/libexec/safelibs/backends/libpthread.so.0"
 reviewer = "phase-5-auto-review"
 shipped = true
@@ -378,16 +387,32 @@ shipped = true
 [[reviewed_fallback_entries]]
 audit_notes = "Private copied upstream libresolv payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_08_locale_iconv_posix_parsers"
+owning_phase = "impl_09_math_and_aux_dsos"
 path = "/usr/libexec/safelibs/backends/libresolv.so.2"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
+audit_notes = "Private copied upstream librt payload retained only as an explicitly inventoried backend while the public realtime DSO path comes from the safe build root."
+classification = "private_baseline_backend_dso"
+owning_phase = "impl_09_math_and_aux_dsos"
+path = "/usr/libexec/safelibs/backends/librt.so.1"
 reviewer = "phase-5-auto-review"
 shipped = true
 
 [[reviewed_fallback_entries]]
 audit_notes = "Private baseline libthread_db copy retained only as an explicitly inventoried backend payload while the public libthread_db path comes from the safe build root."
 classification = "private_baseline_backend_dso"
-owning_phase = "impl_08_locale_iconv_posix_parsers"
+owning_phase = "impl_09_math_and_aux_dsos"
 path = "/usr/libexec/safelibs/backends/libthread_db.so.1"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
+audit_notes = "Private copied upstream libutil payload retained only as an explicitly inventoried backend while the public login/helper DSO path comes from the safe build root."
+classification = "private_baseline_backend_dso"
+owning_phase = "impl_09_math_and_aux_dsos"
+path = "/usr/libexec/safelibs/backends/libutil.so.1"
 reviewer = "phase-5-auto-review"
 shipped = true
 
