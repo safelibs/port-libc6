@@ -61,7 +61,7 @@ Math, Wide-Char, Dlfcn/Rt/Util/Debug/Sunrpc, and Remaining Helper-Tool Cutover
   - `safe/upstream-compat/package-scope.toml`
 - Implementation:
   - new crates or modules for math and auxiliary DSOs under `safe/crates/**`
-  - activation of `safe/crates/aux-dsos/**` beyond the current README placeholder when auxiliary DSO code is needed
+  - likely activation of `safe/crates/aux-dsos/**` beyond the current README placeholder
   - `safe/Cargo.toml`
   - `safe/Cargo.lock`
   - `safe/xtask/src/commands/build.rs`
