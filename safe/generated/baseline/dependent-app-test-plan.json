@@ -1,0 +1,136 @@
+{
+  "metadata": {
+    "phase": "impl_11_dependent_app_image_contract",
+    "library": "libc6",
+    "ubuntu_release": "24.04",
+    "ubuntu_codename": "noble",
+    "counts": {
+      "dependent_count": 16,
+      "image_contract_case_count": 5
+    },
+    "safe_packages": [
+      "libc6",
+      "libc6-dev",
+      "libc6-dbg",
+      "libc-bin",
+      "libc-dev-bin",
+      "locales",
+      "nscd"
+    ],
+    "notes": [
+      "Derived from the committed dependents.json inventory without replacing it.",
+      "Phase 11 owns the image-contract suite and helper package contract."
+    ]
+  },
+  "image_helper_packages": {
+    "runtime": [
+      "dbus-user-session",
+      "xvfb",
+      "libvirt-clients"
+    ],
+    "source_build_bootstrap": [
+      "ca-certificates",
+      "jq",
+      "build-essential",
+      "dpkg-dev",
+      "fakeroot"
+    ]
+  },
+  "suites": {
+    "image-contract": {
+      "type": "harness-contract",
+      "cases": [
+        "safe-packages",
+        "safe-apt-policy",
+        "dependent-packages",
+        "helper-packages",
+        "libc-resolution"
+      ]
+    }
+  },
+  "dependents": [
+    {
+      "name": "bash",
+      "binary_package": "bash",
+      "category": "shell"
+    },
+    {
+      "name": "coreutils",
+      "binary_package": "coreutils",
+      "category": "base-tools"
+    },
+    {
+      "name": "systemd",
+      "binary_package": "systemd",
+      "category": "service-manager"
+    },
+    {
+      "name": "python3.12-minimal",
+      "binary_package": "python3.12-minimal",
+      "category": "language-runtime"
+    },
+    {
+      "name": "git",
+      "binary_package": "git",
+      "category": "developer-tool"
+    },
+    {
+      "name": "openssh-client",
+      "binary_package": "openssh-client",
+      "category": "network-client"
+    },
+    {
+      "name": "network-manager",
+      "binary_package": "network-manager",
+      "category": "network-service"
+    },
+    {
+      "name": "nginx",
+      "binary_package": "nginx",
+      "category": "server"
+    },
+    {
+      "name": "postgresql-16",
+      "binary_package": "postgresql-16",
+      "category": "database"
+    },
+    {
+      "name": "ffmpeg",
+      "binary_package": "ffmpeg",
+      "category": "media"
+    },
+    {
+      "name": "qemu-system-x86",
+      "binary_package": "qemu-system-x86",
+      "category": "virtualization"
+    },
+    {
+      "name": "podman",
+      "binary_package": "podman",
+      "category": "container-runtime"
+    },
+    {
+      "name": "gnome-shell",
+      "binary_package": "gnome-shell",
+      "category": "desktop"
+    },
+    {
+      "name": "strace",
+      "binary_package": "strace",
+      "category": "diagnostic",
+      "source_package": "strace"
+    },
+    {
+      "name": "valgrind",
+      "binary_package": "valgrind",
+      "category": "diagnostic",
+      "source_package": "valgrind"
+    },
+    {
+      "name": "libvirt",
+      "binary_package": "libvirt-daemon",
+      "category": "virtualization",
+      "source_package": "libvirt"
+    }
+  ]
+}
