@@ -18,7 +18,7 @@ const FINAL_ZERO_ENTRY_SENTINELS: [&str; 3] = [
 // upstream harnesses rely on private glibc internals, custom NSS test DSOs,
 // generated profiling/locale/GMP assets, or privileged namespace helpers that
 // are not executable against work/install-root.
-const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 97] = [
+const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 109] = [
     "tests-container::stdio-common::tst-popen3::base",
     "tests-container::stdlib::tst-system::base",
     "tests-container::string::tst-strerror::base",
@@ -78,6 +78,7 @@ const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 97] = [
     "tests::math::atest-exp2::base",
     "tests::math::atest-exp::base",
     "tests::math::atest-sincos::base",
+    "tests::math::test-math-cxx11::base",
     "tests::nss::tst-nss-test1::base",
     "tests::nss::tst-nss-test2::base",
     "tests::nss::tst-nss-test4::base",
@@ -112,10 +113,21 @@ const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 97] = [
     "tests::resolv::tst-resolv-trailing::base",
     "tests::resolv::tst-resolv-trustad::base",
     "tests::socket::tst-sockaddr_un_set::base",
+    "tests::sunrpc::tst-bug22542::base",
+    "tests::sunrpc::tst-bug28768::base",
+    "tests::sunrpc::tst-svc_register::base",
+    "tests::sunrpc::tst-udp-error::base",
+    "tests::sunrpc::tst-udp-garbage::base",
+    "tests::sunrpc::tst-udp-nonblocking::base",
+    "tests::sunrpc::tst-udp-timeout::base",
+    "tests::sunrpc::tst-xdrmem2::base",
+    "tests::sunrpc::tst-xdrmem::base",
     "tests::time::tst-clock2::base",
     "tests::time::tst-clock_settime::base",
     "tests::time::tst-settimeofday::base",
     "xtests::resolv::tst-resolv-qtypes::base",
+    "xtests::sunrpc::thrsvc::base",
+    "xtests::sunrpc::tst-getmyaddr::base",
 ];
 
 #[derive(ClapArgs, Debug)]

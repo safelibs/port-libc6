@@ -1,7 +1,7 @@
 use crate::common::{
-    command_output, copy_file_or_symlink, load_test_catalog, load_tests_manifest, repo_path,
-    repo_root, resolve_safe_workspace_path, resolve_upstream_source_build_dir, safe_root,
-    touch_executable_text, upstream_build_dir, TestCatalogEntry, TestsManifestEntry,
+    command_output, copy_file_or_symlink, copy_tree, load_test_catalog, load_tests_manifest,
+    repo_path, repo_root, resolve_safe_workspace_path, resolve_upstream_source_build_dir,
+    safe_root, touch_executable_text, upstream_build_dir, TestCatalogEntry, TestsManifestEntry,
 };
 use anyhow::{anyhow, bail, Context, Result};
 use clap::Args as ClapArgs;
@@ -1265,6 +1265,13 @@ fn expand_upstream_make_value_with_objpfx(
             .ok()
             .flatten()
             .unwrap_or_default();
+    let signaling_nans = resolve_make_variable(
+        &config.build_root.join("config.make"),
+        "config-cflags-signaling-nans",
+    )
+    .ok()
+    .flatten()
+    .unwrap_or_default();
     value
         .replace("$(objpfx)", &objpfx)
         .replace("${objpfx}", &objpfx)
@@ -1282,6 +1289,8 @@ fn expand_upstream_make_value_with_objpfx(
         .replace("${no-fortify-source}", &no_fortify_source)
         .replace("$(fortify-source)", &fortify_source)
         .replace("${fortify-source}", &fortify_source)
+        .replace("$(config-cflags-signaling-nans)", &signaling_nans)
+        .replace("${config-cflags-signaling-nans}", &signaling_nans)
         .replace("$(posixrules-file)", "posixrules")
         .replace("${posixrules-file}", "posixrules")
         .replace("$(localtime-file)", "/etc/localtime")
@@ -2723,6 +2732,7 @@ fn stage_glibc_source_prelude(
 
 fn patch_internal_test_staged_headers(entry: &TestsManifestEntry, work_dir: &Path) -> Result<()> {
     if !uses_internal_glibc_mode(entry) {
+        patch_staged_cpu_features_header(work_dir)?;
         return Ok(());
     }
     for relative in ["gnu/stubs.h", "gnu/stubs-64.h"] {
@@ -2740,6 +2750,24 @@ fn patch_internal_test_staged_headers(entry: &TestsManifestEntry, work_dir: &Pat
             fs::write(&path, patched)
                 .with_context(|| format!("failed to write {}", path.display()))?;
         }
+    }
+    Ok(())
+}
+
+fn patch_staged_cpu_features_header(work_dir: &Path) -> Result<()> {
+    let header = work_dir.join("cpu-features.h");
+    if !header.exists() {
+        return Ok(());
+    }
+    let original = fs::read_to_string(&header)
+        .with_context(|| format!("failed to read {}", header.display()))?;
+    let patched = original.replace(
+        "#if defined (_LIBC) && !IS_IN (nonlib)",
+        "#if defined (_LIBC) && 0",
+    );
+    if patched != original {
+        fs::write(&header, patched)
+            .with_context(|| format!("failed to write {}", header.display()))?;
     }
     Ok(())
 }
@@ -2940,6 +2968,10 @@ do_test (void)
 "#;
             fs::write(staged_source, replacement)
                 .with_context(|| format!("failed to write {}", staged_source.display()))?;
+        }
+        "tests::rt::tst-timer::base" => {
+            let sysdeps_timer = repo_root().join("original/sysdeps/pthread/tst-timer.c");
+            copy_file_or_symlink(&sysdeps_timer, staged_source)?;
         }
         _ => {}
     }
@@ -3182,8 +3214,17 @@ fn compile_entry_against_install_root_with_source(
     stage_entry_makefiles(entry, &work_dir)?;
     stage_source_backed_runtime_assets(config, entry, &work_dir)?;
     stage_internal_header_overlay(config, &work_dir)?;
+    if entry.subdir == "sunrpc" {
+        stage_sunrpc_internal_headers(&work_dir)?;
+    }
     let staged_prelude = stage_glibc_source_prelude(config, entry, &work_dir)?;
+    let source_name = source_hint
+        .and_then(|hint| Path::new(hint).file_name())
+        .or_else(|| source.file_name())
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| anyhow!("failed to derive source name from {}", source.display()))?;
     let staged_source = stage_source_tree(config, entry, source, &work_dir, source_hint)?;
+    let libmvec_support = stage_libmvec_test_support(config, entry, &work_dir, source_name)?;
     patch_staged_source_for_entry(entry, &staged_source, &work_dir)?;
     patch_internal_test_staged_headers(entry, &work_dir)?;
     stage_stack_align_header_chain(&work_dir)?;
@@ -3205,11 +3246,6 @@ fn compile_entry_against_install_root_with_source(
     let include_root = config.install_root.join("usr/include");
     let lib_root = config.install_root.join("usr/lib64");
     let loader = lib_root.join("ld-linux-x86-64.so.2");
-    let source_name = source_hint
-        .and_then(|hint| Path::new(hint).file_name())
-        .or_else(|| source.file_name())
-        .and_then(|name| name.to_str())
-        .ok_or_else(|| anyhow!("failed to derive source name from {}", source.display()))?;
     let mut command = Command::new(compiler);
     command
         .current_dir(&work_dir)
@@ -3239,6 +3275,11 @@ fn compile_entry_against_install_root_with_source(
     if has_companion_dsos {
         command.arg("-rdynamic");
     }
+    if let Some(libmvec) = &libmvec_support {
+        for cflag in &libmvec.cflags {
+            command.arg(cflag);
+        }
+    }
     apply_makefile_compile_flags(&mut command, config, entry, source_name)?;
     if entry.family == "tests-static" {
         command.arg("-static");
@@ -3258,19 +3299,33 @@ fn compile_entry_against_install_root_with_source(
         }
     }
     command.arg(command_path_for_work_dir(&work_dir, &staged_source));
+    if let Some(libmvec) = &libmvec_support {
+        for source in &libmvec.sources {
+            command.arg(command_path_for_work_dir(&work_dir, source));
+        }
+        for object in &libmvec.objects {
+            command.arg(command_path_for_work_dir(&work_dir, object));
+        }
+    }
     for companion_dso in &linked_companion_dsos {
         command.arg(command_path_for_work_dir(&work_dir, companion_dso));
     }
     command
         .arg(config.build_root.join("support/libsupport_nonshared.a"))
-        .arg("-ldl")
+        .arg("-ldl");
+    if links_libmvec(entry, source_name) {
+        command.arg("-lmvec");
+    }
+    command
         .arg("-lm")
         .arg("-lresolv")
         .arg("-lrt")
         .arg("-lutil")
-        .arg("-lanl")
-        .arg("-o")
-        .arg(&binary);
+        .arg("-lanl");
+    if entry.family != "tests-static" {
+        command.arg("-Wl,-l:libc.so.6");
+    }
+    command.arg("-o").arg(&binary);
     run_test_command(&mut command)?;
     Ok(CompiledEntry { work_dir, binary })
 }
@@ -3298,6 +3353,231 @@ fn add_staged_source_include_dirs(command: &mut Command, work_dir: &Path, staged
     for include_dir in include_dirs {
         command.arg("-I").arg(include_dir);
     }
+}
+
+fn links_libmvec(entry: &TestsManifestEntry, source_name: &str) -> bool {
+    source_name.contains("libmvec")
+        || entry.catalog_id.contains("::math::test-") && entry.catalog_id.contains("-libmvec-")
+}
+
+struct LibmvecTestSupport {
+    sources: Vec<PathBuf>,
+    objects: Vec<PathBuf>,
+    cflags: Vec<&'static str>,
+}
+
+fn stage_libmvec_test_support(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+    work_dir: &Path,
+    source_name: &str,
+) -> Result<Option<LibmvecTestSupport>> {
+    let Some(spec) = libmvec_test_spec(source_name) else {
+        return Ok(None);
+    };
+    let fpu_root = repo_root().join("original/sysdeps/x86_64/fpu");
+    let wrapper_source = fpu_root.join(spec.wrapper_source);
+    let wrapper_hint = format!("original/sysdeps/x86_64/fpu/{}", spec.wrapper_source);
+    let staged_wrapper = stage_source_tree(
+        config,
+        entry,
+        &wrapper_source,
+        work_dir,
+        Some(&wrapper_hint),
+    )?;
+
+    let driver_source = fpu_root.join(spec.driver_source);
+    let driver_hint = format!("original/sysdeps/x86_64/fpu/{}", spec.driver_source);
+    let staged_driver =
+        stage_source_tree(config, entry, &driver_source, work_dir, Some(&driver_hint))?;
+
+    if let Some(header) = spec.sysdeps_next_header {
+        stage_libmvec_include_next_header(config, entry, work_dir, header)?;
+    }
+    let wrapper_object = compile_libmvec_wrapper_object(
+        config,
+        entry,
+        work_dir,
+        &staged_wrapper,
+        spec.wrapper_arch_cflags,
+    )?;
+    let cflags = vec![
+        "-fno-builtin",
+        "-D__FAST_MATH__",
+        "-DTEST_FAST_MATH",
+        "-fno-inline",
+        "-fopenmp-simd",
+        "-Wno-unknown-pragmas",
+    ];
+    Ok(Some(LibmvecTestSupport {
+        sources: vec![staged_driver],
+        objects: vec![wrapper_object],
+        cflags,
+    }))
+}
+
+struct LibmvecTestSpec {
+    wrapper_source: &'static str,
+    driver_source: &'static str,
+    wrapper_arch_cflags: &'static [&'static str],
+    sysdeps_next_header: Option<&'static str>,
+}
+
+fn libmvec_test_spec(source_name: &str) -> Option<LibmvecTestSpec> {
+    let stem = source_name.strip_suffix(".c").unwrap_or(source_name);
+    let is_double = stem.starts_with("test-double-libmvec-");
+    let is_float = stem.starts_with("test-float-libmvec-");
+    if !is_double && !is_float {
+        return None;
+    }
+
+    let isa = if stem.ends_with("-avx512f") {
+        "avx512f"
+    } else if stem.ends_with("-avx2") {
+        "avx2"
+    } else if stem.ends_with("-avx") {
+        "avx"
+    } else {
+        "base"
+    };
+
+    let (wrapper_source, arch_cflags, sysdeps_next_header) = match (is_double, isa) {
+        (true, "base") => ("test-double-vlen2-wrappers.c", &[][..], None),
+        (true, "avx") => (
+            "test-double-vlen4-wrappers.c",
+            &["-mavx"][..],
+            Some("test-double-vlen4.h"),
+        ),
+        (true, "avx2") => (
+            "test-double-vlen4-avx2-wrappers.c",
+            &["-mavx2"][..],
+            Some("test-double-vlen4.h"),
+        ),
+        (true, "avx512f") => (
+            "test-double-vlen8-wrappers.c",
+            &["-mavx512f"][..],
+            Some("test-double-vlen8.h"),
+        ),
+        (false, "base") => ("test-float-vlen4-wrappers.c", &[][..], None),
+        (false, "avx") => (
+            "test-float-vlen8-wrappers.c",
+            &["-mavx"][..],
+            Some("test-float-vlen8.h"),
+        ),
+        (false, "avx2") => (
+            "test-float-vlen8-avx2-wrappers.c",
+            &["-mavx2"][..],
+            Some("test-float-vlen8.h"),
+        ),
+        (false, "avx512f") => (
+            "test-float-vlen16-wrappers.c",
+            &["-mavx512f"][..],
+            Some("test-float-vlen16.h"),
+        ),
+        _ => return None,
+    };
+    let driver_source = match isa {
+        "base" => "test-libmvec.c",
+        "avx" => "test-libmvec-avx.c",
+        "avx2" => "test-libmvec-avx2.c",
+        "avx512f" => "test-libmvec-avx512f.c",
+        _ => return None,
+    };
+
+    Some(LibmvecTestSpec {
+        wrapper_source,
+        driver_source,
+        wrapper_arch_cflags: arch_cflags,
+        sysdeps_next_header,
+    })
+}
+
+fn compile_libmvec_wrapper_object(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+    work_dir: &Path,
+    wrapper_source: &Path,
+    arch_cflags: &[&str],
+) -> Result<PathBuf> {
+    let object = work_dir.join(format!(
+        "{}.o",
+        wrapper_source
+            .file_stem()
+            .and_then(|stem| stem.to_str())
+            .ok_or_else(|| anyhow!(
+                "failed to derive wrapper object name from {}",
+                wrapper_source.display()
+            ))?
+    ));
+    let include_root = config.install_root.join("usr/include");
+    let mut command = Command::new("gcc");
+    command
+        .current_dir(work_dir)
+        .arg(format!("--sysroot={}", config.install_root.display()))
+        .arg("-O2")
+        .arg("-g")
+        .arg("-D_GNU_SOURCE")
+        .arg("-pthread")
+        .arg("-I")
+        .arg(work_dir)
+        .arg("-I")
+        .arg(work_dir.join(&entry.subdir))
+        .arg("-I")
+        .arg(&config.build_root)
+        .arg("-I")
+        .arg(config.build_root.join("support"))
+        .arg("-I")
+        .arg(config.build_root.join("elf"))
+        .arg("-I")
+        .arg(config.build_root.join("nptl"));
+    add_staged_source_include_dirs(&mut command, work_dir, wrapper_source);
+    command.arg("-I").arg(&include_root);
+    for include_dir in host_after_include_dirs() {
+        command.arg("-idirafter").arg(include_dir);
+    }
+    command
+        .arg("-fno-builtin")
+        .arg("-D__FAST_MATH__")
+        .arg("-DTEST_FAST_MATH")
+        .arg("-fno-inline")
+        .arg("-Wno-unknown-pragmas");
+    for cflag in arch_cflags {
+        command.arg(cflag);
+    }
+    command
+        .arg("-c")
+        .arg(command_path_for_work_dir(work_dir, wrapper_source))
+        .arg("-o")
+        .arg(&object);
+    run_test_command(&mut command)?;
+    Ok(object)
+}
+
+fn stage_libmvec_include_next_header(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+    work_dir: &Path,
+    header: &str,
+) -> Result<()> {
+    let generic = repo_root().join("original/math").join(header);
+    let source_hint = format!("original/math/{header}");
+    stage_source_tree(config, entry, &generic, work_dir, Some(&source_hint))?;
+
+    let staged_sysdeps = work_dir.join("sysdeps/x86_64/fpu").join(header);
+    if !staged_sysdeps.exists() {
+        return Ok(());
+    }
+    let original = fs::read_to_string(&staged_sysdeps)
+        .with_context(|| format!("failed to read {}", staged_sysdeps.display()))?;
+    let patched = original.replace(
+        &format!("#include_next <{header}>"),
+        &format!("#include \"math/{header}\""),
+    );
+    if patched != original {
+        fs::write(&staged_sysdeps, patched)
+            .with_context(|| format!("failed to write {}", staged_sysdeps.display()))?;
+    }
+    Ok(())
 }
 
 fn config_with_compiled_runtime_path(
@@ -3328,23 +3608,84 @@ fn compile_companion_dsos(
     source: &Path,
     work_dir: &Path,
 ) -> Result<Vec<PathBuf>> {
-    let mut outputs = Vec::new();
-    for basename in referenced_companion_dsos(entry, source)? {
-        let Some(companion_source) = resolve_companion_dso_source(entry, source, &basename)? else {
-            if is_installed_glibc_dso_dependency(&basename) {
-                continue;
-            }
+    let basenames = referenced_companion_dsos(entry, source)?
+        .into_iter()
+        .collect::<BTreeSet<_>>();
+    let mut compiled = BTreeMap::new();
+    let mut visiting = BTreeSet::new();
+    for basename in &basenames {
+        compile_companion_dso(
+            config,
+            entry,
+            source,
+            work_dir,
+            basename,
+            &basenames,
+            &mut compiled,
+            &mut visiting,
+        )?;
+    }
+    Ok(compiled.into_values().collect())
+}
+
+fn compile_companion_dso(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+    source: &Path,
+    work_dir: &Path,
+    basename: &str,
+    requested: &BTreeSet<String>,
+    compiled: &mut BTreeMap<String, PathBuf>,
+    visiting: &mut BTreeSet<String>,
+) -> Result<()> {
+    if compiled.contains_key(basename) || is_installed_glibc_dso_dependency(basename) {
+        return Ok(());
+    }
+    if !visiting.insert(basename.to_string()) {
+        bail!(
+            "{} has a cyclic companion DSO dependency involving {}",
+            entry.catalog_id,
+            basename
+        );
+    }
+
+    let Some(companion_source) = resolve_companion_dso_source(entry, source, basename)? else {
+        if requested.contains(basename) {
             bail!(
                 "{} references {} but no companion source was found under safe/tests or original/",
                 entry.catalog_id,
                 basename
             );
-        };
-        let output = work_dir.join(&basename);
-        compile_shared_entry_support(config, entry, &companion_source, &output)?;
-        outputs.push(output);
+        }
+        visiting.remove(basename);
+        return Ok(());
+    };
+
+    let mut linked_inputs = Vec::new();
+    for dependency in companion_dso_dependencies_from_makefiles(entry, basename)? {
+        if is_installed_glibc_dso_dependency(&dependency) {
+            continue;
+        }
+        compile_companion_dso(
+            config,
+            entry,
+            source,
+            work_dir,
+            &dependency,
+            requested,
+            compiled,
+            visiting,
+        )?;
+        if let Some(path) = compiled.get(&dependency) {
+            linked_inputs.push(path.clone());
+        }
     }
-    Ok(outputs)
+
+    let output = work_dir.join(basename);
+    compile_shared_entry_support(config, entry, &companion_source, &output, &linked_inputs)?;
+    compiled.insert(basename.to_string(), output);
+    visiting.remove(basename);
+    Ok(())
 }
 
 fn is_installed_glibc_dso_dependency(basename: &str) -> bool {
@@ -3386,6 +3727,14 @@ fn companion_dsos_from_makefiles(entry: &TestsManifestEntry) -> Result<Vec<Strin
 fn linked_companion_dsos_from_makefiles(entry: &TestsManifestEntry) -> Result<Vec<String>> {
     let stem = artifact_stem(entry)?;
     let targets = [format!("$(objpfx){stem}:")];
+    collect_makefile_companion_dsos(entry, &targets)
+}
+
+fn companion_dso_dependencies_from_makefiles(
+    entry: &TestsManifestEntry,
+    basename: &str,
+) -> Result<Vec<String>> {
+    let targets = [format!("$(objpfx){basename}:")];
     collect_makefile_companion_dsos(entry, &targets)
 }
 
@@ -3469,15 +3818,17 @@ fn resolve_companion_dso_source(
     let source_dir = source
         .parent()
         .ok_or_else(|| anyhow!("{} has no parent directory", source.display()))?;
-    let mut candidates = vec![
-        source_dir.join(basename),
-        source_dir.join(format!("{stem}.c")),
-    ];
+    let mut candidates = vec![source_dir.join(basename)];
+    for extension in ["c", "cc", "cpp", "cxx"] {
+        candidates.push(source_dir.join(format!("{stem}.{extension}")));
+    }
     if let Some(path) = original_companion_candidate(entry, basename)? {
         candidates.push(path);
     }
-    if let Some(path) = original_companion_candidate(entry, &format!("{stem}.c"))? {
-        candidates.push(path);
+    for extension in ["c", "cc", "cpp", "cxx"] {
+        if let Some(path) = original_companion_candidate(entry, &format!("{stem}.{extension}"))? {
+            candidates.push(path);
+        }
     }
     for candidate in candidates {
         if candidate.exists() {
@@ -3503,6 +3854,7 @@ fn compile_shared_entry_support(
     entry: &TestsManifestEntry,
     source: &Path,
     output: &Path,
+    linked_inputs: &[PathBuf],
 ) -> Result<()> {
     let work_dir = output
         .parent()
@@ -3511,6 +3863,9 @@ fn compile_shared_entry_support(
     let lib_root = config.install_root.join("usr/lib64");
     let staged_prelude = stage_glibc_source_prelude(config, entry, work_dir)?;
     let staged_source = stage_source_tree(config, entry, source, work_dir, None)?;
+    if entry.subdir == "sunrpc" {
+        stage_sunrpc_internal_headers(work_dir)?;
+    }
     patch_internal_test_staged_headers(entry, work_dir)?;
     stage_stack_align_header_chain(work_dir)?;
     let source_name = source
@@ -3560,16 +3915,22 @@ fn compile_shared_entry_support(
         .arg(&lib_root)
         .arg("-L")
         .arg(work_dir)
-        .arg(command_path_for_work_dir(work_dir, &staged_source))
+        .arg(command_path_for_work_dir(work_dir, &staged_source));
+    for linked_input in linked_inputs {
+        command.arg(command_path_for_work_dir(work_dir, linked_input));
+    }
+    command
         .arg(config.build_root.join("support/libsupport_nonshared.a"))
         .arg("-ldl")
         .arg("-lm")
         .arg("-lresolv")
         .arg("-lrt")
         .arg("-lutil")
-        .arg("-lanl")
-        .arg("-o")
-        .arg(output);
+        .arg("-lanl");
+    if entry.family != "tests-static" {
+        command.arg("-Wl,-l:libc.so.6");
+    }
+    command.arg("-o").arg(output);
     apply_makefile_compile_flags(&mut command, config, entry, source_name)?;
     run_test_command(&mut command)
 }
@@ -3624,6 +3985,9 @@ fn stage_source_backed_runtime_assets(
     entry: &TestsManifestEntry,
     work_dir: &Path,
 ) -> Result<()> {
+    if entry.subdir == "sunrpc" {
+        stage_sunrpc_internal_headers(work_dir)?;
+    }
     let iconv_testdata = config.build_root.join("iconvdata/testdata");
     if iconv_testdata.exists() {
         let target = work_dir.join("iconvdata/testdata");
@@ -3644,11 +4008,36 @@ fn stage_source_backed_runtime_assets(
                 .with_context(|| format!("failed to create {}", target.display()))?;
         }
     }
-    stage_makefile_generated_assets(entry, work_dir)?;
+    stage_makefile_generated_assets(config, entry, work_dir)?;
     Ok(())
 }
 
-fn stage_makefile_generated_assets(entry: &TestsManifestEntry, work_dir: &Path) -> Result<()> {
+fn stage_sunrpc_internal_headers(work_dir: &Path) -> Result<()> {
+    let original_sunrpc = repo_root().join("original/sunrpc");
+    for (source, target) in [
+        (original_sunrpc.join("rpc"), work_dir.join("rpc")),
+        (
+            original_sunrpc.join("rpc"),
+            work_dir.join("sunrpc").join("rpc"),
+        ),
+        (original_sunrpc.join("rpcsvc"), work_dir.join("rpcsvc")),
+        (
+            original_sunrpc.join("rpcsvc"),
+            work_dir.join("sunrpc").join("rpcsvc"),
+        ),
+    ] {
+        if source.exists() {
+            copy_tree(&source, &target)?;
+        }
+    }
+    Ok(())
+}
+
+fn stage_makefile_generated_assets(
+    config: &RunConfig,
+    entry: &TestsManifestEntry,
+    work_dir: &Path,
+) -> Result<()> {
     match entry.catalog_id.as_str() {
         "tests::posix::runptests::base" => materialize_posix_regex_driver_header(
             work_dir,
@@ -3658,6 +4047,13 @@ fn stage_makefile_generated_assets(entry: &TestsManifestEntry, work_dir: &Path) 
         )?,
         "tests::posix::runtests::base" => {
             materialize_posix_regex_driver_header(work_dir, "testcases.h", "TESTS", "TESTS2C.sed")?
+        }
+        "tests-special::catgets::test-gencat::base" => {
+            ensure_catgets_test_gencat_assets(config, work_dir)?
+        }
+        "tests::catgets::tst-catgets::base" => ensure_catgets_libc_catalog(config)?,
+        "tests-special::intl::tst-gettext3::base" | "tests-special::intl::tst-gettext5::base" => {
+            ensure_intl_codeset_mo(config)?
         }
         _ => {}
     }
@@ -3674,6 +4070,109 @@ fn stage_makefile_generated_assets(entry: &TestsManifestEntry, work_dir: &Path) 
     }
 
     Ok(())
+}
+
+fn ensure_catgets_test_gencat_assets(config: &RunConfig, work_dir: &Path) -> Result<()> {
+    ensure_generated_locale(config, "ja_JP.SJIS")?;
+    let output_dir = work_dir.join("catgets");
+    fs::create_dir_all(&output_dir)
+        .with_context(|| format!("failed to create {}", output_dir.display()))?;
+    let catalog = output_dir.join("sample.SJIS.cat");
+    let header = output_dir.join("test-gencat.h");
+
+    let mut command = install_root_program_command(config, "usr/bin/gencat");
+    command
+        .current_dir(repo_root().join("original/catgets"))
+        .arg("-H")
+        .arg(&header)
+        .stdin(Stdio::from(fs::File::open(
+            repo_root().join("original/catgets/sample.SJIS"),
+        )?))
+        .stdout(Stdio::from(fs::File::create(&catalog)?))
+        .stderr(Stdio::inherit());
+    run_configured_status(&mut command)
+        .with_context(|| format!("failed to generate {}", catalog.display()))
+}
+
+fn ensure_catgets_libc_catalog(config: &RunConfig) -> Result<()> {
+    let catgets_root = config.build_root.join("catgets");
+    let output_dir = catgets_root.join("de");
+    let catalog = output_dir.join("libc.cat");
+    if catalog.exists() {
+        return Ok(());
+    }
+
+    ensure_generated_locale(config, "de_DE.ISO-8859-1")?;
+    fs::create_dir_all(&output_dir)
+        .with_context(|| format!("failed to create {}", output_dir.display()))?;
+
+    let msg = catgets_root.join("de.msg");
+    let awk_output = Command::new("awk")
+        .env("LC_ALL", "C")
+        .arg("-f")
+        .arg(repo_root().join("original/catgets/xopen-msg.awk"))
+        .arg(repo_root().join("original/po/de.po"))
+        .output()
+        .with_context(|| "failed to generate catgets/de.msg")?;
+    if !awk_output.status.success() {
+        bail!("catgets/de.msg generation failed ({})", awk_output.status);
+    }
+    fs::write(&msg, awk_output.stdout)
+        .with_context(|| format!("failed to write {}", msg.display()))?;
+
+    let mut command = install_root_program_command(config, "usr/bin/gencat");
+    command
+        .current_dir(repo_root().join("original/catgets"))
+        .env("LC_ALL", "de_DE.ISO-8859-1")
+        .arg(&catalog)
+        .arg(&msg)
+        .stderr(Stdio::inherit());
+    run_configured_status(&mut command)
+        .with_context(|| format!("failed to generate {}", catalog.display()))
+}
+
+fn ensure_intl_codeset_mo(config: &RunConfig) -> Result<()> {
+    ensure_generated_locale(config, "de_DE.ISO-8859-1")?;
+    ensure_generated_locale(config, "de_DE.UTF-8")?;
+    let output = config
+        .build_root
+        .join("intl/domaindir/de_DE/LC_MESSAGES/codeset.mo");
+    if output.exists() {
+        return Ok(());
+    }
+    if let Some(parent) = output.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("failed to create {}", parent.display()))?;
+    }
+    let mut command = Command::new("msgfmt");
+    command
+        .arg("-o")
+        .arg(&output)
+        .arg(repo_root().join("original/intl/tstcodeset.po"));
+    run_configured_status(&mut command)
+        .with_context(|| format!("failed to generate {}", output.display()))
+}
+
+fn install_root_program_command(config: &RunConfig, relative: &str) -> Command {
+    let mut command = Command::new(safe_loader_path(config));
+    command
+        .arg("--library-path")
+        .arg(runtime_library_path(config))
+        .arg(config.install_root.join(relative));
+    apply_harness_env(&mut command, config);
+    command
+}
+
+fn run_configured_status(command: &mut Command) -> Result<()> {
+    let debug = format!("{command:?}");
+    let status = command
+        .status()
+        .with_context(|| format!("failed to spawn {debug}"))?;
+    if status.success() || status.code() == Some(77) {
+        Ok(())
+    } else {
+        bail!("command failed ({status}): {debug}")
+    }
 }
 
 fn materialize_posix_regex_driver_header(
@@ -3817,11 +4316,15 @@ fn apply_makefile_compile_flags(
     source_name: &str,
 ) -> Result<()> {
     let stem = artifact_stem(entry)?;
-    for variable in [
+    let mut variables = vec![
         format!("CPPFLAGS-{source_name}"),
         format!("CFLAGS-{source_name}"),
         format!("LDFLAGS-{stem}"),
-    ] {
+    ];
+    if compiler_for_source(Path::new(source_name)) == "g++" {
+        variables.insert(1, format!("CXXFLAGS-{source_name}"));
+    }
+    for variable in variables {
         for makefile in makefiles_for_manifest_entry(entry)? {
             if let Some(raw_value) = resolve_make_variable(&makefile, &variable)? {
                 for token in split_shell_words(&raw_value)? {

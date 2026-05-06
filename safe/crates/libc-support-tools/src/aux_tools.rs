@@ -76,12 +76,24 @@ fn resolve_zic_backend() -> Result<PathBuf> {
 }
 
 fn resolve_backend(installed: &str, repo: PathBuf) -> Result<PathBuf> {
-    for candidate in [PathBuf::from(installed), repo] {
+    let mut candidates = vec![PathBuf::from(installed)];
+    if let Some(path) = current_install_root_backend(installed) {
+        candidates.push(path);
+    }
+    candidates.push(repo);
+    for candidate in candidates {
         if candidate.exists() {
             return Ok(candidate);
         }
     }
     Err(anyhow!("no backend payload is available for {installed}"))
+}
+
+fn current_install_root_backend(installed: &str) -> Option<PathBuf> {
+    let relative = installed.strip_prefix("/usr/")?;
+    let executable = env::current_exe().ok()?;
+    let usr_root = executable.parent()?.parent()?;
+    Some(usr_root.join(relative))
 }
 
 fn repo_relative_backend(path: &str) -> PathBuf {
