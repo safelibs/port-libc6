@@ -20,13 +20,13 @@ PATH="/sbin:/usr/sbin:/bin:/usr/bin"
 NAME="nscd"
 DESC="Name Service Cache Daemon"
 DAEMON="/usr/sbin/nscd"
-PIDFILE="/var/run/nscd/nscd.pid"
+PIDFILE="/run/nscd/nscd.pid"
 
 # Sanity checks.
 umask 022
 [ -f /etc/nscd.conf ] || exit 0
 [ -x "$DAEMON" ] || exit 0
-[ -d /var/run/nscd ] || mkdir -p /var/run/nscd
+[ -d /run/nscd ] || mkdir -p /run/nscd
 . /lib/lsb/init-functions
 
 start_nscd()
@@ -143,4 +143,3 @@ status)
 	exit 1
 	;;
 esac
-

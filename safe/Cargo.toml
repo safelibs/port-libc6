@@ -5,6 +5,7 @@ members = [
     "crates/core-runtime",
     "crates/ldso",
     "crates/libc6",
+    "crates/network-identity",
     "crates/libpthread",
     "crates/libthread-db",
 ]

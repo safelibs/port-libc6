@@ -1,3 +1,3 @@
 # libc6 Runtime Port
 
-Phase 6 keeps the startup port in place, carries the low-level runtime exports under `safe/crates/libc6/src/sys/**`, and moves the first libc-family public DSO payloads onto the safe build path while private baseline backend copies remain explicitly inventoried.
+Phase 7 keeps the phase-6 libc-family cutover in place and extends the public provenance model to network-facing DSOs while private baseline backend copies remain explicitly inventoried.

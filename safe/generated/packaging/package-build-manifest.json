@@ -57,6 +57,7 @@
         "safe/debian/local/etc/bindresvport.blacklist",
         "safe/debian/local/etc/ld.so.conf",
         "safe/debian/local/etc/ld.so.conf.d/libc.conf",
+        "safe/debian/local/etc/nss",
         "safe/debian/local/etc/nsswitch.conf",
         "safe/debian/local/manpages/getconf.1",
         "safe/debian/local/manpages/tzselect.1",

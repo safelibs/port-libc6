@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "phase": "impl_06_io_stdio_string_path",
+    "phase": "impl_07_nss_resolver_nscd",
     "include_testroot_only": false,
     "package_count": 7,
     "packages": [
@@ -30,6 +30,19 @@
       "symlink_target": null,
       "owner_phase": null,
       "verification": null
+    },
+    {
+      "package": "libc-bin",
+      "path": "/etc/default/nss",
+      "source_path": "safe/debian/local/etc/nss",
+      "source_origin": "safe_local",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "config_asset",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
     },
     {
       "package": "libc-bin",
@@ -6858,6 +6871,19 @@
     },
     {
       "package": "libc6-dbg",
+      "path": "/usr/lib/debug/.build-id/29/11099266c62a4cd9691e74eee1445c518b3cf7.debug",
+      "source_path": "/usr/lib64/libresolv.so.2",
+      "source_origin": "derived_debug",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "debug_asset",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
+    },
+    {
+      "package": "libc6-dbg",
       "path": "/usr/lib/debug/.build-id/2a/3d28dcc601fcbbd28317278cb365efb8a51cdb.debug",
       "source_path": "/usr/lib64/gconv/IBM865.so",
       "source_origin": "derived_debug",
@@ -7885,6 +7911,19 @@
     },
     {
       "package": "libc6-dbg",
+      "path": "/usr/lib/debug/.build-id/70/af20529ca3881b3c6f4c8e3187645b6462d765.debug",
+      "source_path": "/usr/lib64/libanl.so.1",
+      "source_origin": "derived_debug",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "debug_asset",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
+    },
+    {
+      "package": "libc6-dbg",
       "path": "/usr/lib/debug/.build-id/73/0b8f0a14a0b1576661dd130d3cfe1187a613a8.debug",
       "source_path": "/usr/lib64/gconv/EBCDIC-ES-S.so",
       "source_origin": "derived_debug",
@@ -8548,19 +8587,6 @@
     },
     {
       "package": "libc6-dbg",
-      "path": "/usr/lib/debug/.build-id/a0/7da3b88771644c7dc90188ee94b520aab22c66.debug",
-      "source_path": "/usr/lib64/libanl.so.1",
-      "source_origin": "derived_debug",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "debug_asset",
-      "executable": true,
-      "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
-      "verification": "network-tools"
-    },
-    {
-      "package": "libc6-dbg",
       "path": "/usr/lib/debug/.build-id/a0/8fe6965602f239df9a2516e7029a8caa98e6e8.debug",
       "source_path": "/usr/lib64/gconv/CP1257.so",
       "source_origin": "derived_debug",
@@ -8909,19 +8935,6 @@
       "symlink_target": null,
       "owner_phase": null,
       "verification": "basic-required-packages"
-    },
-    {
-      "package": "libc6-dbg",
-      "path": "/usr/lib/debug/.build-id/ba/dee089f98f44e3b91a75bb8ad556bd0675d71f.debug",
-      "source_path": "/usr/lib64/libresolv.so.2",
-      "source_origin": "derived_debug",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "debug_asset",
-      "executable": true,
-      "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
-      "verification": "network-tools"
     },
     {
       "package": "libc6-dbg",
@@ -22381,15 +22394,15 @@
     {
       "package": "libc-bin",
       "path": "/usr/share/libc-bin/nsswitch.conf",
-      "source_path": "original/debian/local/etc/nsswitch.conf",
-      "source_origin": "debian_local",
+      "source_path": "safe/debian/local/etc/nsswitch.conf",
+      "source_origin": "safe_local",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "config_asset",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
     },
     {
       "package": "locales",

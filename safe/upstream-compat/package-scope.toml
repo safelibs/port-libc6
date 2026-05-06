@@ -1,5 +1,5 @@
 [metadata]
-phase = "impl_06_io_stdio_string_path"
+phase = "impl_07_nss_resolver_nscd"
 notes = [
     "Required-package baselines remain derived from the checked-in build/testroot.pristine tree, while the committed packaging surface now lives under safe/debian/** and safe/generated/packaging/package-build-manifest.json.",
     "Later phases must consume the committed safe packaging files in place instead of reading undeclared inputs from original/debian/**.",
@@ -12,6 +12,7 @@ notes = [
     "Phase 8 keeps required package manifests in place, extends the libc-family public DSO cutover through libBrokenLocale, ships the locale helper scripts directly from safe/debian/local/**, and tracks only the helper backends that still delegate to preserved upstream locale binaries.",
     "Phase 9 keeps required package manifests in place, extends the libc-family public DSO cutover through libdl, libm, libmvec, libpcprofile, librt, and libutil, ships the remaining dev/time entrypoints as Rust frontends, and tracks only the temporary backend DSOs plus helper backends still delegated to preserved upstream payloads.",
     "Phase 6 keeps required package manifests in place, moves the first libc-family public DSOs and public libc6-dev link names onto the safe build path, and tracks private baseline backend DSOs plus remaining libc6-dev startup/static/audit carryovers as explicit final-cutover obligations.",
+    "Phase 7 keeps required package manifests in place, moves the network-facing public DSOs, getent, nscd, nsswitch, and nss defaults onto phase-owned sources, and tracks private baseline network backends explicitly.",
 ]
 
 [debug_derivation]
@@ -406,6 +407,15 @@ path = "/etc/bindresvport.blacklist"
 scope = "required_package"
 shipped_status = "shipped"
 source_path = "safe/debian/local/etc/bindresvport.blacklist"
+
+[[files]]
+asset_kind = "config_asset"
+executable = false
+package = "libc-bin"
+path = "/etc/default/nss"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "safe/debian/local/etc/nss"
 
 [[files]]
 asset_kind = "data_asset"
@@ -17215,7 +17225,7 @@ shipped_status = "testroot_only"
 source_path = "build/testroot.pristine/usr/share/info/libc.info-9"
 
 [[files]]
-asset_kind = "data_asset"
+asset_kind = "config_asset"
 executable = false
 package = "libc-bin"
 path = "/usr/share/libc-bin/nsswitch.conf"

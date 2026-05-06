@@ -26,8 +26,8 @@ const PHASE_09_ID: &str = "impl_09_math_and_aux_dsos";
 const FINAL_CUTOVER_PHASE: &str = "impl_10_final_fixup_and_audit";
 
 const PHASE_EXTRA_NOTES: [&str; 4] = [
-    "Phase 6 moves the first libc-family public DSO payloads onto the safe build path, keeps private baseline backend copies explicitly inventoried, and records remaining libc6-dev build-testroot carryovers as final-cutover obligations.",
-    "The safe test tree carries every phase-6-owned stdio, stdlib, libio, string, io, time, dirent, assert, ctype, termios, timezone, normalized sysdeps, generated placeholder, and shared script row from the committed ownership plan.",
+    "Phase 7 moves the network-facing libanl, libnsl, libnss_*, and libresolv public payloads onto the safe build path while keeping private baseline backend copies explicitly inventoried.",
+    "The safe test tree carries every phase-7-owned hesiod, inet, nis, nss, resolv, socket, normalized sysdeps, shared script, and nscd sentinel row from the committed ownership plan.",
     "check-owned-tests validates exact ownership completeness against the committed test catalog and test-port plan before it executes ported rows.",
     "stage-upstream-build is the only supported way to adopt or recreate safe/work/original-build for relink smokes, package derivation, and upstream-test execution.",
 ];
@@ -276,6 +276,8 @@ fn build_rust_runtime_crates(args: &Args) -> Result<()> {
         .arg("-p")
         .arg("libc6")
         .arg("-p")
+        .arg("network-identity")
+        .arg("-p")
         .arg("libpthread")
         .arg("-p")
         .arg("libthread-db")
@@ -354,6 +356,7 @@ fn link_hybrid_shell(
         write_forwarding_veneer_oracle(baseline, scratch_root)?;
     }
     let rust_anchor = write_rust_anchor_object(baseline, scratch_root)?;
+    let phase_rust_object = write_phase_rust_object(baseline, scratch_root)?;
     let resolver_path = scratch_root
         .join("sources")
         .join(format!("{}-resolver.c", baseline.dso_id));
@@ -375,7 +378,12 @@ fn link_hybrid_shell(
             &rust_anchor,
             scratch_root,
         )?;
-        ensure_public_cutover_is_not_baseline(baseline, backend_source, &output_path, scratch_root)?;
+        ensure_public_cutover_is_not_baseline(
+            baseline,
+            backend_source,
+            &output_path,
+            scratch_root,
+        )?;
         add_safelibs_public_note(&output_path, scratch_root, &baseline.dso_id)?;
         materialize_shell_aliases(artifact_root, baseline, &output_install_path)?;
         return Ok(());
@@ -404,12 +412,11 @@ fn link_hybrid_shell(
     if baseline_has_version_defs(baseline) {
         command.arg(format!("-Wl,--version-script={}", version_script.display()));
     }
-    command
-        .arg("-o")
-        .arg(&output_path)
-        .arg(&rust_anchor)
-        .arg(&source_path)
-        .arg(&resolver_path);
+    command.arg("-o").arg(&output_path).arg(&rust_anchor);
+    if let Some(object) = &phase_rust_object {
+        command.arg(object);
+    }
+    command.arg(&source_path).arg(&resolver_path);
     if let Some((start_asm, start_c)) = &loader_exec_sources {
         command.arg(start_asm).arg(start_c);
     }
@@ -490,6 +497,47 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {{
     Ok(object_path)
 }
 
+fn write_phase_rust_object(baseline: &AbiBaseline, scratch_root: &Path) -> Result<Option<PathBuf>> {
+    if !matches!(baseline.dso_id.as_str(), "libanl" | "libresolv") {
+        return Ok(None);
+    }
+
+    let object_path = scratch_root
+        .join("objects")
+        .join(format!("{}-network-identity.o", baseline.dso_id));
+    ensure_parent_dir(&object_path)?;
+    run_command(
+        Command::new("rustc")
+            .arg("--crate-name")
+            .arg(format!(
+                "{}_network_identity",
+                rust_ident_for_dso(&baseline.dso_id)
+            ))
+            .arg("--edition=2021")
+            .arg("--emit=obj")
+            .arg("--crate-type=lib")
+            .arg("-C")
+            .arg("panic=abort")
+            .arg("-C")
+            .arg("relocation-model=pic")
+            .arg("--cfg")
+            .arg(format!(
+                "safelibs_dso=\"{}\"",
+                rust_ident_for_dso(&baseline.dso_id)
+            ))
+            .arg("-o")
+            .arg(&object_path)
+            .arg(safe_root().join("crates/network-identity/src/lib.rs")),
+    )
+    .with_context(|| {
+        format!(
+            "failed to compile network Rust object for {}",
+            baseline.dso_id
+        )
+    })?;
+    Ok(Some(object_path))
+}
+
 fn rust_ident_for_dso(dso_id: &str) -> String {
     dso_id
         .chars()
@@ -504,9 +552,9 @@ fn rust_ident_for_dso(dso_id: &str) -> String {
 }
 
 fn stable_anchor_value(input: &str) -> usize {
-    input
-        .bytes()
-        .fold(0x6a09e667usize, |acc, byte| acc.wrapping_mul(16777619) ^ byte as usize)
+    input.bytes().fold(0x6a09e667usize, |acc, byte| {
+        acc.wrapping_mul(16777619) ^ byte as usize
+    })
 }
 
 fn write_loader_exec_sources(
@@ -631,8 +679,8 @@ fn ensure_public_cutover_is_not_baseline(
             .arg(".note.safelibs")
             .arg(&stripped),
     )?;
-    let generated = fs::read(&stripped)
-        .with_context(|| format!("failed to read {}", stripped.display()))?;
+    let generated =
+        fs::read(&stripped).with_context(|| format!("failed to read {}", stripped.display()))?;
     let baseline_bytes = fs::read(backend_source)
         .with_context(|| format!("failed to read {}", backend_source.display()))?;
     if generated == baseline_bytes {
@@ -794,7 +842,7 @@ fn resolve_upstream_install_payload(upstream_root: &Path, install_path: &str) ->
 fn add_safelibs_public_note(output_path: &Path, scratch_root: &Path, tag: &str) -> Result<()> {
     let note_path = scratch_root.join("notes").join(format!("{tag}.txt"));
     let note_text = format!(
-        "phase={PHASE_ID}\nowner_phase={}\nartifact={tag}\nkind=safe-build-public-dso-cutover\nrust_crates=core-runtime,libc6,libpthread,libthread-db\n",
+        "phase={PHASE_ID}\nowner_phase={}\nartifact={tag}\nkind=safe-build-public-dso-cutover\nrust_crates=core-runtime,libc6,network-identity,libpthread,libthread-db\n",
         owner_phase_for_dso_id(tag)
     );
     fs::write(&note_path, &note_text)
@@ -950,8 +998,7 @@ fn render_shell_source(baseline: &AbiBaseline) -> String {
             "/* Generated forwarding ABI veneer set for {}. */",
             baseline.dso_id
         ),
-        "/* Missing Rust-provided exports resolve by exact version through dlvsym. */"
-            .to_string(),
+        "/* Missing Rust-provided exports resolve by exact version through dlvsym. */".to_string(),
         ".text".to_string(),
     ];
 
@@ -1087,7 +1134,10 @@ fn shell_export_symbols(baseline: &AbiBaseline) -> Vec<ShellExport> {
     let mut seen = BTreeSet::new();
     let mut exports = Vec::new();
     for raw in &baseline.exported_symbols {
-        if !seen.insert(raw.clone()) || is_version_marker(raw) {
+        if !seen.insert(raw.clone())
+            || is_version_marker(raw)
+            || rust_implemented_export_symbol(&baseline.dso_id, raw)
+        {
             continue;
         }
         if let Some((name, version)) = split_export_version(raw) {
@@ -1101,6 +1151,20 @@ fn shell_export_symbols(baseline: &AbiBaseline) -> Vec<ShellExport> {
         }
     }
     exports
+}
+
+fn rust_implemented_export_symbol(dso_id: &str, raw: &str) -> bool {
+    let name = split_export_version(raw)
+        .map(|(name, _)| name)
+        .unwrap_or(raw);
+    match dso_id {
+        "libanl" => name == "__libanl_version_placeholder",
+        "libresolv" => matches!(
+            name,
+            "__ns_get16" | "__ns_get32" | "ns_get16" | "ns_get32" | "ns_put16" | "ns_put32"
+        ),
+        _ => false,
+    }
 }
 
 fn split_export_version(raw: &str) -> Option<(&str, &str)> {
@@ -1636,8 +1700,8 @@ against the checked-in upstream build outputs while the runtime remains hybrid.
   harness and smoke checks.
 - `cargo run -p xtask -- run-original-tests ...` populates that build tree from
   the committed safe test sources and the checked-in upstream build artifacts.
-- Phase 6 extends that committed test tree with the I/O, stdio, string, path,
-  time, libc-family, and normalized sysdeps-owned coverage without inventing a
+- Phase 7 extends that committed test tree with network, resolver, NSS, nscd,
+  socket, inet, and normalized sysdeps-owned coverage without inventing a
   parallel workflow.
 "#,
     )?;
@@ -1651,25 +1715,25 @@ by the safe libc port.
 - `safe/tests/support/**` mirrors the committed upstream support subtree.
 - `safe/tests/manifest.toml` is the authoritative phase ownership ledger for the
   copied tests.
-- Phase 6 adds the stdio, stdlib, libio, string, io, time, dirent, assert,
-  ctype, termios, timezone, generated placeholder, shared script, and normalized
-  sysdeps entries while preserving later committed port statuses in place.
+- Phase 7 adds the hesiod, inet, nis, nss, resolv, socket, nscd sentinel,
+  shared script, and normalized sysdeps entries while preserving later committed
+  port statuses in place.
 "#,
     )?;
     write_text_file(
         &safe_root().join("tests/core/README.md"),
         r#"# Core Runtime Test Notes
 
-Phase 6 keeps the earlier runtime stdlib allowlist intact. Only the entropy
-coverage points `tst-getrandom` and `tst-arc4random*` remain phase-5-owned;
-every other stdlib catalog entry is phase-6-owned.
+Phase 7 keeps the earlier runtime and libc-family test allowlists intact while
+the network-owned rows are materialized and run through the shared install-root
+harness.
 "#,
     )?;
 
     let crate_readmes = [
         (
             "safe/crates/libc6/README.md",
-            "# libc6 Runtime Port\n\nPhase 6 keeps the startup port in place, carries the low-level runtime exports under `safe/crates/libc6/src/sys/**`, and moves the first libc-family public DSO payloads onto the safe build path while private baseline backend copies remain explicitly inventoried.",
+            "# libc6 Runtime Port\n\nPhase 7 keeps the phase-6 libc-family cutover in place and extends the public provenance model to network-facing DSOs while private baseline backend copies remain explicitly inventoried.",
         ),
         (
             "safe/crates/ldso/README.md",
@@ -1677,23 +1741,23 @@ every other stdlib catalog entry is phase-6-owned.
         ),
         (
             "safe/crates/core-runtime/README.md",
-            "# core-runtime\n\nPhase 6 keeps low-level syscall wrappers, errno and TLS state, futex helpers, allocator entrypoints, signal bookkeeping, path helpers, time helpers, and entropy interfaces under `safe/crates/core-runtime/src/**` while the libc-family package cutover begins.",
+            "# core-runtime\n\nPhase 7 keeps low-level syscall wrappers, errno and TLS state, futex helpers, allocator entrypoints, signal bookkeeping, path helpers, time helpers, and entropy interfaces under `safe/crates/core-runtime/src/**` while network-facing package coverage is added.",
         ),
         (
             "safe/crates/libpthread/README.md",
-            "# libpthread Runtime State\n\nPhase 6 keeps the Rust-side pthread bookkeeping, futex-backed synchronization helpers, and setxid coordination under `safe/crates/libpthread/src/**` while the first libc-family DSO cutover reuses the safe-built packaging path.",
+            "# libpthread Runtime State\n\nPhase 7 keeps the Rust-side pthread bookkeeping, futex-backed synchronization helpers, and setxid coordination under `safe/crates/libpthread/src/**` while network test coverage runs through the shared install-root harness.",
         ),
         (
             "safe/crates/libthread-db/README.md",
-            "# libthread-db Surface\n\nPhase 6 records the debugger-facing proc-service and thread-db surface under `safe/crates/libthread-db/src/**` while libc-family cutover provenance is tracked through the safe build path.",
+            "# libthread-db Surface\n\nPhase 7 keeps the debugger-facing proc-service and thread-db surface under `safe/crates/libthread-db/src/**` while network DSO provenance is tracked through the safe build path.",
         ),
         (
             "safe/crates/aux-dsos/README.md",
-            "# Hybrid Aux DSOs\n\nLater phases extend the same generated version-script, safe-build public provenance, and explicit private backend inventory model introduced by the phase-6 libc-family cutover.",
+            "# Hybrid Aux DSOs\n\nPhase 7 extends the generated version-script, safe-build public provenance, and explicit private backend inventory model to network-facing DSOs.",
         ),
         (
             "safe/crates/compat-asm/x86_64/README.md",
-            "# x86_64 Compat ASM\n\nPhase 6 keeps the minimal unavoidable amd64 startup and relocation shims here while later phases can extend the checked-in compatibility veneer set without regenerating the surrounding workflow.",
+            "# x86_64 Compat ASM\n\nPhase 7 keeps the minimal unavoidable amd64 startup and forwarding shims here while extending the checked-in compatibility veneer set for network DSOs without regenerating the surrounding workflow.",
         ),
     ];
     for (path, contents) in crate_readmes {
@@ -1811,7 +1875,7 @@ fn refresh_package_scope() -> Result<()> {
     let mut doc: PackageScopeDoc =
         load_current_or_head_doc("safe/upstream-compat/package-scope.toml")?;
     doc.metadata.phase = PHASE_ID.to_string();
-    let note = "Phase 6 keeps required package manifests in place, moves the first libc-family public DSOs and public libc6-dev link names onto the safe build path, and tracks private baseline backend DSOs plus remaining libc6-dev startup/static/audit carryovers as explicit final-cutover obligations.";
+    let note = "Phase 7 keeps required package manifests in place, moves the network-facing public DSOs, getent, nscd, nsswitch, and nss defaults onto phase-owned sources, and tracks private baseline network backends explicitly.";
     if !doc.metadata.notes.iter().any(|entry| entry == note) {
         doc.metadata.notes.push(note.to_string());
     }
@@ -1834,7 +1898,7 @@ fn refresh_cve_status() -> Result<()> {
     let path = safe_root().join("upstream-compat/cve-status.toml");
     let mut doc: CveStatusDoc = load_current_or_head_doc("safe/upstream-compat/cve-status.toml")?;
     doc.metadata.phase = PHASE_ID.to_string();
-    let note = "Phase 6 updates runtime, path, time, entropy, realpath, strftime, makecontext, and pointer-guard CVE dispositions after the first libc-family public provenance cutover.";
+    let note = "Phase 7 updates resolver, NSS, getaddrinfo, and nscd-client CVE dispositions after the network-facing DSO and tool cutover.";
     if !doc.metadata.notes.iter().any(|entry| entry == note) {
         doc.metadata.notes.push(note.to_string());
     }
@@ -1878,7 +1942,7 @@ fn refresh_cve_status() -> Result<()> {
                 | "nss_nis / getpwnam"
         ) {
             entry.status = "open".to_string();
-            entry.rationale = "Phase 7 removes the temporary getent/nscd wrappers, carries the public network-facing DSOs from the safe build root, and inventories private backend copies explicitly. The resolver and NSS code paths themselves still come from copied upstream payloads in this phase, so bug-class-specific hardening for this component remains open until a later direct implementation replaces those backend-derived bodies.".to_string();
+            entry.rationale = "Phase 7 removes the temporary getent/nscd wrappers, carries the public network-facing DSOs from the safe build root, links Rust resolver helpers for bounded DNS name skipping and network-byte-order parsing, and inventories private backend copies explicitly. The nscd tool uses generation-checked state snapshots instead of torn shared-cache reads. Full NSS, getaddrinfo, and resolver backend replacement remains open until the remaining backend-derived bodies are replaced.".to_string();
         } else if entry.component.contains("getrandom / arc4random") {
             entry.status = "mitigated".to_string();
             entry.rationale = "Phase 6 ships the libc-family public payloads from the safe build path rather than directly from build/testroot.pristine, so the entropy surface is no longer tracked as a baseline-backend exception. The remaining backend copies are private inventory only.".to_string();
@@ -1905,7 +1969,7 @@ fn refresh_safety_policy() -> Result<()> {
         metadata.insert(
             "phase_note".to_string(),
             TomlValue::String(
-                "Phase 6 keeps the reviewed unsafe and fallback policy entries in sync while the first libc-family public DSOs move onto the safe-build public provenance path and private backend copies remain explicitly tracked.".to_string(),
+                "Phase 7 keeps the reviewed unsafe and fallback policy entries in sync while network-facing DSOs and tools move onto phase-owned sources and private backend copies remain explicitly tracked.".to_string(),
             ),
         );
     }
@@ -1914,7 +1978,7 @@ fn refresh_safety_policy() -> Result<()> {
             .entry("notes")
             .or_insert_with(|| TomlValue::Array(Vec::new()));
         if let Some(notes) = notes.as_array_mut() {
-            let note = "Phase 6 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope tracks the private libc-family backend DSOs and preserved helper backends explicitly.";
+            let note = "Phase 7 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope tracks private network backend DSOs and preserved helper backends explicitly.";
             if !notes
                 .iter()
                 .filter_map(TomlValue::as_str)
@@ -2161,7 +2225,7 @@ fn refresh_fallback_inventory() -> Result<()> {
         "notes": [
             "This inventory is the single committed ledger of non-Rust source, script, assembly, template, and fallback assets planned under safe/**.",
             "Later phases must update this file in place instead of maintaining ad hoc fallback lists.",
-            "Phase 6 moves the first libc-family public DSOs onto the safe build path and limits remaining copied-upstream runtime payloads to explicitly tracked private backend binaries plus later-phase libc6-dev obligations."
+            "Phase 7 moves network-facing public DSOs and tools onto phase-owned sources and limits remaining copied-upstream network payloads to explicitly tracked private backend binaries."
         ],
         "phase": PHASE_ID
     });
@@ -2496,8 +2560,8 @@ fn public_build_source_path(build_root: &str, install_path: &str) -> String {
 
 fn owner_phase_for_dso_id(dso_id: &str) -> &'static str {
     match dso_id {
-        "libanl" | "libnsl" | "libnss_compat" | "libnss_dns" | "libnss_files"
-        | "libnss_hesiod" | "libresolv" => PHASE_07_ID,
+        "libanl" | "libnsl" | "libnss_compat" | "libnss_dns" | "libnss_files" | "libnss_hesiod"
+        | "libresolv" => PHASE_07_ID,
         "libBrokenLocale" => PHASE_08_ID,
         "libdl" | "libm" | "libmvec" | "libpcprofile" | "librt" | "libutil" => PHASE_09_ID,
         _ => PHASE_06_ID,
@@ -2624,6 +2688,7 @@ fn normalize_tool_package_manifests() -> Result<()> {
         )?;
     }
     normalize_locale_script_package_manifest()?;
+    normalize_network_config_package_manifest()?;
     Ok(())
 }
 
@@ -2781,7 +2846,62 @@ fn update_package_scope_tool_files(files: &mut Vec<TomlValue>) -> Result<()> {
         }
     }
     update_package_scope_locale_script_files(files);
+    update_package_scope_network_config_files(files);
     Ok(())
+}
+
+fn normalize_network_config_package_manifest() -> Result<()> {
+    let path = safe_root().join("generated/baseline/package-files/libc-bin.json");
+    let mut manifest: PackageManifest = load_json(&path)?;
+    set_package_manifest_phase(&mut manifest);
+    for (install_path, source_path) in [
+        (
+            "/usr/share/libc-bin/nsswitch.conf",
+            "safe/debian/local/etc/nsswitch.conf",
+        ),
+        ("/etc/default/nss", "safe/debian/local/etc/nss"),
+    ] {
+        upsert_package_entry(
+            &mut manifest.entries,
+            PackageEntry {
+                package: "libc-bin".to_string(),
+                path: install_path.to_string(),
+                source_path: Some(source_path.to_string()),
+                source_origin: "safe_local".to_string(),
+                scope: "required_package".to_string(),
+                shipped_status: "shipped".to_string(),
+                asset_kind: "config_asset".to_string(),
+                executable: false,
+                symlink_target: None,
+                owner_phase: Some(PHASE_07_ID.to_string()),
+                verification: Some("network-tools".to_string()),
+            },
+        );
+    }
+    normalize_package_entries(&mut manifest.entries);
+    write_pretty_json(&path, &manifest)
+}
+
+fn update_package_scope_network_config_files(files: &mut Vec<TomlValue>) {
+    for (install_path, source_path) in [
+        (
+            "/usr/share/libc-bin/nsswitch.conf",
+            "safe/debian/local/etc/nsswitch.conf",
+        ),
+        ("/etc/default/nss", "safe/debian/local/etc/nss"),
+    ] {
+        upsert_package_scope_file(
+            files,
+            install_path,
+            "libc-bin",
+            source_path,
+            "config_asset",
+            false,
+            "required_package",
+            "shipped",
+        );
+        clear_package_scope_temporary(files, install_path);
+    }
 }
 
 fn normalize_locale_script_package_manifest() -> Result<()> {

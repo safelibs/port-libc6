@@ -3,6 +3,7 @@ use std::collections::BTreeSet;
 use std::env;
 use std::ffi::OsStr;
 use std::fs;
+use std::io::ErrorKind;
 use std::net::{IpAddr, ToSocketAddrs};
 use std::path::{Path, PathBuf};
 use std::thread;
@@ -16,6 +17,7 @@ const NSCD_CACHE_DIR: &str = "/var/cache/nscd";
 const NSCD_PIDFILE: &str = "/run/nscd/nscd.pid";
 const NSCD_SOCKET_MARKER: &str = "/run/nscd/socket";
 const NSCD_INVALIDATION_DIR: &str = "/run/nscd/invalidations";
+const NSCD_SNAPSHOT: &str = "/run/nscd/state.snapshot";
 
 pub fn main_from_env() -> Result<()> {
     let argv = env::args().collect::<Vec<_>>();
@@ -146,6 +148,12 @@ fn query_hosts(keys: &[String], family: HostFamily, expanded: bool) -> Result<()
 
     let mut rows = Vec::new();
     for key in keys {
+        if let Some(ip) = parse_numeric_host(key) {
+            if matches_family(ip, family) {
+                append_host_rows(&mut rows, ip, key, expanded);
+            }
+            continue;
+        }
         let mut seen = BTreeSet::new();
         let addrs = (key.as_str(), 0)
             .to_socket_addrs()
@@ -155,13 +163,7 @@ fn query_hosts(keys: &[String], family: HostFamily, expanded: bool) -> Result<()
             if !matches_family(ip, family) || !seen.insert(ip) {
                 continue;
             }
-            if expanded {
-                rows.push(format!("{ip} STREAM {key}"));
-                rows.push(format!("{ip} DGRAM"));
-                rows.push(format!("{ip} RAW"));
-            } else {
-                rows.push(format!("{ip} {key}"));
-            }
+            append_host_rows(&mut rows, ip, key, expanded);
         }
     }
 
@@ -172,6 +174,23 @@ fn query_hosts(keys: &[String], family: HostFamily, expanded: bool) -> Result<()
         println!("{row}");
     }
     Ok(())
+}
+
+fn parse_numeric_host(key: &str) -> Option<IpAddr> {
+    if key.is_empty() || key.bytes().any(|byte| byte.is_ascii_whitespace()) {
+        return None;
+    }
+    key.parse::<IpAddr>().ok()
+}
+
+fn append_host_rows(rows: &mut Vec<String>, ip: IpAddr, key: &str, expanded: bool) {
+    if expanded {
+        rows.push(format!("{ip} STREAM {key}"));
+        rows.push(format!("{ip} DGRAM"));
+        rows.push(format!("{ip} RAW"));
+    } else {
+        rows.push(format!("{ip} {key}"));
+    }
 }
 
 fn matches_family(ip: IpAddr, family: HostFamily) -> bool {
@@ -195,7 +214,10 @@ fn run_nscd(args: &[String]) -> Result<()> {
         shutdown_nscd()?;
         return Ok(());
     }
-    if let Some(index) = args.iter().position(|arg| arg == "-i") {
+    if let Some(index) = args
+        .iter()
+        .position(|arg| arg == "-i" || arg == "--invalidate")
+    {
         let database = args
             .get(index + 1)
             .ok_or_else(|| anyhow::anyhow!("nscd -i requires a database name"))?;
@@ -243,6 +265,7 @@ fn run_nscd_loop() -> Result<()> {
         .with_context(|| format!("failed to write {NSCD_PIDFILE}"))?;
     fs::write(NSCD_SOCKET_MARKER, "safe nscd socket marker\n")
         .with_context(|| format!("failed to write {NSCD_SOCKET_MARKER}"))?;
+    write_nscd_snapshot(1, &pid, &[])?;
 
     loop {
         thread::sleep(Duration::from_secs(1));
@@ -252,9 +275,14 @@ fn run_nscd_loop() -> Result<()> {
         if current.trim() != pid {
             break;
         }
+        let generation = read_nscd_snapshot()
+            .map(|snapshot| snapshot.generation.saturating_add(1))
+            .unwrap_or(1);
+        write_nscd_snapshot(generation, &pid, &collect_invalidations()?)?;
     }
 
     let _ = fs::remove_file(NSCD_SOCKET_MARKER);
+    let _ = fs::remove_file(NSCD_SNAPSHOT);
     Ok(())
 }
 
@@ -264,6 +292,7 @@ fn shutdown_nscd() -> Result<()> {
             .with_context(|| format!("failed to remove {NSCD_PIDFILE}"))?;
     }
     let _ = fs::remove_file(NSCD_SOCKET_MARKER);
+    let _ = fs::remove_file(NSCD_SNAPSHOT);
     Ok(())
 }
 
@@ -273,13 +302,130 @@ fn invalidate_database(database: &str) -> Result<()> {
     let marker = PathBuf::from(NSCD_INVALIDATION_DIR).join(database);
     fs::write(&marker, "invalidated\n")
         .with_context(|| format!("failed to write {}", marker.display()))?;
+    if let Ok(snapshot) = read_nscd_snapshot() {
+        let mut invalidations = snapshot.invalidations;
+        if !invalidations.iter().any(|entry| entry == database) {
+            invalidations.push(database.to_string());
+        }
+        write_nscd_snapshot(
+            snapshot.generation.saturating_add(1),
+            &snapshot.pid,
+            &invalidations,
+        )?;
+    }
     Ok(())
 }
 
 fn print_nscd_status() -> Result<()> {
-    let pid = fs::read_to_string(NSCD_PIDFILE).unwrap_or_else(|_| "stopped\n".to_string());
-    println!("nscd pid: {}", pid.trim());
+    let snapshot = read_nscd_snapshot().ok();
+    let pid_text = snapshot
+        .as_ref()
+        .map(|snapshot| snapshot.pid.clone())
+        .or_else(|| {
+            fs::read_to_string(NSCD_PIDFILE)
+                .ok()
+                .map(|pid| pid.trim().to_string())
+        })
+        .unwrap_or_else(|| "stopped".to_string());
+    println!("nscd pid: {pid_text}");
     println!("runtime dir: {NSCD_RUN_DIR}");
     println!("cache dir: {NSCD_CACHE_DIR}");
+    if let Some(snapshot) = snapshot {
+        println!("snapshot generation: {}", snapshot.generation);
+        if !snapshot.invalidations.is_empty() {
+            println!("invalidated: {}", snapshot.invalidations.join(","));
+        }
+    }
     Ok(())
+}
+
+#[derive(Debug)]
+struct NscdSnapshot {
+    generation: u64,
+    pid: String,
+    invalidations: Vec<String>,
+}
+
+fn write_nscd_snapshot(generation: u64, pid: &str, invalidations: &[String]) -> Result<()> {
+    fs::create_dir_all(NSCD_RUN_DIR).with_context(|| format!("failed to create {NSCD_RUN_DIR}"))?;
+    let mut payload = String::new();
+    payload.push_str(&format!("generation={generation}\n"));
+    payload.push_str(&format!("pid={pid}\n"));
+    if !invalidations.is_empty() {
+        payload.push_str("invalidations=");
+        payload.push_str(&invalidations.join(","));
+        payload.push('\n');
+    }
+    payload.push_str(&format!("generation_end={generation}\n"));
+    let tmp_path = format!("{}.{}.tmp", NSCD_SNAPSHOT, std::process::id());
+    fs::write(&tmp_path, payload).with_context(|| format!("failed to write {tmp_path}"))?;
+    fs::rename(&tmp_path, NSCD_SNAPSHOT)
+        .with_context(|| format!("failed to publish {NSCD_SNAPSHOT}"))?;
+    Ok(())
+}
+
+fn read_nscd_snapshot() -> Result<NscdSnapshot> {
+    for _ in 0..3 {
+        match fs::read_to_string(NSCD_SNAPSHOT) {
+            Ok(contents) => {
+                if let Some(snapshot) = parse_nscd_snapshot(&contents) {
+                    return Ok(snapshot);
+                }
+            }
+            Err(error) if error.kind() == ErrorKind::NotFound => bail!("nscd snapshot is absent"),
+            Err(error) => return Err(error).context("failed to read nscd snapshot"),
+        }
+        thread::sleep(Duration::from_millis(10));
+    }
+    bail!("nscd snapshot changed while being read")
+}
+
+fn parse_nscd_snapshot(contents: &str) -> Option<NscdSnapshot> {
+    let mut generation = None;
+    let mut generation_end = None;
+    let mut pid = None;
+    let mut invalidations = Vec::new();
+    for line in contents.lines() {
+        if let Some(value) = line.strip_prefix("generation=") {
+            generation = value.parse::<u64>().ok();
+        } else if let Some(value) = line.strip_prefix("generation_end=") {
+            generation_end = value.parse::<u64>().ok();
+        } else if let Some(value) = line.strip_prefix("pid=") {
+            pid = Some(value.to_string());
+        } else if let Some(value) = line.strip_prefix("invalidations=") {
+            invalidations = value
+                .split(',')
+                .filter(|entry| !entry.is_empty())
+                .map(str::to_string)
+                .collect();
+        }
+    }
+    let generation = generation?;
+    if generation == 0 || Some(generation) != generation_end {
+        return None;
+    }
+    Some(NscdSnapshot {
+        generation,
+        pid: pid?,
+        invalidations,
+    })
+}
+
+fn collect_invalidations() -> Result<Vec<String>> {
+    let mut invalidations = Vec::new();
+    match fs::read_dir(NSCD_INVALIDATION_DIR) {
+        Ok(entries) => {
+            for entry in entries {
+                let entry = entry?;
+                if let Some(name) = entry.file_name().to_str() {
+                    invalidations.push(name.to_string());
+                }
+            }
+        }
+        Err(error) if error.kind() == ErrorKind::NotFound => {}
+        Err(error) => return Err(error).context("failed to read nscd invalidations"),
+    }
+    invalidations.sort();
+    invalidations.dedup();
+    Ok(invalidations)
 }

@@ -1,6 +1,6 @@
 # Core Runtime Test Notes
 
-Phase 6 keeps the earlier runtime stdlib allowlist intact. Only the entropy
-coverage points `tst-getrandom` and `tst-arc4random*` remain phase-5-owned;
-every other stdlib catalog entry is phase-6-owned.
+Phase 7 keeps the earlier runtime and libc-family test allowlists intact while
+the network-owned rows are materialized and run through the shared install-root
+harness.
 

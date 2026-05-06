@@ -3,9 +3,9 @@
     "notes": [
       "This inventory is the single committed ledger of non-Rust source, script, assembly, template, and fallback assets planned under safe/**.",
       "Later phases must update this file in place instead of maintaining ad hoc fallback lists.",
-      "Phase 6 moves the first libc-family public DSOs onto the safe build path and limits remaining copied-upstream runtime payloads to explicitly tracked private backend binaries plus later-phase libc6-dev obligations."
+      "Phase 7 moves network-facing public DSOs and tools onto phase-owned sources and limits remaining copied-upstream network payloads to explicitly tracked private backend binaries."
     ],
-    "phase": "impl_06_io_stdio_string_path"
+    "phase": "impl_07_nss_resolver_nscd"
   },
   "entries": [
     {

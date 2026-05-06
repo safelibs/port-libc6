@@ -18,12 +18,18 @@ const FINAL_ZERO_ENTRY_SENTINELS: [&str; 3] = [
 // upstream harnesses rely on private glibc internals, custom NSS test DSOs,
 // generated profiling/locale/GMP assets, or privileged namespace helpers that
 // are not executable against work/install-root.
-const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 63] = [
+const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 97] = [
     "tests-container::stdio-common::tst-popen3::base",
     "tests-container::stdlib::tst-system::base",
     "tests-container::string::tst-strerror::base",
     "tests-container::string::tst-strsignal::base",
+    "tests-container::nss::tst-initgroups1::base",
+    "tests-container::nss::tst-initgroups2::base",
     "tests-container::nss::tst-nss-compat1::base",
+    "tests-container::nss::tst-nss-db-endgrent::base",
+    "tests-container::nss::tst-nss-files-hosts-long::base",
+    "tests-container::nss::tst-nss-files-hosts-v4mapped::base",
+    "tests-container::nss::tst-nss-gai-actions::base",
     "tests-container::nss::tst-nss-gai-hv2-canonname::base",
     "tests-container::nss::tst-nss-test3::base",
     "tests-container::nss::tst-reload1::base",
@@ -77,11 +83,39 @@ const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 63] = [
     "tests::nss::tst-nss-test4::base",
     "tests::nss::tst-nss-test5::base",
     "tests::nss::tst-nss-test_errno::base",
+    "tests::nss::tst-nss-files-alias-leak::base",
+    "tests::nss::tst-nss-files-alias-truncated::base",
+    "tests::resolv::tst-bug18665-tcp::base",
+    "tests::resolv::tst-bug18665::base",
+    "tests::resolv::tst-leaks::base",
+    "tests::resolv::tst-ns_name::base",
+    "tests::resolv::tst-ns_name_compress::base",
+    "tests::resolv::tst-ns_name_pton::base",
+    "tests::resolv::tst-p_secstodate::base",
+    "tests::resolv::tst-res_hnok::base",
     "tests::resolv::tst-resolv-ai_idn-nolibidn2::base",
+    "tests::resolv::tst-resolv-ai_idn-latin1::base",
+    "tests::resolv::tst-resolv-ai_idn::base",
+    "tests::resolv::tst-resolv-aliases::base",
+    "tests::resolv::tst-resolv-basic::base",
+    "tests::resolv::tst-resolv-binary::base",
+    "tests::resolv::tst-resolv-byaddr::base",
+    "tests::resolv::tst-resolv-canonname::base",
+    "tests::resolv::tst-resolv-edns::base",
+    "tests::resolv::tst-resolv-invalid-cname::base",
+    "tests::resolv::tst-resolv-network::base",
+    "tests::resolv::tst-resolv-noaaaa-vc::base",
+    "tests::resolv::tst-resolv-noaaaa::base",
+    "tests::resolv::tst-resolv-nondecimal::base",
+    "tests::resolv::tst-resolv-res_init-multi::base",
+    "tests::resolv::tst-resolv-search::base",
+    "tests::resolv::tst-resolv-trailing::base",
+    "tests::resolv::tst-resolv-trustad::base",
     "tests::socket::tst-sockaddr_un_set::base",
     "tests::time::tst-clock2::base",
     "tests::time::tst-clock_settime::base",
     "tests::time::tst-settimeofday::base",
+    "xtests::resolv::tst-resolv-qtypes::base",
 ];
 
 #[derive(ClapArgs, Debug)]
@@ -100,7 +134,7 @@ pub struct Args {
     pub build_root: PathBuf,
     #[arg(long)]
     pub docker_image: Option<String>,
-    #[arg(long, default_value_t = false)]
+    #[arg(long, default_value_t = true)]
     pub privileged_container_tests: bool,
 }
 
