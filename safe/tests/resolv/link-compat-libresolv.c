@@ -1,15 +1,8 @@
-extern int dn_skipname (const unsigned char *, const unsigned char *);
-
-static const unsigned char qname[] =
-  {
-    3, 'w', 'w', 'w',
-    7, 'e', 'x', 'a', 'm', 'p', 'l', 'e',
-    3, 'c', 'o', 'm',
-    0
-  };
+extern unsigned int ns_get16 (const unsigned char *);
 
 int
 main (void)
 {
-  return dn_skipname (qname, qname + sizeof (qname)) < 0;
+  static const unsigned char value[] = { 0x12, 0x34 };
+  return ns_get16 (value) != 0x1234;
 }

@@ -525,6 +525,8 @@ fn write_phase_rust_object(baseline: &AbiBaseline, scratch_root: &Path) -> Resul
                 "safelibs_dso=\"{}\"",
                 rust_ident_for_dso(&baseline.dso_id)
             ))
+            .arg("--cfg")
+            .arg("safelibs_dso_build")
             .arg("-o")
             .arg(&object_path)
             .arg(safe_root().join("crates/network-identity/src/lib.rs")),

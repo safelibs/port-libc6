@@ -1,37 +1,48 @@
 #![no_std]
 
+#[cfg(not(safelibs_dso_build))]
 use core::cmp;
 
+#[cfg(any(not(safelibs_dso_build), safelibs_dso = "libresolv"))]
 const DNS_LABEL_POINTER: u8 = 0xc0;
+#[cfg(any(not(safelibs_dso_build), safelibs_dso = "libresolv"))]
 const DNS_LABEL_MASK: u8 = 0xc0;
+#[cfg(any(not(safelibs_dso_build), safelibs_dso = "libresolv"))]
 const DNS_LABEL_MAX: usize = 63;
+#[cfg(any(not(safelibs_dso_build), safelibs_dso = "libresolv"))]
 const DNS_POINTER_SIZE: usize = 2;
 
+#[cfg(any(not(safelibs_dso_build), safelibs_dso = "libanl"))]
 #[no_mangle]
 pub extern "C" fn __libanl_version_placeholder() -> i32 {
     0
 }
 
+#[cfg(any(not(safelibs_dso_build), safelibs_dso = "libresolv"))]
 #[no_mangle]
 pub unsafe extern "C" fn ns_get16(src: *const u8) -> u32 {
     read_be16(src)
 }
 
+#[cfg(any(not(safelibs_dso_build), safelibs_dso = "libresolv"))]
 #[no_mangle]
 pub unsafe extern "C" fn __ns_get16(src: *const u8) -> u32 {
     read_be16(src)
 }
 
+#[cfg(any(not(safelibs_dso_build), safelibs_dso = "libresolv"))]
 #[no_mangle]
 pub unsafe extern "C" fn ns_get32(src: *const u8) -> usize {
     read_be32(src) as usize
 }
 
+#[cfg(any(not(safelibs_dso_build), safelibs_dso = "libresolv"))]
 #[no_mangle]
 pub unsafe extern "C" fn __ns_get32(src: *const u8) -> usize {
     read_be32(src) as usize
 }
 
+#[cfg(any(not(safelibs_dso_build), safelibs_dso = "libresolv"))]
 #[no_mangle]
 pub unsafe extern "C" fn ns_put16(src: u32, dst: *mut u8) {
     if dst.is_null() {
@@ -41,6 +52,7 @@ pub unsafe extern "C" fn ns_put16(src: u32, dst: *mut u8) {
     *dst.add(1) = (src & 0xff) as u8;
 }
 
+#[cfg(any(not(safelibs_dso_build), safelibs_dso = "libresolv"))]
 #[no_mangle]
 pub unsafe extern "C" fn ns_put32(src: usize, dst: *mut u8) {
     if dst.is_null() {
@@ -53,6 +65,7 @@ pub unsafe extern "C" fn ns_put32(src: usize, dst: *mut u8) {
     *dst.add(3) = (value & 0xff) as u8;
 }
 
+#[cfg(any(not(safelibs_dso_build), safelibs_dso = "libresolv"))]
 #[no_mangle]
 pub unsafe extern "C" fn ns_name_skip(ptrptr: *mut *const u8, eom: *const u8) -> i32 {
     if ptrptr.is_null() || eom.is_null() {
@@ -71,6 +84,7 @@ pub unsafe extern "C" fn ns_name_skip(ptrptr: *mut *const u8, eom: *const u8) ->
     }
 }
 
+#[cfg(any(not(safelibs_dso_build), safelibs_dso = "libresolv"))]
 pub fn skip_dns_name(mut cursor: *const u8, eom: *const u8) -> Option<*const u8> {
     loop {
         if cursor >= eom {
@@ -103,6 +117,7 @@ pub fn skip_dns_name(mut cursor: *const u8, eom: *const u8) -> Option<*const u8>
     }
 }
 
+#[cfg(not(safelibs_dso_build))]
 pub fn reverse_lookup_name_is_valid(name: &[u8]) -> bool {
     if name.is_empty() || name.len() > 255 {
         return false;
@@ -128,6 +143,7 @@ pub fn reverse_lookup_name_is_valid(name: &[u8]) -> bool {
     true
 }
 
+#[cfg(not(safelibs_dso_build))]
 pub fn numeric_host_kind(input: &[u8]) -> NumericHostKind {
     if input.is_empty() || input.iter().any(|byte| byte.is_ascii_whitespace()) {
         return NumericHostKind::Invalid;
@@ -159,6 +175,7 @@ pub fn numeric_host_kind(input: &[u8]) -> NumericHostKind {
     }
 }
 
+#[cfg(not(safelibs_dso_build))]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum NumericHostKind {
     Ipv4,
@@ -167,6 +184,7 @@ pub enum NumericHostKind {
     Invalid,
 }
 
+#[cfg(not(safelibs_dso_build))]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct NscdSnapshotHeader {
     pub generation_begin: u64,
@@ -174,6 +192,7 @@ pub struct NscdSnapshotHeader {
     pub generation_end: u64,
 }
 
+#[cfg(not(safelibs_dso_build))]
 impl NscdSnapshotHeader {
     pub fn checked_payload_len(&self, actual_len: usize) -> Option<usize> {
         let payload_len = self.payload_len as usize;
@@ -187,6 +206,7 @@ impl NscdSnapshotHeader {
     }
 }
 
+#[cfg(any(not(safelibs_dso_build), safelibs_dso = "libresolv"))]
 unsafe fn read_be16(src: *const u8) -> u32 {
     if src.is_null() {
         return 0;
@@ -194,6 +214,7 @@ unsafe fn read_be16(src: *const u8) -> u32 {
     ((*src.add(0) as u32) << 8) | (*src.add(1) as u32)
 }
 
+#[cfg(any(not(safelibs_dso_build), safelibs_dso = "libresolv"))]
 unsafe fn read_be32(src: *const u8) -> u32 {
     if src.is_null() {
         return 0;
@@ -204,6 +225,7 @@ unsafe fn read_be32(src: *const u8) -> u32 {
         | (*src.add(3) as u32)
 }
 
+#[cfg(any(not(safelibs_dso_build), safelibs_dso = "libresolv"))]
 fn bytes_until(cursor: *const u8, eom: *const u8) -> Option<usize> {
     if cursor > eom {
         None
@@ -212,6 +234,7 @@ fn bytes_until(cursor: *const u8, eom: *const u8) -> Option<usize> {
     }
 }
 
+#[cfg(not(safelibs_dso_build))]
 fn parse_decimal_octet(input: &[u8]) -> Option<u8> {
     if input.is_empty() || input.len() > 3 || (input.len() > 1 && input[0] == b'0') {
         return None;
@@ -229,6 +252,7 @@ fn parse_decimal_octet(input: &[u8]) -> Option<u8> {
     Some(value as u8)
 }
 
+#[cfg(not(safelibs_dso_build))]
 mod heapless_parts {
     pub struct Parts<'a, const N: usize> {
         inner: [&'a [u8]; N],

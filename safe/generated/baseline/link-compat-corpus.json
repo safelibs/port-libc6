@@ -139,7 +139,9 @@
       "original_object_relpath": "network-libanl/main.o",
       "compile_args": [],
       "link_args": [
-        "-lanl"
+        "-Wl,--no-as-needed",
+        "-lanl",
+        "-Wl,--as-needed"
       ],
       "required_startfiles": [],
       "exercised_dsos": [
@@ -157,7 +159,9 @@
       "original_object_relpath": "network-libresolv/main.o",
       "compile_args": [],
       "link_args": [
-        "-lresolv"
+        "-Wl,--no-as-needed",
+        "-lresolv",
+        "-Wl,--as-needed"
       ],
       "required_startfiles": [],
       "exercised_dsos": [

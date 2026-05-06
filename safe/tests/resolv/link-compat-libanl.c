@@ -1,14 +1,7 @@
-struct timespec
-{
-  long tv_sec;
-  long tv_nsec;
-};
-
-extern int gai_suspend (const void *const [], int, const struct timespec *);
+extern int __libanl_version_placeholder (void);
 
 int
 main (void)
 {
-  (void) gai_suspend (0, 0, 0);
-  return 0;
+  return __libanl_version_placeholder ();
 }

@@ -7,3 +7,9 @@ edition = "2021"
 path = "src/lib.rs"
 
 [dependencies]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(safelibs_dso_build)',
+    'cfg(safelibs_dso, values("libanl", "libresolv"))',
+] }
