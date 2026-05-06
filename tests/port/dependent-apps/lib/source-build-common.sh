@@ -6,6 +6,7 @@ SOURCE_BUILD_SOURCE_PACKAGE=""
 SOURCE_BUILD_SOURCE_VERSION=""
 SOURCE_BUILD_BINARY_PACKAGE=""
 SOURCE_BUILD_PACKAGE_ROOT=""
+SOURCE_BUILD_DSC_FILE=""
 SOURCE_BUILD_SRC_DIR=""
 SOURCE_BUILD_INSTALL_ROOT=""
 
@@ -112,6 +113,7 @@ source_build_case_init() {
 
   SOURCE_BUILD_PACKAGE_ROOT="$DEPENDENT_APPS_CASE_WORKDIR/source/$SOURCE_BUILD_SOURCE_PACKAGE"
   SOURCE_BUILD_INSTALL_ROOT="$SOURCE_BUILD_PACKAGE_ROOT/install"
+  SOURCE_BUILD_DSC_FILE=""
   SOURCE_BUILD_SRC_DIR=""
 }
 
@@ -219,17 +221,64 @@ source_build_prepare_dependencies() {
   source_build_run_harness "apt-get update command" \
     apt-get update
   source_build_run_harness "install source-build bootstrap tools" \
-    apt-get install -y --no-install-recommends ca-certificates jq build-essential dpkg-dev fakeroot
+    apt-get install -y --no-install-recommends ca-certificates curl jq build-essential dpkg-dev fakeroot
   source_build_log_safe_package_state "before build dependencies"
   source_build_run_harness "install build-dependency compatibility shims" \
     source_build_install_builddep_compat_shims
-  source_build_run_harness "install build dependencies command: apt-get build-dep -y $SOURCE_BUILD_SOURCE_PACKAGE" \
-    apt-get build-dep -y "$SOURCE_BUILD_SOURCE_PACKAGE"
+}
+
+source_build_install_build_dependencies() {
+  [[ -n "$SOURCE_BUILD_DSC_FILE" ]] || \
+    source_build_fail harness "missing declared source dsc for $SOURCE_BUILD_SOURCE_PACKAGE"
+  source_build_run_harness "install build dependencies command: apt-get build-dep -y $SOURCE_BUILD_DSC_FILE" \
+    apt-get build-dep -y "$SOURCE_BUILD_DSC_FILE"
   source_build_log_safe_package_state "after build dependencies"
 }
 
+source_build_file_version() {
+  local version=$1
+  printf '%s\n' "${version#*:}"
+}
+
+source_build_fetch_source_from_launchpad() {
+  local file_version
+  local base_url
+  local dsc_name
+  local source_file
+  local source_files=()
+
+  file_version=$(source_build_file_version "$SOURCE_BUILD_SOURCE_VERSION")
+  base_url="https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/$SOURCE_BUILD_SOURCE_PACKAGE/$SOURCE_BUILD_SOURCE_VERSION"
+  dsc_name="${SOURCE_BUILD_SOURCE_PACKAGE}_${file_version}.dsc"
+
+  source_build_log "fetch source command: curl Launchpad primary source files for $SOURCE_BUILD_SOURCE_PACKAGE=$SOURCE_BUILD_SOURCE_VERSION"
+  source_build_print_command curl -fL --retry 3 --retry-delay 1 --show-error \
+    -o "$SOURCE_BUILD_PACKAGE_ROOT/$dsc_name" "$base_url/$dsc_name"
+  (cd "$SOURCE_BUILD_PACKAGE_ROOT" && \
+    curl -fL --retry 3 --retry-delay 1 --show-error \
+      -o "$dsc_name" "$base_url/$dsc_name")
+
+  mapfile -t source_files < <(awk '
+    /^Files:/ { in_files = 1; next }
+    /^[[:alnum:]][^:]*:/ { if (in_files) exit }
+    in_files && NF >= 3 { print $3 }
+  ' "$SOURCE_BUILD_PACKAGE_ROOT/$dsc_name")
+  ((${#source_files[@]} > 0)) || \
+    source_build_fail harness "unable to read source file list from $dsc_name"
+
+  for source_file in "${source_files[@]}"; do
+    source_build_print_command curl -fL --retry 3 --retry-delay 1 --show-error \
+      -o "$SOURCE_BUILD_PACKAGE_ROOT/$source_file" "$base_url/$source_file"
+    (cd "$SOURCE_BUILD_PACKAGE_ROOT" && \
+      curl -fL --retry 3 --retry-delay 1 --show-error \
+        -o "$source_file" "$base_url/$source_file")
+  done
+
+  source_build_print_command dpkg-source -x "$dsc_name"
+  (cd "$SOURCE_BUILD_PACKAGE_ROOT" && dpkg-source -x "$dsc_name")
+}
+
 source_build_fetch_source() {
-  local dsc_file
   local fetched_version
 
   rm -rf "$SOURCE_BUILD_PACKAGE_ROOT"
@@ -242,13 +291,14 @@ source_build_fetch_source() {
   local rc=$?
   set -e
   if (( rc != 0 )); then
-    printf 'exact source fetch failed with exit code %s; retrying unversioned fetch for diagnostics\n' "$rc" >&2
-    (cd "$SOURCE_BUILD_PACKAGE_ROOT" && apt-get source "$SOURCE_BUILD_SOURCE_PACKAGE") || true
+    printf 'exact source fetch failed with exit code %s; fetching declared source from Launchpad primary\n' "$rc" >&2
+    find "$SOURCE_BUILD_PACKAGE_ROOT" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+    source_build_fetch_source_from_launchpad
   fi
 
-  dsc_file=$(find "$SOURCE_BUILD_PACKAGE_ROOT" -maxdepth 1 -type f -name '*.dsc' | sort | head -n 1)
+  SOURCE_BUILD_DSC_FILE=$(find "$SOURCE_BUILD_PACKAGE_ROOT" -maxdepth 1 -type f -name '*.dsc' | sort | head -n 1)
   SOURCE_BUILD_SRC_DIR=$(find "$SOURCE_BUILD_PACKAGE_ROOT" -mindepth 1 -maxdepth 1 -type d | sort | head -n 1)
-  [[ -n "$dsc_file" && -n "$SOURCE_BUILD_SRC_DIR" ]] || \
+  [[ -n "$SOURCE_BUILD_DSC_FILE" && -n "$SOURCE_BUILD_SRC_DIR" ]] || \
     source_build_fail harness "unable to locate fetched source package for $SOURCE_BUILD_SOURCE_PACKAGE"
   mkdir -p "$SOURCE_BUILD_INSTALL_ROOT"
 
@@ -257,17 +307,18 @@ source_build_fetch_source() {
   fi
   printf 'exact source package version fetched: %s\n' "$fetched_version"
   printf 'declared source package version: %s\n' "$SOURCE_BUILD_SOURCE_VERSION"
-  printf 'source dsc: %s\n' "$dsc_file"
+  printf 'source dsc: %s\n' "$SOURCE_BUILD_DSC_FILE"
   printf 'source directory: %s\n' "$SOURCE_BUILD_SRC_DIR"
   if [[ "$fetched_version" != "$SOURCE_BUILD_SOURCE_VERSION" ]]; then
-    printf 'fetched source package version differs from dependents.json: expected %s, got %s\n' \
-      "$SOURCE_BUILD_SOURCE_VERSION" "$fetched_version"
+    source_build_fail harness \
+      "fetched source package version differs from dependents.json: expected $SOURCE_BUILD_SOURCE_VERSION, got $fetched_version"
   fi
 }
 
 source_build_prepare_case() {
   source_build_prepare_dependencies
   source_build_fetch_source
+  source_build_install_build_dependencies
 }
 
 source_build_smoke_strace() {
