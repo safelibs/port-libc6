@@ -3,55 +3,11 @@
     "notes": [
       "This inventory is the single committed ledger of non-Rust source, script, assembly, template, and fallback assets planned under safe/**.",
       "Later phases must update this file in place instead of maintaining ad hoc fallback lists.",
-      "Phase 8 removes locale helper backend binaries, keeps locale scripts directly shipped, and limits remaining copied-upstream DSO payloads to explicitly tracked private backend binaries."
+      "Phase 9 removes dev/time helper backend binaries and limits remaining copied-upstream payloads to explicitly tracked private DSO backends."
     ],
-    "phase": "impl_08_locale_iconv_posix_parsers"
+    "phase": "impl_09_math_and_aux_dsos"
   },
   "entries": [
-    {
-      "path": "/usr/bin/gencat",
-      "source_path": "build/testroot.pristine/usr/bin/gencat",
-      "classification": "temporary_fallback_binary",
-      "owning_phase": "impl_09_math_and_aux_dsos",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/bin/gencat"
-      ],
-      "audit_notes": "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains dev-and-time-tools."
-    },
-    {
-      "path": "/usr/bin/getconf",
-      "source_path": "build/testroot.pristine/usr/bin/getconf",
-      "classification": "temporary_fallback_binary",
-      "owning_phase": "impl_09_math_and_aux_dsos",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/bin/getconf"
-      ],
-      "audit_notes": "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains dev-and-time-tools."
-    },
-    {
-      "path": "/usr/bin/tzselect",
-      "source_path": "build/testroot.pristine/usr/bin/tzselect",
-      "classification": "temporary_fallback_binary",
-      "owning_phase": "impl_09_math_and_aux_dsos",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/bin/tzselect"
-      ],
-      "audit_notes": "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains dev-and-time-tools."
-    },
-    {
-      "path": "/usr/bin/zdump",
-      "source_path": "build/testroot.pristine/usr/bin/zdump",
-      "classification": "temporary_fallback_binary",
-      "owning_phase": "impl_09_math_and_aux_dsos",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/bin/zdump"
-      ],
-      "audit_notes": "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains dev-and-time-tools."
-    },
     {
       "path": "/usr/lib/pt_chown",
       "source_path": null,
@@ -172,61 +128,6 @@
         "/usr/lib64/rcrt1.o"
       ],
       "audit_notes": "Required-package startup or assembly shim carried by the safe port surface."
-    },
-    {
-      "path": "/usr/libexec/safelibs/aux-tools/gencat.backend",
-      "source_path": "build/testroot.pristine/usr/bin/gencat",
-      "classification": "tracked_backend_binary",
-      "owning_phase": "impl_09_math_and_aux_dsos",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/aux-tools/gencat.backend"
-      ],
-      "audit_notes": "Rust frontend /usr/bin/gencat delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
-    },
-    {
-      "path": "/usr/libexec/safelibs/aux-tools/getconf.backend",
-      "source_path": "build/testroot.pristine/usr/bin/getconf",
-      "classification": "tracked_backend_binary",
-      "owning_phase": "impl_09_math_and_aux_dsos",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/aux-tools/getconf.backend"
-      ],
-      "audit_notes": "Rust frontend /usr/bin/getconf delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
-    },
-    {
-      "path": "/usr/libexec/safelibs/aux-tools/tzselect.backend",
-      "source_path": "original/timezone/tzselect.ksh",
-      "classification": "tracked_backend_binary",
-      "owning_phase": "impl_09_math_and_aux_dsos",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/aux-tools/tzselect.backend"
-      ],
-      "audit_notes": "Rust frontend /usr/bin/tzselect delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
-    },
-    {
-      "path": "/usr/libexec/safelibs/aux-tools/zdump.backend",
-      "source_path": "build/testroot.pristine/usr/bin/zdump",
-      "classification": "tracked_backend_binary",
-      "owning_phase": "impl_09_math_and_aux_dsos",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/aux-tools/zdump.backend"
-      ],
-      "audit_notes": "Rust frontend /usr/bin/zdump delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
-    },
-    {
-      "path": "/usr/libexec/safelibs/aux-tools/zic.backend",
-      "source_path": "build/testroot.pristine/usr/sbin/zic",
-      "classification": "tracked_backend_binary",
-      "owning_phase": "impl_09_math_and_aux_dsos",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/aux-tools/zic.backend"
-      ],
-      "audit_notes": "Rust frontend /usr/sbin/zic delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
     },
     {
       "path": "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2",
@@ -480,17 +381,6 @@
         "/usr/libexec/safelibs/runtime-tools/pldd.backend"
       ],
       "audit_notes": "Rust frontend /usr/bin/pldd delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
-    },
-    {
-      "path": "/usr/sbin/zic",
-      "source_path": "build/testroot.pristine/usr/sbin/zic",
-      "classification": "temporary_fallback_binary",
-      "owning_phase": "impl_09_math_and_aux_dsos",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/sbin/zic"
-      ],
-      "audit_notes": "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains dev-and-time-tools."
     },
     {
       "path": "safe/crates/compat-asm/x86_64/forwarding-veneer-template.S",

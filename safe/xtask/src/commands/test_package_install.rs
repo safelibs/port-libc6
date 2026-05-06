@@ -515,7 +515,7 @@ smoke_dev_and_time_tools() {
   compare_public_payload /workspace/safe/generated/baseline/package-files/libc6-dev.json /usr/lib64/libm.so
   compare_public_payload /workspace/safe/generated/baseline/package-files/libc6-dev.json /usr/lib64/libmvec.so
 
-  log "Checking dev/time helper entrypoints and backend inventory"
+  log "Checking dev/time helper entrypoints and backend removal"
   for path in \
     /usr/bin/gencat \
     /usr/bin/getconf \
@@ -530,7 +530,10 @@ smoke_dev_and_time_tools() {
     /usr/libexec/safelibs/aux-tools/tzselect.backend \
     /usr/libexec/safelibs/aux-tools/zdump.backend \
     /usr/libexec/safelibs/aux-tools/zic.backend; do
-    test -x "$path"
+    if [ -e "$path" ]; then
+      printf 'phase-09 helper still ships backend payload %s\n' "$path" >&2
+      exit 1
+    fi
   done
   for path in \
     /usr/libexec/safelibs/fallback/libc-dev-bin/gencat.real \

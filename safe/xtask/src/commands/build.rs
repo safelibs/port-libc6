@@ -130,6 +130,14 @@ const PHASE_08_LOCALE_TOOL_BACKENDS: [&str; 4] = [
     "/usr/libexec/safelibs/locale-tools/localedef.backend",
 ];
 
+const PHASE_09_AUX_TOOL_BACKENDS: [&str; 5] = [
+    "/usr/libexec/safelibs/aux-tools/gencat.backend",
+    "/usr/libexec/safelibs/aux-tools/getconf.backend",
+    "/usr/libexec/safelibs/aux-tools/tzselect.backend",
+    "/usr/libexec/safelibs/aux-tools/zdump.backend",
+    "/usr/libexec/safelibs/aux-tools/zic.backend",
+];
+
 const LOCALE_DATA_FILES: [(&str, &str); 1] = [(
     "/usr/share/i18n/SUPPORTED",
     "safe/generated/localedata/SUPPORTED",
@@ -1817,7 +1825,7 @@ fn refresh_phase_ledgers() -> Result<()> {
 fn refresh_port_status() -> Result<()> {
     let path = safe_root().join("upstream-compat/port-status.toml");
     let mut doc: PortStatusDoc = load_current_or_head_doc("safe/upstream-compat/port-status.toml")?;
-    doc.metadata.phase = PHASE_ID.to_string();
+    doc.metadata.phase = PHASE_09_ID.to_string();
     for note in PHASE_EXTRA_NOTES {
         if !doc.metadata.notes.iter().any(|entry| entry == note) {
             doc.metadata.notes.push(note.to_string());
@@ -1896,8 +1904,13 @@ fn refresh_package_scope() -> Result<()> {
     let path = safe_root().join("upstream-compat/package-scope.toml");
     let mut doc: PackageScopeDoc =
         load_current_or_head_doc("safe/upstream-compat/package-scope.toml")?;
-    doc.metadata.phase = PHASE_ID.to_string();
-    let note = "Phase 8 keeps required package manifests in place, removes the locale helper backend payloads, ships locale maintainer helpers directly, and tracks the remaining private DSO backends explicitly.";
+    doc.metadata.phase = PHASE_09_ID.to_string();
+    doc.metadata.notes.retain(|entry| {
+        !entry.contains("helper backends still delegated")
+            && !entry.contains("preserved helper backends")
+            && !entry.contains("preserved upstream locale binaries")
+    });
+    let note = "Phase 9 keeps required package manifests in place, removes the dev/time helper backend payloads, ships gencat, getconf, tzselect, zdump, and zic as Rust entrypoints, and tracks only the explicitly inventoried private DSO backends.";
     if !doc.metadata.notes.iter().any(|entry| entry == note) {
         doc.metadata.notes.push(note.to_string());
     }
@@ -1986,12 +1999,12 @@ fn refresh_cve_status() -> Result<()> {
 fn refresh_safety_policy() -> Result<()> {
     let path = safe_root().join("upstream-compat/safety-policy.toml");
     let mut doc = load_toml(&path)?;
-    set_metadata_phase(&mut doc, PHASE_ID)?;
+    set_metadata_phase(&mut doc, PHASE_09_ID)?;
     if let Some(metadata) = doc.get_mut("metadata").and_then(TomlValue::as_table_mut) {
         metadata.insert(
             "phase_note".to_string(),
             TomlValue::String(
-                "Phase 8 keeps the reviewed unsafe and fallback policy entries in sync while locale helpers move onto phase-owned Rust or direct script sources and private backend copies remain explicitly tracked.".to_string(),
+                "Phase 9 keeps the reviewed unsafe and fallback policy entries in sync while dev/time helpers move onto phase-owned Rust implementations and private DSO backend copies remain explicitly tracked.".to_string(),
             ),
         );
     }
@@ -2000,7 +2013,12 @@ fn refresh_safety_policy() -> Result<()> {
             .entry("notes")
             .or_insert_with(|| TomlValue::Array(Vec::new()));
         if let Some(notes) = notes.as_array_mut() {
-            let note = "Phase 8 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope tracks private DSO backends and confirms locale helper backend removal explicitly.";
+            notes.retain(|entry| {
+                entry
+                    .as_str()
+                    .is_none_or(|text| !text.contains("preserved helper backends"))
+            });
+            let note = "Phase 9 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope confirms dev/time helper backend removal explicitly.";
             if !notes
                 .iter()
                 .filter_map(TomlValue::as_str)
@@ -2058,6 +2076,11 @@ fn refresh_fallback_inventory() -> Result<()> {
                 | "/usr/bin/ldd"
                 | "/usr/sbin/ldconfig"
                 | "/usr/bin/pldd"
+                | "/usr/bin/gencat"
+                | "/usr/bin/getconf"
+                | "/usr/bin/tzselect"
+                | "/usr/bin/zdump"
+                | "/usr/sbin/zic"
                 | "/usr/bin/getent"
                 | "/usr/sbin/nscd"
                 | "/usr/bin/iconv"
@@ -2073,6 +2096,11 @@ fn refresh_fallback_inventory() -> Result<()> {
                 | "/usr/libexec/safelibs/locale-tools/iconvconfig.backend"
                 | "/usr/libexec/safelibs/locale-tools/locale.backend"
                 | "/usr/libexec/safelibs/locale-tools/localedef.backend"
+                | "/usr/libexec/safelibs/aux-tools/gencat.backend"
+                | "/usr/libexec/safelibs/aux-tools/getconf.backend"
+                | "/usr/libexec/safelibs/aux-tools/tzselect.backend"
+                | "/usr/libexec/safelibs/aux-tools/zdump.backend"
+                | "/usr/libexec/safelibs/aux-tools/zic.backend"
                 | "/usr/lib64/ld-linux-x86-64.so.2"
                 | "/usr/lib64/libc.so.6"
                 | "/usr/lib64/libpthread.so.0"
@@ -2260,9 +2288,9 @@ fn refresh_fallback_inventory() -> Result<()> {
         "notes": [
             "This inventory is the single committed ledger of non-Rust source, script, assembly, template, and fallback assets planned under safe/**.",
             "Later phases must update this file in place instead of maintaining ad hoc fallback lists.",
-            "Phase 8 removes locale helper backend binaries, keeps locale scripts directly shipped, and limits remaining copied-upstream DSO payloads to explicitly tracked private backend binaries."
+            "Phase 9 removes dev/time helper backend binaries and limits remaining copied-upstream payloads to explicitly tracked private DSO backends."
         ],
-        "phase": PHASE_ID
+        "phase": PHASE_09_ID
     });
     write_pretty_json(&path, &inventory)
 }
@@ -2716,9 +2744,10 @@ fn normalize_tool_package_manifests() -> Result<()> {
     }
 
     for (package, mut manifest) in manifests {
-        manifest
-            .entries
-            .retain(|entry| !PHASE_08_LOCALE_TOOL_BACKENDS.contains(&entry.path.as_str()));
+        manifest.entries.retain(|entry| {
+            !PHASE_08_LOCALE_TOOL_BACKENDS.contains(&entry.path.as_str())
+                && !PHASE_09_AUX_TOOL_BACKENDS.contains(&entry.path.as_str())
+        });
         normalize_package_entries(&mut manifest.entries);
         write_pretty_json(
             &safe_root().join(format!("generated/baseline/package-files/{package}.json")),
@@ -2855,6 +2884,7 @@ fn update_package_scope_libc_family_files(files: &mut Vec<TomlValue>) -> Result<
 
 fn update_package_scope_tool_files(files: &mut Vec<TomlValue>) -> Result<()> {
     remove_package_scope_paths(files, &PHASE_08_LOCALE_TOOL_BACKENDS);
+    remove_package_scope_paths(files, &PHASE_09_AUX_TOOL_BACKENDS);
     for tool in required_tools() {
         let asset_kind = match tool.kind {
             RequiredToolKind::FallbackWrapper { .. } => "fallback_wrapper",

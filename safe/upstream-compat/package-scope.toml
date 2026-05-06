@@ -1,5 +1,5 @@
 [metadata]
-phase = "impl_08_locale_iconv_posix_parsers"
+phase = "impl_09_math_and_aux_dsos"
 notes = [
     "Required-package baselines remain derived from the checked-in build/testroot.pristine tree, while the committed packaging surface now lives under safe/debian/** and safe/generated/packaging/package-build-manifest.json.",
     "Later phases must consume the committed safe packaging files in place instead of reading undeclared inputs from original/debian/**.",
@@ -9,11 +9,10 @@ notes = [
     "Phase 5 keeps required package manifests in place, switches runtime entrypoints such as pldd to Rust frontends, and explicitly tracks any remaining runtime or loader backend binaries.",
     "Phase 6 keeps required package manifests in place, cuts the first libc-family public DSOs and public libc6-dev link names over to safe-built payloads, and tracks any remaining baseline backend DSOs under explicit private package paths.",
     "Phase 7 keeps required package manifests in place, extends the libc-family public DSO cutover through the network-facing DSOs and link names, and tracks the copied upstream payloads under explicit private backend paths.",
-    "Phase 8 keeps required package manifests in place, extends the libc-family public DSO cutover through libBrokenLocale, ships the locale helper scripts directly from safe/debian/local/**, and tracks only the helper backends that still delegate to preserved upstream locale binaries.",
-    "Phase 9 keeps required package manifests in place, extends the libc-family public DSO cutover through libdl, libm, libmvec, libpcprofile, librt, and libutil, ships the remaining dev/time entrypoints as Rust frontends, and tracks only the temporary backend DSOs plus helper backends still delegated to preserved upstream payloads.",
     "Phase 6 keeps required package manifests in place, moves the first libc-family public DSOs and public libc6-dev link names onto the safe build path, and tracks private baseline backend DSOs plus remaining libc6-dev startup/static/audit carryovers as explicit final-cutover obligations.",
     "Phase 7 keeps required package manifests in place, moves the network-facing public DSOs, getent, nscd, nsswitch, and nss defaults onto phase-owned sources, and tracks private baseline network backends explicitly.",
     "Phase 8 keeps required package manifests in place, removes the locale helper backend payloads, ships locale maintainer helpers directly, and tracks the remaining private DSO backends explicitly.",
+    "Phase 9 keeps required package manifests in place, removes the dev/time helper backend payloads, ships gencat, getconf, tzselect, zdump, and zic as Rust entrypoints, and tracks only the explicitly inventoried private DSO backends.",
 ]
 
 [debug_derivation]
@@ -11199,51 +11198,6 @@ path = "/usr/libexec/getconf/XBS5_LP64_OFF64"
 scope = "testroot_only"
 shipped_status = "testroot_only"
 source_path = "build/testroot.pristine/usr/libexec/getconf/XBS5_LP64_OFF64"
-
-[[files]]
-asset_kind = "tracked_backend_binary"
-executable = true
-package = "libc-dev-bin"
-path = "/usr/libexec/safelibs/aux-tools/gencat.backend"
-scope = "required_package"
-shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/bin/gencat"
-
-[[files]]
-asset_kind = "tracked_backend_binary"
-executable = true
-package = "libc-bin"
-path = "/usr/libexec/safelibs/aux-tools/getconf.backend"
-scope = "required_package"
-shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/bin/getconf"
-
-[[files]]
-asset_kind = "tracked_backend_binary"
-executable = true
-package = "libc-bin"
-path = "/usr/libexec/safelibs/aux-tools/tzselect.backend"
-scope = "required_package"
-shipped_status = "shipped"
-source_path = "original/timezone/tzselect.ksh"
-
-[[files]]
-asset_kind = "tracked_backend_binary"
-executable = true
-package = "libc-bin"
-path = "/usr/libexec/safelibs/aux-tools/zdump.backend"
-scope = "required_package"
-shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/bin/zdump"
-
-[[files]]
-asset_kind = "tracked_backend_binary"
-executable = true
-package = "libc-bin"
-path = "/usr/libexec/safelibs/aux-tools/zic.backend"
-scope = "required_package"
-shipped_status = "shipped"
-source_path = "build/testroot.pristine/usr/sbin/zic"
 
 [[files]]
 asset_kind = "private_baseline_backend_dso"
