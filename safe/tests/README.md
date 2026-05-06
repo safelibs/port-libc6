@@ -6,7 +6,7 @@ by the safe libc port.
 - `safe/tests/support/**` mirrors the committed upstream support subtree.
 - `safe/tests/manifest.toml` is the authoritative phase ownership ledger for the
   copied tests.
-- Phase 7 adds the hesiod, inet, nis, nss, resolv, socket, nscd sentinel,
-  shared script, and normalized sysdeps entries while preserving later committed
-  port statuses in place.
+- Phase 8 adds the conform, iconv, iconvdata, locale, localedata, posix, po
+  sentinel, shared script, and normalized sysdeps entries while preserving later
+  committed port statuses in place.
 

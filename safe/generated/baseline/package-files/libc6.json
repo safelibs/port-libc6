@@ -11,7 +11,7 @@
       "original/debian/sysdeps/linux.mk"
     ],
     "package": "libc6",
-    "phase": "impl_07_nss_resolver_nscd",
+    "phase": "impl_08_locale_iconv_posix_parsers",
     "scope": "required_package"
   },
   "entries": [

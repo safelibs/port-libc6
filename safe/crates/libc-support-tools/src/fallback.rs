@@ -6,10 +6,7 @@ use crate::aux_tools::{
 use crate::loader_tools::{
     LDCONFIG_BACKEND_INSTALL_PATH, LDSO_BACKEND_INSTALL_PATH, LOADER_TOOL_BINARY_NAME,
 };
-use crate::locale_tools::{
-    ICONVCONFIG_BACKEND_INSTALL_PATH, ICONV_BACKEND_INSTALL_PATH, LOCALEDEF_BACKEND_INSTALL_PATH,
-    LOCALE_BACKEND_INSTALL_PATH, LOCALE_TOOL_BINARY_NAME, LOCALE_TOOL_SOURCE_PATH,
-};
+use crate::locale_tools::{LOCALE_TOOL_BINARY_NAME, LOCALE_TOOL_SOURCE_PATH};
 use crate::network_tools::{GETENT_SOURCE_PATH, NETWORK_TOOL_BINARY_NAME, NSCD_SOURCE_PATH};
 use crate::runtime_tools::{PLDD_BACKEND_INSTALL_PATH, RUNTIME_TOOL_BINARY_NAME};
 
@@ -53,26 +50,6 @@ const LDCONFIG_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
 const PLDD_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
     install_path: PLDD_BACKEND_INSTALL_PATH,
     source_path: "build/testroot.pristine/usr/bin/pldd",
-}];
-
-const ICONV_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
-    install_path: ICONV_BACKEND_INSTALL_PATH,
-    source_path: "build/testroot.pristine/usr/bin/iconv",
-}];
-
-const ICONVCONFIG_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
-    install_path: ICONVCONFIG_BACKEND_INSTALL_PATH,
-    source_path: "build/testroot.pristine/usr/sbin/iconvconfig",
-}];
-
-const LOCALE_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
-    install_path: LOCALE_BACKEND_INSTALL_PATH,
-    source_path: "build/testroot.pristine/usr/bin/locale",
-}];
-
-const LOCALEDEF_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
-    install_path: LOCALEDEF_BACKEND_INSTALL_PATH,
-    source_path: "build/testroot.pristine/usr/bin/localedef",
 }];
 
 const GENCAT_BACKEND_ASSETS: &[BackendAsset] = &[BackendAsset {
@@ -144,7 +121,7 @@ const REQUIRED_TOOLS: &[RequiredTool] = &[
         kind: RequiredToolKind::RustEntrypoint {
             binary_name: LOCALE_TOOL_BINARY_NAME,
             public_source_path: LOCALE_TOOL_SOURCE_PATH,
-            backend_assets: ICONV_BACKEND_ASSETS,
+            backend_assets: NO_BACKEND_ASSETS,
         },
     },
     RequiredTool {
@@ -177,7 +154,7 @@ const REQUIRED_TOOLS: &[RequiredTool] = &[
         kind: RequiredToolKind::RustEntrypoint {
             binary_name: LOCALE_TOOL_BINARY_NAME,
             public_source_path: LOCALE_TOOL_SOURCE_PATH,
-            backend_assets: LOCALE_BACKEND_ASSETS,
+            backend_assets: NO_BACKEND_ASSETS,
         },
     },
     RequiredTool {
@@ -188,7 +165,7 @@ const REQUIRED_TOOLS: &[RequiredTool] = &[
         kind: RequiredToolKind::RustEntrypoint {
             binary_name: LOCALE_TOOL_BINARY_NAME,
             public_source_path: LOCALE_TOOL_SOURCE_PATH,
-            backend_assets: LOCALEDEF_BACKEND_ASSETS,
+            backend_assets: NO_BACKEND_ASSETS,
         },
     },
     RequiredTool {
@@ -232,7 +209,7 @@ const REQUIRED_TOOLS: &[RequiredTool] = &[
         kind: RequiredToolKind::RustEntrypoint {
             binary_name: LOCALE_TOOL_BINARY_NAME,
             public_source_path: LOCALE_TOOL_SOURCE_PATH,
-            backend_assets: ICONVCONFIG_BACKEND_ASSETS,
+            backend_assets: NO_BACKEND_ASSETS,
         },
     },
     RequiredTool {

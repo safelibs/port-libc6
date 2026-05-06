@@ -1,75 +1,58 @@
-#!/usr/bin/perl -w
-#
-# Author: Petter Reinholdtsen <pere@hungry.com>
-# Date:   2002-02-23
-#
-# Test if the locale given as argument is a valid locale.  If it
-# is not, print on stdout the string to add to /etc/locale.gen to make
-# locale-gen generate the locale (if it exists at all).
+#!/bin/sh
+set -eu
 
-use POSIX qw(setlocale LC_ALL);
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ $# -lt 1 ]; then
+    echo "Usage: $0 <locale>"
+    exit 1
+fi
 
-my $debug = 0;
+locale_name=$1
+normalized=$(printf '%s\n' "$locale_name" | sed \
+    -e 's/\.UTF-8/.utf8/g' \
+    -e 's/\.utf-8/.utf8/g' \
+    -e 's/\.UTF8/.utf8/g')
 
-my $defaultcharset = $ENV{"DEFAULTCHARSET"} || "ISO-8859-1";
+case "$normalized" in
+    C|POSIX|C.utf8)
+        echo "locale '$locale_name' valid and available" >&2
+        exit 0
+        ;;
+esac
 
-my $supportedlist = "/usr/share/i18n/SUPPORTED";
+if /usr/bin/locale -a 2>/dev/null | sed \
+    -e 's/\.UTF-8/.utf8/g' \
+    -e 's/\.utf-8/.utf8/g' \
+    -e 's/\.UTF8/.utf8/g' | grep -Fx -- "$normalized" >/dev/null; then
+    echo "locale '$locale_name' valid and available" >&2
+    exit 0
+fi
 
-unless (defined $ARGV[0]) {
-    usage();
-    exit 1;
-}
+base=${locale_name%%.*}
+base=${base%%@*}
+modifier=
+case "$locale_name" in
+    *@*) modifier="@${locale_name#*@}" ;;
+esac
+charset=${locale_name#*.}
+if [ "$charset" = "$locale_name" ] || [ -z "$charset" ]; then
+    charset=UTF-8
+else
+    charset=${charset%%@*}
+fi
 
-my $LANG = $ARGV[0];
+if [ -r /usr/share/i18n/SUPPORTED ]; then
+    supported=$(awk -v loc="$base$modifier" -v want="$locale_name" '
+        $1 == want { print $1 " " $2; found = 1; exit }
+        $1 == loc && $2 == "UTF-8" { print $1 " " $2; found = 1; exit }
+        END { exit found ? 0 : 1 }
+    ' /usr/share/i18n/SUPPORTED 2>/dev/null || true)
+    if [ -n "$supported" ]; then
+        echo "locale '$locale_name' not available" >&2
+        printf '%s\n' "$supported"
+        exit 1
+    fi
+fi
 
-my $loc = setlocale(LC_ALL, $LANG);
-if ( ! $loc) {
-    print STDERR "locale '$LANG' not available\n";
-
-    my ($locale)   = $LANG =~ m/^([^.@]+)/;
-    my ($charset)  = $LANG =~ m/^[^.]+\.([^@]+)/;
-    my ($modifier) = $LANG =~ m/(@.+)$/;
-
-    $modifier = "" unless defined $modifier;
-
-    # Hm, if charset is missing, how to we pick the correct one to
-    # use?  Fetching the value from /usr/share/i18n/SUPPORTED should
-    # work on Debian.
-    my $codeset = "";
-    if (defined $charset) {
-       $codeset = '.' . $charset;
-    } else {
-       $charset = get_default_charset("$locale$modifier");
-    }
-
-    # print "L: $locale C: $charset M: $modifier\n";
-    print "$locale$codeset$modifier $charset\n";
-
-    exit 1;
-} else {
-    print STDERR "locale '$LANG' valid and available\n";
-    exit 0;
-}
-
-sub usage {
-    print "Usage: $0 <locale>\n"
-}
-
-sub get_default_charset {
-    my ($locale) = @_;
-    my ($l, $c);
-    open(SUPPORTED, "< $supportedlist") || die "Unable to open $supportedlist";
-    while (<SUPPORTED>) {
-	chomp;
-	($l, $c) = split(/\s+/);
-	print "Checking '$l' '$c' != '$locale'\n" if $debug;
-	last if  ($l eq $locale);
-    }
-    close(SUPPORTED);
-
-    if ($l eq $locale) {
-	return $c;
-    } else {
-	return $defaultcharset;
-    }
-}
+echo "locale '$locale_name' not available" >&2
+printf '%s %s\n' "$base$modifier" "$charset"
+exit 1

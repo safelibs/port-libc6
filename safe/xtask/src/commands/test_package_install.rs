@@ -322,7 +322,7 @@ smoke_locale_tools() {
     fi
   done
 
-  log "Checking locale-tool entrypoints and backend inventory"
+  log "Checking locale-tool entrypoints and removed backend inventory"
   for path in \
     /usr/bin/iconv \
     /usr/bin/locale \
@@ -339,10 +339,7 @@ smoke_locale_tools() {
     /usr/libexec/safelibs/locale-tools/iconv.backend \
     /usr/libexec/safelibs/locale-tools/iconvconfig.backend \
     /usr/libexec/safelibs/locale-tools/locale.backend \
-    /usr/libexec/safelibs/locale-tools/localedef.backend; do
-    test -x "$path"
-  done
-  for path in \
+    /usr/libexec/safelibs/locale-tools/localedef.backend \
     /usr/libexec/safelibs/fallback/libc-bin/iconv.real \
     /usr/libexec/safelibs/fallback/libc-bin/locale.real \
     /usr/libexec/safelibs/fallback/libc-bin/localedef.real \

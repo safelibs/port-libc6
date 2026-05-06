@@ -1,3 +1,3 @@
 # libc6 Runtime Port
 
-Phase 7 keeps the phase-6 libc-family cutover in place and extends the public provenance model to network-facing DSOs while private baseline backend copies remain explicitly inventoried.
+Phase 8 keeps the phase-6 libc-family and phase-7 network cutovers in place, adds locale/iconv/POSIX parser ownership, and keeps any remaining private baseline backend copies explicitly inventoried.

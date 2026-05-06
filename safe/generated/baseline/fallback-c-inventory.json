@@ -3,9 +3,9 @@
     "notes": [
       "This inventory is the single committed ledger of non-Rust source, script, assembly, template, and fallback assets planned under safe/**.",
       "Later phases must update this file in place instead of maintaining ad hoc fallback lists.",
-      "Phase 7 moves network-facing public DSOs and tools onto phase-owned sources and limits remaining copied-upstream network payloads to explicitly tracked private backend binaries."
+      "Phase 8 removes locale helper backend binaries, keeps locale scripts directly shipped, and limits remaining copied-upstream DSO payloads to explicitly tracked private backend binaries."
     ],
-    "phase": "impl_07_nss_resolver_nscd"
+    "phase": "impl_08_locale_iconv_posix_parsers"
   },
   "entries": [
     {
@@ -29,39 +29,6 @@
         "/usr/bin/getconf"
       ],
       "audit_notes": "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains dev-and-time-tools."
-    },
-    {
-      "path": "/usr/bin/iconv",
-      "source_path": "build/testroot.pristine/usr/bin/iconv",
-      "classification": "temporary_fallback_binary",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/bin/iconv"
-      ],
-      "audit_notes": "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains locale-tools."
-    },
-    {
-      "path": "/usr/bin/locale",
-      "source_path": "build/testroot.pristine/usr/bin/locale",
-      "classification": "temporary_fallback_binary",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/bin/locale"
-      ],
-      "audit_notes": "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains locale-tools."
-    },
-    {
-      "path": "/usr/bin/localedef",
-      "source_path": "build/testroot.pristine/usr/bin/localedef",
-      "classification": "temporary_fallback_binary",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/bin/localedef"
-      ],
-      "audit_notes": "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains locale-tools."
     },
     {
       "path": "/usr/bin/tzselect",
@@ -504,50 +471,6 @@
       "audit_notes": "Rust frontend /usr/sbin/ldconfig delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
     },
     {
-      "path": "/usr/libexec/safelibs/locale-tools/iconv.backend",
-      "source_path": "build/testroot.pristine/usr/bin/iconv",
-      "classification": "tracked_backend_binary",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/locale-tools/iconv.backend"
-      ],
-      "audit_notes": "Rust frontend /usr/bin/iconv delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
-    },
-    {
-      "path": "/usr/libexec/safelibs/locale-tools/iconvconfig.backend",
-      "source_path": "build/testroot.pristine/usr/sbin/iconvconfig",
-      "classification": "tracked_backend_binary",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/locale-tools/iconvconfig.backend"
-      ],
-      "audit_notes": "Rust frontend /usr/sbin/iconvconfig delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
-    },
-    {
-      "path": "/usr/libexec/safelibs/locale-tools/locale.backend",
-      "source_path": "build/testroot.pristine/usr/bin/locale",
-      "classification": "tracked_backend_binary",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/locale-tools/locale.backend"
-      ],
-      "audit_notes": "Rust frontend /usr/bin/locale delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
-    },
-    {
-      "path": "/usr/libexec/safelibs/locale-tools/localedef.backend",
-      "source_path": "build/testroot.pristine/usr/bin/localedef",
-      "classification": "tracked_backend_binary",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/locale-tools/localedef.backend"
-      ],
-      "audit_notes": "Rust frontend /usr/bin/localedef delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
-    },
-    {
       "path": "/usr/libexec/safelibs/runtime-tools/pldd.backend",
       "source_path": "build/testroot.pristine/usr/bin/pldd",
       "classification": "tracked_backend_binary",
@@ -559,50 +482,6 @@
       "audit_notes": "Rust frontend /usr/bin/pldd delegates to this tracked backend payload until the low-level implementation phase replaces it fully."
     },
     {
-      "path": "/usr/sbin/iconvconfig",
-      "source_path": "build/testroot.pristine/usr/sbin/iconvconfig",
-      "classification": "temporary_fallback_binary",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/sbin/iconvconfig"
-      ],
-      "audit_notes": "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains locale-tools."
-    },
-    {
-      "path": "/usr/sbin/locale-gen",
-      "source_path": "safe/debian/local/usr_sbin/locale-gen",
-      "classification": "temporary_fallback_binary",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/sbin/locale-gen"
-      ],
-      "audit_notes": "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains locale-tools."
-    },
-    {
-      "path": "/usr/sbin/update-locale",
-      "source_path": "safe/debian/local/usr_sbin/update-locale",
-      "classification": "temporary_fallback_binary",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/sbin/update-locale"
-      ],
-      "audit_notes": "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains locale-tools."
-    },
-    {
-      "path": "/usr/sbin/validlocale",
-      "source_path": "safe/debian/local/usr_sbin/validlocale",
-      "classification": "temporary_fallback_binary",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/sbin/validlocale"
-      ],
-      "audit_notes": "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains locale-tools."
-    },
-    {
       "path": "/usr/sbin/zic",
       "source_path": "build/testroot.pristine/usr/sbin/zic",
       "classification": "temporary_fallback_binary",
@@ -612,28 +491,6 @@
         "/usr/sbin/zic"
       ],
       "audit_notes": "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains dev-and-time-tools."
-    },
-    {
-      "path": "/usr/share/locales/install-language-pack",
-      "source_path": "safe/debian/local/usr_share_locales/install-language-pack",
-      "classification": "temporary_fallback_binary",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/share/locales/install-language-pack"
-      ],
-      "audit_notes": "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains locale-tools."
-    },
-    {
-      "path": "/usr/share/locales/remove-language-pack",
-      "source_path": "safe/debian/local/usr_share_locales/remove-language-pack",
-      "classification": "temporary_fallback_binary",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/share/locales/remove-language-pack"
-      ],
-      "audit_notes": "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains locale-tools."
     },
     {
       "path": "safe/crates/compat-asm/x86_64/forwarding-veneer-template.S",

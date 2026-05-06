@@ -3330,19 +3330,41 @@ fn compile_companion_dsos(
 ) -> Result<Vec<PathBuf>> {
     let mut outputs = Vec::new();
     for basename in referenced_companion_dsos(entry, source)? {
-        let companion_source =
-            resolve_companion_dso_source(entry, source, &basename)?.ok_or_else(|| {
-                anyhow!(
-                    "{} references {} but no companion source was found under safe/tests or original/",
-                    entry.catalog_id,
-                    basename
-                )
-            })?;
+        let Some(companion_source) = resolve_companion_dso_source(entry, source, &basename)? else {
+            if is_installed_glibc_dso_dependency(&basename) {
+                continue;
+            }
+            bail!(
+                "{} references {} but no companion source was found under safe/tests or original/",
+                entry.catalog_id,
+                basename
+            );
+        };
         let output = work_dir.join(&basename);
         compile_shared_entry_support(config, entry, &companion_source, &output)?;
         outputs.push(output);
     }
     Ok(outputs)
+}
+
+fn is_installed_glibc_dso_dependency(basename: &str) -> bool {
+    matches!(
+        basename,
+        "ld.so"
+            | "libBrokenLocale.so"
+            | "libanl.so"
+            | "libc.so"
+            | "libc_malloc_debug.so"
+            | "libdl.so"
+            | "libm.so"
+            | "libmvec.so"
+            | "libnsl.so"
+            | "libpthread.so"
+            | "libresolv.so"
+            | "librt.so"
+            | "libthread_db.so"
+            | "libutil.so"
+    ) || basename.starts_with("libnss_")
 }
 
 fn referenced_companion_dsos(entry: &TestsManifestEntry, source: &Path) -> Result<Vec<String>> {
@@ -4205,7 +4227,10 @@ fn resolve_shell_script_recipe_args(
                 raw_args.to_string()
             } else if let Some((_, raw_args)) = recipe_line.split_once("$^") {
                 let primary_binary = binary.or(built_binary.as_deref()).ok_or_else(|| {
-                    anyhow!("failed to resolve $^ primary binary for {}", entry.catalog_id)
+                    anyhow!(
+                        "failed to resolve $^ primary binary for {}",
+                        entry.catalog_id
+                    )
                 })?;
                 format!("{} {raw_args}", primary_binary.display())
             } else {

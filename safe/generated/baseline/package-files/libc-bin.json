@@ -11,7 +11,7 @@
       "original/debian/sysdeps/linux.mk"
     ],
     "package": "libc-bin",
-    "phase": "impl_07_nss_resolver_nscd",
+    "phase": "impl_08_locale_iconv_posix_parsers",
     "scope": "required_package"
   },
   "entries": [
@@ -287,58 +287,6 @@
       "symlink_target": null,
       "owner_phase": "impl_04_loader_startup_secure_exec",
       "verification": "loader-tools"
-    },
-    {
-      "package": "libc-bin",
-      "path": "/usr/libexec/safelibs/locale-tools/iconv.backend",
-      "source_path": "build/testroot.pristine/usr/bin/iconv",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "tracked_backend_binary",
-      "executable": true,
-      "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
-      "verification": "locale-tools"
-    },
-    {
-      "package": "libc-bin",
-      "path": "/usr/libexec/safelibs/locale-tools/iconvconfig.backend",
-      "source_path": "build/testroot.pristine/usr/sbin/iconvconfig",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "tracked_backend_binary",
-      "executable": true,
-      "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
-      "verification": "locale-tools"
-    },
-    {
-      "package": "libc-bin",
-      "path": "/usr/libexec/safelibs/locale-tools/locale.backend",
-      "source_path": "build/testroot.pristine/usr/bin/locale",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "tracked_backend_binary",
-      "executable": true,
-      "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
-      "verification": "locale-tools"
-    },
-    {
-      "package": "libc-bin",
-      "path": "/usr/libexec/safelibs/locale-tools/localedef.backend",
-      "source_path": "build/testroot.pristine/usr/bin/localedef",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "tracked_backend_binary",
-      "executable": true,
-      "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
-      "verification": "locale-tools"
     },
     {
       "package": "libc-bin",
