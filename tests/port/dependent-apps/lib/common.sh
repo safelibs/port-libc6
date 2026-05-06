@@ -58,6 +58,11 @@ dependent_apps_case_script() {
   printf '%s/tests/port/dependent-apps/cases/%s.sh\n' "$DEPENDENT_APPS_ROOT_DIR" "$case_name"
 }
 
+dependent_apps_source_build_script() {
+  local case_name=$1
+  printf '%s/tests/port/dependent-apps/source-builds/%s.sh\n' "$DEPENDENT_APPS_ROOT_DIR" "$case_name"
+}
+
 dependent_apps_case_init() {
   local case_name=$1
   export DEPENDENT_APPS_CASE="$case_name"

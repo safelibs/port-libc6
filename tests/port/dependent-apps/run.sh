@@ -160,9 +160,25 @@ else
 fi
 (( ${#cases[@]} > 0 )) || dependent_apps_die "suite has no selected cases: $suite"
 
+case "$suite_type" in
+  harness-contract)
+    ;;
+  runtime-smoke)
+    ;;
+  source-build)
+    ;;
+  *)
+    dependent_apps_die "unsupported suite type for $suite: $suite_type"
+    ;;
+esac
+
 if [[ "$suite_type" != "harness-contract" ]]; then
   for case_name in "${cases[@]}"; do
-    case_script=$(dependent_apps_case_script "$case_name")
+    if [[ "$suite_type" == "source-build" ]]; then
+      case_script=$(dependent_apps_source_build_script "$case_name")
+    else
+      case_script=$(dependent_apps_case_script "$case_name")
+    fi
     [[ -x "$case_script" ]] || dependent_apps_die "missing executable case script: $case_script"
   done
 fi
@@ -214,7 +230,14 @@ for case_name in "${cases[@]}"; do
       harness_failed=$((harness_failed + 1))
     fi
   else
-    case_script="/workspace/tests/port/dependent-apps/cases/$case_name.sh"
+    if [[ "$suite_type" == "source-build" ]]; then
+      case_script="/workspace/tests/port/dependent-apps/source-builds/$case_name.sh"
+    else
+      case_script="/workspace/tests/port/dependent-apps/cases/$case_name.sh"
+    fi
+    case_status_dir="$tmp_dir/status/$case_name"
+    rm -rf "$case_status_dir"
+    mkdir -p "$case_status_dir"
     container_marker="dependent_apps_container_started=$case_id"
     docker_args=(docker run --rm)
     if (( privileged )); then
@@ -226,6 +249,14 @@ for case_name in "${cases[@]}"; do
       -e "DEPENDENT_APPS_CASE=$case_name"
       -e "DEPENDENT_APPS_CASE_ID=$case_id"
       -e "DEPENDENT_APPS_CASE_WORKDIR=/tmp/safelibs-dependent-apps/$suite/$case_name"
+    )
+    if [[ "$suite_type" == "source-build" ]]; then
+      docker_args+=(
+        -e "DEPENDENT_APPS_FAILURE_KIND_PATH=/tmp/safelibs-dependent-status/failure-kind"
+        -v "$case_status_dir:/tmp/safelibs-dependent-status:rw"
+      )
+    fi
+    docker_args+=(
       -v "$HARNESS_DIR:/workspace/tests/port/dependent-apps:ro"
       -w /workspace
       "$image"
@@ -238,9 +269,36 @@ for case_name in "${cases[@]}"; do
     else
       exit_code=$?
       if grep -Fqx "$container_marker" "$log_abs"; then
-        status=failed
-        failure_kind='"compatibility_candidate"'
-        failed=$((failed + 1))
+        if [[ "$suite_type" == "source-build" ]]; then
+          source_failure_kind=""
+          if [[ -f "$case_status_dir/failure-kind" ]]; then
+            source_failure_kind=$(tr -d '\r\n' <"$case_status_dir/failure-kind")
+          fi
+          printf 'source_build_failure_kind=%s\n' "${source_failure_kind:-unset}" >>"$log_abs"
+          case "$source_failure_kind" in
+            compatibility_candidate)
+              status=failed
+              failure_kind='"compatibility_candidate"'
+              failed=$((failed + 1))
+              ;;
+            harness)
+              status=harness_failed
+              failure_kind='"harness"'
+              harness_failed=$((harness_failed + 1))
+              ;;
+            *)
+              printf 'source-build case did not record a valid failure kind for %s with exit code %s\n' \
+                "$case_id" "$exit_code" >>"$log_abs"
+              status=harness_failed
+              failure_kind='"harness"'
+              harness_failed=$((harness_failed + 1))
+              ;;
+          esac
+        else
+          status=failed
+          failure_kind='"compatibility_candidate"'
+          failed=$((failed + 1))
+        fi
       else
         printf 'container startup failed for %s with exit code %s\n' "$case_id" "$exit_code" >>"$log_abs"
         status=harness_failed
