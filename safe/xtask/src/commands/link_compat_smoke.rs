@@ -150,6 +150,9 @@ fn relink_case(
         .arg("-Wl,-rpath-link")
         .arg(&libdir)
         .arg("-Wl,-dynamic-linker,/usr/lib64/ld-linux-x86-64.so.2");
+    if !case_requests_pie(case) {
+        command.arg("-no-pie");
+    }
     for startfile in &case.required_startfiles {
         command.arg(original_sysroot.join(startfile.trim_start_matches('/')));
     }
@@ -162,6 +165,15 @@ fn relink_case(
     Ok(binary)
 }
 
+fn case_requests_pie(case: &crate::common::LinkCompatCase) -> bool {
+    case.coverage_class == "pie"
+        || case.coverage_class == "static-pie"
+        || case
+            .link_args
+            .iter()
+            .any(|arg| arg == "-pie" || arg == "-static-pie")
+}
+
 fn run_case(
     case: &crate::common::LinkCompatCase,
     binary: &Path,
@@ -171,13 +183,20 @@ fn run_case(
         "skip" => Ok(()),
         "direct" => run_direct_case(case, binary),
         "safe-loader" => {
+            let backend_root = install_path_to_root(install_root, "/usr/libexec/safelibs/backends");
+            let library_path = format!(
+                "{}:{}",
+                backend_root.display(),
+                make_ld_library_path(install_root)
+            );
             let output = command_output(
                 Command::new(install_path_to_root(
                     install_root,
                     "/usr/lib64/ld-linux-x86-64.so.2",
                 ))
+                .env("SAFELIBS_BACKEND_ROOT", &backend_root)
                 .arg("--library-path")
-                .arg(make_ld_library_path(install_root))
+                .arg(library_path)
                 .arg(binary),
             )?;
             ensure_no_runtime_failure(case, &output)

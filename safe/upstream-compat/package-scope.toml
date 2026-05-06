@@ -11250,6 +11250,17 @@ asset_kind = "private_baseline_backend_dso"
 executable = false
 final_cutover_phase = "impl_10_final_fixup_and_audit"
 package = "libc6"
+path = "/usr/libexec/safelibs/backends/libBrokenLocale.so.1"
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/libBrokenLocale.so.1"
+temporary = true
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+final_cutover_phase = "impl_10_final_fixup_and_audit"
+package = "libc6"
 path = "/usr/libexec/safelibs/backends/libanl.so.1"
 scope = "required_package"
 shipped_status = "shipped"

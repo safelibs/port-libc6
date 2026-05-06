@@ -273,6 +273,17 @@
       "audit_notes": "Private baseline loader copy retained only as an explicitly inventoried backend payload while the public loader path comes from the safe build root."
     },
     {
+      "path": "/usr/libexec/safelibs/backends/libBrokenLocale.so.1",
+      "source_path": "build/testroot.pristine/usr/lib64/libBrokenLocale.so.1",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_08_locale_iconv_posix_parsers",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/libBrokenLocale.so.1"
+      ],
+      "audit_notes": "Private copied upstream libBrokenLocale payload retained only as an explicitly inventoried backend while the public compatibility DSO path comes from the safe build root."
+    },
+    {
       "path": "/usr/libexec/safelibs/backends/libanl.so.1",
       "source_path": "build/testroot.pristine/usr/lib64/libanl.so.1",
       "classification": "private_baseline_backend_dso",

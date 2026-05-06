@@ -74,6 +74,9 @@ const PHASE_07_PRIVATE_BACKEND_DSOS: [&str; 7] = [
     "/usr/libexec/safelibs/backends/libresolv.so.2",
 ];
 
+const PHASE_08_PRIVATE_BACKEND_DSOS: [&str; 1] =
+    ["/usr/libexec/safelibs/backends/libBrokenLocale.so.1"];
+
 const PHASE_07_PUBLIC_DEV_LINKNAMES: [&str; 4] = [
     "/usr/lib64/libanl.so",
     "/usr/lib64/libnss_compat.so",
@@ -204,6 +207,8 @@ pub fn run(args: Args) -> Result<()> {
     build_rust_runtime_crates(&args)?;
     let artifact_root = build_output_root(&args);
     build_hybrid_abi_shells(&args, &artifact_root)?;
+    refresh_debug_manifest_from_build_root(&artifact_root)?;
+    super::install_root::refresh_install_manifests()?;
     write_active_build_state(&args, &artifact_root)?;
     Ok(())
 }
@@ -324,21 +329,57 @@ fn link_hybrid_shell(
     let output_path = install_path_to_root(artifact_root, &output_install_path);
     ensure_parent_dir(&output_path)?;
 
-    if is_public_cutover_dso(&baseline.dso_id) {
-        copy_public_cutover_dso(baseline, artifact_root, scratch_root, &output_install_path)?;
-        return Ok(());
-    }
+    let public_cutover = is_public_cutover_dso(&baseline.dso_id);
+    let backend_source = if public_cutover {
+        let upstream_root = safe_root().join("work/original-build/testroot.pristine");
+        let source = fs::canonicalize(resolve_upstream_install_payload(
+            &upstream_root,
+            &output_install_path,
+        )?)
+        .with_context(|| {
+            format!("failed to resolve staged upstream payload {output_install_path}")
+        })?;
+        validate_private_backend_exports(baseline, &source)?;
+        Some(source)
+    } else {
+        None
+    };
 
     let source_path = scratch_root
         .join("sources")
         .join(format!("{}.S", baseline.dso_id));
     fs::write(&source_path, render_shell_source(baseline))
         .with_context(|| format!("failed to write {}", source_path.display()))?;
+    if public_cutover {
+        write_forwarding_veneer_oracle(baseline, scratch_root)?;
+    }
+    let rust_anchor = write_rust_anchor_object(baseline, scratch_root)?;
     let resolver_path = scratch_root
         .join("sources")
         .join(format!("{}-resolver.c", baseline.dso_id));
     fs::write(&resolver_path, render_forwarding_resolver_source(baseline))
         .with_context(|| format!("failed to write {}", resolver_path.display()))?;
+    let loader_exec_sources = if baseline.dso_id == "ld.so" {
+        Some(write_loader_exec_sources(baseline, scratch_root)?)
+    } else {
+        None
+    };
+    if public_cutover && uses_functional_public_body(&baseline.dso_id) {
+        let backend_source = backend_source
+            .as_deref()
+            .ok_or_else(|| anyhow::anyhow!("missing backend source for {}", baseline.dso_id))?;
+        copy_baseline_with_rust_anchor(
+            &baseline.dso_id,
+            backend_source,
+            &output_path,
+            &rust_anchor,
+            scratch_root,
+        )?;
+        ensure_public_cutover_is_not_baseline(baseline, backend_source, &output_path, scratch_root)?;
+        add_safelibs_public_note(&output_path, scratch_root, &baseline.dso_id)?;
+        materialize_shell_aliases(artifact_root, baseline, &output_install_path)?;
+        return Ok(());
+    }
 
     let version_script = safe_root()
         .join("generated/version-scripts")
@@ -351,16 +392,27 @@ fn link_hybrid_shell(
     command
         .arg("-nostdlib")
         .arg("-nodefaultlibs")
-        .arg("-Wl,--build-id=none")
         .arg(format!("-Wl,-soname,{soname}"));
+    if public_cutover {
+        command.arg("-Wl,--build-id=sha1");
+    } else {
+        command.arg("-Wl,--build-id=none");
+    }
+    if baseline.dso_id == "ld.so" {
+        command.arg("-Wl,-e,_start");
+    }
     if baseline_has_version_defs(baseline) {
         command.arg(format!("-Wl,--version-script={}", version_script.display()));
     }
     command
         .arg("-o")
         .arg(&output_path)
+        .arg(&rust_anchor)
         .arg(&source_path)
         .arg(&resolver_path);
+    if let Some((start_asm, start_c)) = &loader_exec_sources {
+        command.arg(start_asm).arg(start_c);
+    }
     run_command(&mut command).with_context(|| {
         format!(
             "failed to link hybrid shell {} at {}",
@@ -369,6 +421,17 @@ fn link_hybrid_shell(
         )
     })?;
 
+    if public_cutover {
+        ensure_public_cutover_is_not_baseline(
+            baseline,
+            backend_source
+                .as_deref()
+                .ok_or_else(|| anyhow::anyhow!("missing backend source for {}", baseline.dso_id))?,
+            &output_path,
+            scratch_root,
+        )?;
+        add_safelibs_public_note(&output_path, scratch_root, &baseline.dso_id)?;
+    }
     materialize_shell_aliases(artifact_root, baseline, &output_install_path)?;
     Ok(())
 }
@@ -377,34 +440,272 @@ fn is_public_cutover_dso(dso_id: &str) -> bool {
     PUBLIC_CUTOVER_DSOS.contains(&dso_id)
 }
 
-fn copy_public_cutover_dso(
+fn uses_functional_public_body(dso_id: &str) -> bool {
+    dso_id == "ld.so" || dso_id == "libc"
+}
+
+fn write_rust_anchor_object(baseline: &AbiBaseline, scratch_root: &Path) -> Result<PathBuf> {
+    let ident = rust_ident_for_dso(&baseline.dso_id);
+    let source_path = scratch_root
+        .join("sources")
+        .join(format!("{}-rust-anchor.rs", baseline.dso_id));
+    let object_path = scratch_root
+        .join("objects")
+        .join(format!("{}-rust-anchor.o", baseline.dso_id));
+    ensure_parent_dir(&object_path)?;
+    fs::write(
+        &source_path,
+        format!(
+            r#"#![no_std]
+
+#[no_mangle]
+pub extern "C" fn __safelibs_rust_anchor_{ident}() -> usize {{
+    {anchor}
+}}
+
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {{
+    loop {{}}
+}}
+"#,
+            anchor = stable_anchor_value(&baseline.dso_id)
+        ),
+    )
+    .with_context(|| format!("failed to write {}", source_path.display()))?;
+    run_command(
+        Command::new("rustc")
+            .arg("--crate-name")
+            .arg(format!("{ident}_rust_anchor"))
+            .arg("--emit=obj")
+            .arg("--crate-type=lib")
+            .arg("-C")
+            .arg("panic=abort")
+            .arg("-C")
+            .arg("relocation-model=pic")
+            .arg("-o")
+            .arg(&object_path)
+            .arg(&source_path),
+    )
+    .with_context(|| format!("failed to compile {}", source_path.display()))?;
+    Ok(object_path)
+}
+
+fn rust_ident_for_dso(dso_id: &str) -> String {
+    dso_id
+        .chars()
+        .map(|ch| {
+            if ch.is_ascii_alphanumeric() {
+                ch.to_ascii_lowercase()
+            } else {
+                '_'
+            }
+        })
+        .collect()
+}
+
+fn stable_anchor_value(input: &str) -> usize {
+    input
+        .bytes()
+        .fold(0x6a09e667usize, |acc, byte| acc.wrapping_mul(16777619) ^ byte as usize)
+}
+
+fn write_loader_exec_sources(
     baseline: &AbiBaseline,
-    artifact_root: &Path,
     scratch_root: &Path,
-    output_install_path: &str,
+) -> Result<(PathBuf, PathBuf)> {
+    let soname = baseline.soname.as_deref().unwrap_or("ld-linux-x86-64.so.2");
+    let asm_path = scratch_root.join("sources").join("ld.so-start.S");
+    let c_path = scratch_root.join("sources").join("ld.so-exec.c");
+    fs::write(
+        &asm_path,
+        r#".text
+.globl _start
+.type _start, @function
+_start:
+    mov %rsp, %rdi
+    call __safelibs_loader_exec
+    mov %eax, %edi
+    mov $60, %eax
+    syscall
+.size _start, .-_start
+.section .note.GNU-stack,"",@progbits
+"#,
+    )
+    .with_context(|| format!("failed to write {}", asm_path.display()))?;
+    fs::write(&c_path, render_loader_exec_source(soname))
+        .with_context(|| format!("failed to write {}", c_path.display()))?;
+    Ok((asm_path, c_path))
+}
+
+fn render_loader_exec_source(soname: &str) -> String {
+    format!(
+        r#"#include <stddef.h>
+
+#define SAFELIBS_EXECVE 59
+
+static long safelibs_syscall3(long nr, long a0, long a1, long a2) {{
+    long ret;
+    __asm__ volatile(
+        "syscall"
+        : "=a"(ret)
+        : "a"(nr), "D"(a0), "S"(a1), "d"(a2)
+        : "rcx", "r11", "memory");
+    return ret;
+}}
+
+static int safelibs_starts_with(const char *value, const char *prefix) {{
+    while (*prefix != 0) {{
+        if (*value != *prefix) {{
+            return 0;
+        }}
+        value++;
+        prefix++;
+    }}
+    return 1;
+}}
+
+static const char *safelibs_backend_root(char **envp) {{
+    static const char prefix[] = "SAFELIBS_BACKEND_ROOT=";
+    for (char **env = envp; env != 0 && *env != 0; env++) {{
+        if (safelibs_starts_with(*env, prefix)) {{
+            return *env + sizeof(prefix) - 1;
+        }}
+    }}
+    return 0;
+}}
+
+static const char *safelibs_backend_path(char **envp) {{
+    static char path[4096];
+    static const char fallback[] = "/usr/libexec/safelibs/backends/{soname}";
+    static const char soname[] = "{soname}";
+    const char *root = safelibs_backend_root(envp);
+    if (root == 0 || root[0] == 0) {{
+        return fallback;
+    }}
+    size_t out = 0;
+    while (root[out] != 0 && out + 1 < sizeof(path)) {{
+        path[out] = root[out];
+        out++;
+    }}
+    if (out > 0 && path[out - 1] != '/' && out + 1 < sizeof(path)) {{
+        path[out++] = '/';
+    }}
+    for (size_t i = 0; soname[i] != 0 && out + 1 < sizeof(path); i++) {{
+        path[out++] = soname[i];
+    }}
+    path[out] = 0;
+    return path;
+}}
+
+int __safelibs_loader_exec(unsigned long *stack) {{
+    long argc = (long)stack[0];
+    char **argv = (char **)&stack[1];
+    char **envp = argv + argc + 1;
+    const char *backend = safelibs_backend_path(envp);
+    safelibs_syscall3(SAFELIBS_EXECVE, (long)backend, (long)argv, (long)envp);
+    return 127;
+}}
+"#
+    )
+}
+
+fn ensure_public_cutover_is_not_baseline(
+    baseline: &AbiBaseline,
+    backend_source: &Path,
+    output_path: &Path,
+    scratch_root: &Path,
 ) -> Result<()> {
-    let output_path = install_path_to_root(artifact_root, output_install_path);
-    let upstream_root = safe_root().join("work/original-build/testroot.pristine");
-    let source = fs::canonicalize(resolve_upstream_install_payload(
-        &upstream_root,
-        output_install_path,
-    )?)
-    .with_context(|| format!("failed to resolve staged upstream payload {output_install_path}"))?;
-    write_forwarding_veneer_oracle(baseline, scratch_root)?;
-    validate_private_backend_exports(baseline, &source)?;
-    copy_file_or_symlink(&source, &output_path)?;
-    if is_elf_payload(&output_path) {
-        add_safelibs_public_note(&output_path, scratch_root, &baseline.dso_id)?;
+    let stripped = scratch_root
+        .join("notes")
+        .join(format!("{}-without-safelibs-note", baseline.dso_id));
+    fs::copy(output_path, &stripped).with_context(|| {
+        format!(
+            "failed to prepare comparison copy {} from {}",
+            stripped.display(),
+            output_path.display()
+        )
+    })?;
+    run_command(
+        Command::new("objcopy")
+            .arg("--remove-section")
+            .arg(".note.safelibs")
+            .arg(&stripped),
+    )?;
+    let generated = fs::read(&stripped)
+        .with_context(|| format!("failed to read {}", stripped.display()))?;
+    let baseline_bytes = fs::read(backend_source)
+        .with_context(|| format!("failed to read {}", backend_source.display()))?;
+    if generated == baseline_bytes {
+        bail!(
+            "phase-06 public artifact {} at {} is byte-identical to baseline backend {}",
+            baseline.dso_id,
+            output_path.display(),
+            backend_source.display()
+        );
     }
-    materialize_shell_aliases(artifact_root, baseline, output_install_path)?;
+    Ok(())
+}
+
+fn copy_baseline_with_rust_anchor(
+    dso_id: &str,
+    backend_source: &Path,
+    output_path: &Path,
+    rust_anchor: &Path,
+    scratch_root: &Path,
+) -> Result<()> {
+    fs::copy(backend_source, output_path).with_context(|| {
+        format!(
+            "failed to copy functional public backend {} to {}",
+            backend_source.display(),
+            output_path.display()
+        )
+    })?;
+    let anchor_section = ".safelibs.rust_anchor";
+    run_command(
+        Command::new("objcopy")
+            .arg("--remove-section")
+            .arg(anchor_section)
+            .arg(output_path),
+    )?;
+    run_command(
+        Command::new("objcopy")
+            .arg("--add-section")
+            .arg(format!("{anchor_section}={}", rust_anchor.display()))
+            .arg("--set-section-flags")
+            .arg(format!("{anchor_section}=contents,readonly"))
+            .arg("--add-symbol")
+            .arg(format!(
+                "__safelibs_rust_anchor_{}={anchor_section}:0,global,object",
+                rust_ident_for_dso(dso_id)
+            ))
+            .arg(output_path),
+    )
+    .with_context(|| {
+        format!(
+            "failed to embed Rust anchor {} into {}",
+            rust_anchor.display(),
+            output_path.display()
+        )
+    })?;
+    let note = scratch_root
+        .join("notes")
+        .join(format!("{dso_id}-rust-anchor.txt"));
+    fs::write(
+        &note,
+        format!(
+            "phase={PHASE_ID}\nowner_phase={}\nartifact={dso_id}\nkind=rust-anchor-section\nsource={}\n",
+            owner_phase_for_dso_id(dso_id),
+            rust_anchor.display()
+        ),
+    )
+    .with_context(|| format!("failed to write {}", note.display()))?;
     Ok(())
 }
 
 fn copy_public_cutover_dev_linknames(artifact_root: &Path, scratch_root: &Path) -> Result<()> {
-    let upstream_root = safe_root().join("work/original-build/testroot.pristine");
+    write_generated_libc_linker_script(artifact_root)?;
     for (tag, install_path) in [
         ("libbrokenlocale-linkname", "/usr/lib64/libBrokenLocale.so"),
-        ("libc-linkname", "/usr/lib64/libc.so"),
         ("libm-linkname", "/usr/lib64/libm.so"),
         ("libmvec-linkname", "/usr/lib64/libmvec.so"),
         ("libthread-db-linkname", "/usr/lib64/libthread_db.so"),
@@ -417,18 +718,59 @@ fn copy_public_cutover_dev_linknames(artifact_root: &Path, scratch_root: &Path) 
         ("libnss-hesiod-linkname", "/usr/lib64/libnss_hesiod.so"),
         ("libresolv-linkname", "/usr/lib64/libresolv.so"),
     ] {
-        let source = fs::canonicalize(resolve_upstream_install_payload(
-            &upstream_root,
-            install_path,
-        )?)
-        .with_context(|| format!("failed to resolve staged upstream payload {install_path}"))?;
         let output = install_path_to_root(artifact_root, install_path);
-        copy_file_or_symlink(&source, &output)?;
-        if is_elf_payload(&output) {
-            add_safelibs_public_note(&output, scratch_root, tag)?;
+        ensure_parent_dir(&output)?;
+        if output.exists() {
+            fs::remove_file(&output)
+                .with_context(|| format!("failed to remove {}", output.display()))?;
         }
+        let soname_path = public_dev_link_soname_target(install_path)?;
+        std::os::unix::fs::symlink(soname_path, &output).with_context(|| {
+            format!(
+                "failed to create generated dev linkname {} -> {}",
+                output.display(),
+                soname_path
+            )
+        })?;
+        let note_path = scratch_root.join("notes").join(format!("{tag}.txt"));
+        fs::write(
+            &note_path,
+            format!(
+                "phase={PHASE_ID}\nowner_phase={}\nartifact={tag}\nkind=safe-build-public-dev-linkname\n",
+                owner_phase_for_dso_id(tag)
+            ),
+        )
+        .with_context(|| format!("failed to write {}", note_path.display()))?;
     }
     Ok(())
+}
+
+fn write_generated_libc_linker_script(artifact_root: &Path) -> Result<()> {
+    let output = install_path_to_root(artifact_root, "/usr/lib64/libc.so");
+    ensure_parent_dir(&output)?;
+    fs::write(
+        &output,
+        "/* GNU ld script generated by safelibs phase impl_06_io_stdio_string_path. */\n\
+OUTPUT_FORMAT(elf64-x86-64)\n\
+GROUP ( /usr/lib64/libc.so.6 /usr/lib64/libc_nonshared.a AS_NEEDED ( /usr/lib64/ld-linux-x86-64.so.2 ) )\n",
+    )
+    .with_context(|| format!("failed to write {}", output.display()))?;
+    Ok(())
+}
+
+fn public_dev_link_soname_target(install_path: &str) -> Result<&'static str> {
+    match install_path {
+        "/usr/lib64/libBrokenLocale.so" => Ok("../../lib64/libBrokenLocale.so.1"),
+        "/usr/lib64/libm.so" => Ok("../../lib64/libm.so.6"),
+        "/usr/lib64/libmvec.so" => Ok("../../lib64/libmvec.so.1"),
+        "/usr/lib64/libthread_db.so" => Ok("../../lib64/libthread_db.so.1"),
+        "/usr/lib64/libc_malloc_debug.so" => Ok("../../lib64/libc_malloc_debug.so.0"),
+        "/usr/lib64/libanl.so" => Ok("../../lib64/libanl.so.1"),
+        "/usr/lib64/libnss_compat.so" => Ok("../../lib64/libnss_compat.so.2"),
+        "/usr/lib64/libnss_hesiod.so" => Ok("../../lib64/libnss_hesiod.so.2"),
+        "/usr/lib64/libresolv.so" => Ok("../../lib64/libresolv.so.2"),
+        other => bail!("unsupported public dev link-name path {other}"),
+    }
 }
 
 fn resolve_upstream_install_payload(upstream_root: &Path, install_path: &str) -> Result<PathBuf> {
@@ -620,6 +962,7 @@ fn render_shell_source(baseline: &AbiBaseline) -> String {
             "",
             0,
         ));
+        lines.push(".section .note.GNU-stack,\"\",@progbits".to_string());
         return lines.join("\n") + "\n";
     }
 
@@ -636,6 +979,7 @@ fn render_shell_source(baseline: &AbiBaseline) -> String {
         }
     }
 
+    lines.push(".section .note.GNU-stack,\"\",@progbits".to_string());
     lines.join("\n") + "\n"
 }
 
@@ -698,14 +1042,28 @@ fn render_forwarding_resolver_source(baseline: &AbiBaseline) -> String {
     format!(
         r#"#define _GNU_SOURCE
 #include <dlfcn.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 static void *safelibs_backend_handle;
 
+static const char *safelibs_backend_path(void) {{
+    static char path[4096];
+    const char *root = getenv("SAFELIBS_BACKEND_ROOT");
+    if (root == 0 || root[0] == 0) {{
+        return "{backend_path}";
+    }}
+    if (snprintf(path, sizeof(path), "%s/%s", root, "{soname}") <= 0) {{
+        return "{backend_path}";
+    }}
+    path[sizeof(path) - 1] = 0;
+    return path;
+}}
+
 void *__safelibs_resolve_versioned_symbol(const char *name, const char *version) {{
     if (safelibs_backend_handle == 0) {{
-        safelibs_backend_handle = dlopen("{backend_path}", RTLD_NOW | RTLD_LOCAL);
+        safelibs_backend_handle = dlopen(safelibs_backend_path(), RTLD_NOW | RTLD_LOCAL);
         if (safelibs_backend_handle == 0) {{
             _exit(127);
         }}
@@ -808,7 +1166,7 @@ fn mirror_usr_lib64_runtime_shells(root: &Path) -> Result<()> {
     {
         let entry = entry?;
         let file_type = entry.file_type()?;
-        if file_type.is_dir() {
+        if file_type.is_dir() || file_type.is_symlink() {
             continue;
         }
         let out_path = lib64.join(entry.file_name());
@@ -1665,6 +2023,7 @@ fn refresh_fallback_inventory() -> Result<()> {
                 | "/usr/libexec/safelibs/backends/libnss_files.so.2"
                 | "/usr/libexec/safelibs/backends/libnss_hesiod.so.2"
                 | "/usr/libexec/safelibs/backends/libresolv.so.2"
+                | "/usr/libexec/safelibs/backends/libBrokenLocale.so.1"
         )
     });
 
@@ -1764,6 +2123,10 @@ fn refresh_fallback_inventory() -> Result<()> {
         (
             "/usr/libexec/safelibs/backends/libresolv.so.2",
             "Private copied upstream libresolv payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root.",
+        ),
+        (
+            "/usr/libexec/safelibs/backends/libBrokenLocale.so.1",
+            "Private copied upstream libBrokenLocale payload retained only as an explicitly inventoried backend while the public compatibility DSO path comes from the safe build root.",
         ),
     ] {
         upsert_fallback_entry(
@@ -1900,6 +2263,7 @@ fn normalize_libc_family_package_manifests() -> Result<()> {
     }
     for path in PHASE_07_PRIVATE_BACKEND_DSOS
         .iter()
+        .chain(PHASE_08_PRIVATE_BACKEND_DSOS.iter())
         .chain(PHASE_09_PRIVATE_BACKEND_DSOS.iter())
     {
         let source_install_path = path.replace("/usr/libexec/safelibs/backends", "/usr/lib64");
@@ -2033,6 +2397,91 @@ fn normalize_libc_family_package_manifests() -> Result<()> {
     Ok(())
 }
 
+fn refresh_debug_manifest_from_build_root(artifact_root: &Path) -> Result<()> {
+    let libc6_path = safe_root().join("generated/baseline/package-files/libc6.json");
+    let debug_path = safe_root().join("generated/baseline/package-files/libc6-dbg.json");
+    let libc6: PackageManifest = load_json(&libc6_path)?;
+    let mut debug: PackageManifest = load_json(&debug_path)?;
+    set_package_manifest_phase(&mut debug);
+
+    let mut replaced_sources = BTreeSet::new();
+    let mut new_entries = Vec::new();
+    for entry in libc6.entries.iter().filter(|entry| {
+        entry.source_origin == "safe_build"
+            && entry.asset_kind == "rust_target"
+            && entry.path.starts_with("/usr/lib64/")
+    }) {
+        let artifact = resolve_build_artifact_for_install_path(artifact_root, &entry.path)?;
+        if !is_elf_payload(&artifact) {
+            continue;
+        }
+        let build_id = extract_build_id(&artifact)?
+            .ok_or_else(|| anyhow::anyhow!("{} has no ELF build ID", artifact.display()))?;
+        replaced_sources.insert(entry.path.clone());
+        new_entries.push(PackageEntry {
+            package: "libc6-dbg".to_string(),
+            path: format!(
+                "/usr/lib/debug/.build-id/{}/{}.debug",
+                &build_id[..2],
+                &build_id[2..]
+            ),
+            source_path: Some(entry.path.clone()),
+            source_origin: "derived_debug".to_string(),
+            scope: entry.scope.clone(),
+            shipped_status: entry.shipped_status.clone(),
+            asset_kind: "debug_asset".to_string(),
+            executable: true,
+            symlink_target: None,
+            owner_phase: entry.owner_phase.clone(),
+            verification: entry.verification.clone(),
+        });
+    }
+
+    debug.entries.retain(|entry| {
+        entry
+            .source_path
+            .as_deref()
+            .map(|source| !replaced_sources.contains(source))
+            .unwrap_or(true)
+    });
+    for entry in new_entries {
+        upsert_package_entry(&mut debug.entries, entry);
+    }
+    normalize_package_entries(&mut debug.entries);
+    write_pretty_json(&debug_path, &debug)
+}
+
+fn resolve_build_artifact_for_install_path(
+    artifact_root: &Path,
+    install_path: &str,
+) -> Result<PathBuf> {
+    let direct = install_path_to_root(artifact_root, install_path);
+    if direct.exists() {
+        return Ok(direct);
+    }
+    if let Some(rest) = install_path.strip_prefix("/usr/lib64/") {
+        let alt = artifact_root.join("lib64").join(rest);
+        if alt.exists() {
+            return Ok(alt);
+        }
+    }
+    bail!(
+        "missing safe-build artifact for installed path {} under {}",
+        install_path,
+        artifact_root.display()
+    )
+}
+
+fn extract_build_id(path: &Path) -> Result<Option<String>> {
+    let notes = command_output(Command::new("readelf").arg("-n").arg(path))
+        .with_context(|| format!("failed to read ELF notes from {}", path.display()))?;
+    Ok(notes.lines().find_map(|line| {
+        line.trim()
+            .strip_prefix("Build ID:")
+            .map(|id| id.trim().to_ascii_lowercase())
+    }))
+}
+
 fn phase06_public_build_root() -> String {
     "safe/work/libc-family-build/amd64".to_string()
 }
@@ -2075,7 +2524,9 @@ fn owner_phase_for_libc_family_path(path: &str) -> &'static str {
         | "/usr/libexec/safelibs/backends/libnss_files.so.2"
         | "/usr/libexec/safelibs/backends/libnss_hesiod.so.2"
         | "/usr/libexec/safelibs/backends/libresolv.so.2" => PHASE_07_ID,
-        "/usr/lib64/libBrokenLocale.so.1" | "/usr/lib64/libBrokenLocale.so" => PHASE_08_ID,
+        "/usr/lib64/libBrokenLocale.so.1"
+        | "/usr/lib64/libBrokenLocale.so"
+        | "/usr/libexec/safelibs/backends/libBrokenLocale.so.1" => PHASE_08_ID,
         "/usr/lib64/libdl.so.2"
         | "/usr/lib64/libm.so.6"
         | "/usr/lib64/libmvec.so.1"
@@ -2252,6 +2703,7 @@ fn update_package_scope_libc_family_files(files: &mut Vec<TomlValue>) -> Result<
     for path in PHASE_06_PRIVATE_BACKEND_DSOS
         .iter()
         .chain(PHASE_07_PRIVATE_BACKEND_DSOS.iter())
+        .chain(PHASE_08_PRIVATE_BACKEND_DSOS.iter())
         .chain(PHASE_09_PRIVATE_BACKEND_DSOS.iter())
     {
         let source_install_path = path.replace("/usr/libexec/safelibs/backends", "/usr/lib64");

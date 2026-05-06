@@ -274,6 +274,14 @@ reviewer = "phase-5-auto-review"
 shipped = true
 
 [[reviewed_fallback_entries]]
+audit_notes = "Private copied upstream libBrokenLocale payload retained only as an explicitly inventoried backend while the public compatibility DSO path comes from the safe build root."
+classification = "private_baseline_backend_dso"
+owning_phase = "impl_08_locale_iconv_posix_parsers"
+path = "/usr/libexec/safelibs/backends/libBrokenLocale.so.1"
+reviewer = "phase-5-auto-review"
+shipped = true
+
+[[reviewed_fallback_entries]]
 audit_notes = "Private copied upstream libanl payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
 classification = "private_baseline_backend_dso"
 owning_phase = "impl_07_nss_resolver_nscd"

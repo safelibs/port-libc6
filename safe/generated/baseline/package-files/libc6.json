@@ -3605,6 +3605,19 @@
     },
     {
       "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/libBrokenLocale.so.1",
+      "source_path": "build/testroot.pristine/usr/lib64/libBrokenLocale.so.1",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "verification": "libc-family-cutover"
+    },
+    {
+      "package": "libc6",
       "path": "/usr/libexec/safelibs/backends/libanl.so.1",
       "source_path": "build/testroot.pristine/usr/lib64/libanl.so.1",
       "source_origin": "build_testroot",
