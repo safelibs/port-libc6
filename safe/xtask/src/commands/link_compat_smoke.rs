@@ -45,6 +45,7 @@ pub fn run(args: Args) -> Result<()> {
     super::install_root::materialize_install_root(&install_root, true, false)?;
 
     let corpus = load_link_compat_corpus()?;
+    verify_final_corpus_coverage(&corpus)?;
     verify_final_manifest_closure()?;
     let scratch = safe_root().join("work/link-smoke");
     let original_objects_root = scratch.join("original-objects");
@@ -77,6 +78,65 @@ pub fn run(args: Args) -> Result<()> {
         run_case(&case, &binary, &install_root)?;
     }
     Ok(())
+}
+
+fn verify_final_corpus_coverage(corpus: &crate::common::LinkCompatCorpus) -> Result<()> {
+    let coverage_classes = corpus
+        .cases
+        .iter()
+        .map(|case| case.coverage_class.clone())
+        .collect::<BTreeSet<_>>();
+    let startfiles = corpus
+        .cases
+        .iter()
+        .flat_map(|case| case.required_startfiles.iter().cloned())
+        .collect::<BTreeSet<_>>();
+
+    let required_coverage = [
+        "ordinary-dynamic",
+        "pie",
+        "static",
+        "static-pie",
+        "startup-object",
+        "glibc-private",
+        "profiling-startfile",
+        "profiling-startfile-static-pie",
+    ];
+    let required_startfiles = [
+        "/usr/lib64/Mcrt1.o",
+        "/usr/lib64/Scrt1.o",
+        "/usr/lib64/crt1.o",
+        "/usr/lib64/crti.o",
+        "/usr/lib64/crtn.o",
+        "/usr/lib64/gcrt1.o",
+        "/usr/lib64/grcrt1.o",
+        "/usr/lib64/rcrt1.o",
+    ];
+
+    let mut failures = Vec::new();
+    for coverage in required_coverage {
+        if !coverage_classes.contains(coverage) {
+            failures.push(format!(
+                "committed link-compat corpus is missing {coverage} coverage"
+            ));
+        }
+    }
+    for startfile in required_startfiles {
+        if !startfiles.contains(startfile) {
+            failures.push(format!(
+                "committed link-compat corpus never references required startfile {startfile}"
+            ));
+        }
+    }
+
+    if failures.is_empty() {
+        Ok(())
+    } else {
+        bail!(
+            "final link-compat corpus coverage is incomplete:\n{}",
+            failures.join("\n")
+        )
+    }
 }
 
 fn materialize_original_object(

@@ -1,13 +1,14 @@
 {
   "metadata": {
-    "phase": "impl_09_math_and_aux_dsos",
+    "phase": "impl_10_final_fixup_and_audit",
     "notes": [
       "This corpus is the authoritative relink-compatibility case list for original-object verification.",
       "Phase 6 seeds startup-object, ordinary dynamic, PIE, static, static-PIE, and GLIBC_PRIVATE coverage.",
       "Phase 7 extends the corpus with network-facing libanl, libresolv, and libnss module coverage while keeping the preserved original-object workflow intact.",
       "Phase 8 extends the corpus with locale, iconv, parser, and libBrokenLocale coverage while keeping the preserved original-object workflow intact.",
       "Later phases must extend this file in place instead of rediscovering cases from work/original-build ad hoc.",
-      "Phase 9 extends the corpus with libdl, libm, librt, and libutil coverage while keeping the preserved original-object workflow intact."
+      "Phase 9 extends the corpus with libdl, libm, librt, and libutil coverage while keeping the preserved original-object workflow intact.",
+      "Phase 10 completes final libc6-dev startfile provenance coverage, including Mcrt1.o, Scrt1.o, gcrt1.o, grcrt1.o, and rcrt1.o profiling/static-PIE variants."
     ]
   },
   "cases": [
@@ -33,6 +34,136 @@
         "libc"
       ],
       "run_mode": "safe-loader"
+    },
+    {
+      "case_id": "startup-mcrt1-compat",
+      "owner_phase": "impl_10_final_fixup_and_audit",
+      "coverage_class": "startup-mcrt1",
+      "object_source_kind": "original_sysroot_fixture",
+      "fixture_source_path": "safe/tests/io/link-compat-startup.c",
+      "upstream_object_path": null,
+      "original_object_relpath": "startup-mcrt1-compat/main.o",
+      "compile_args": [],
+      "link_args": [
+        "-nostartfiles"
+      ],
+      "required_startfiles": [
+        "/usr/lib64/Mcrt1.o",
+        "/usr/lib64/crt1.o",
+        "/usr/lib64/crti.o",
+        "/usr/lib64/crtn.o"
+      ],
+      "exercised_dsos": [
+        "ld.so",
+        "libc"
+      ],
+      "run_mode": "safe-loader"
+    },
+    {
+      "case_id": "startup-scrt1-pie",
+      "owner_phase": "impl_10_final_fixup_and_audit",
+      "coverage_class": "startup-scrt1",
+      "object_source_kind": "original_sysroot_fixture",
+      "fixture_source_path": "safe/tests/io/link-compat-startup.c",
+      "upstream_object_path": null,
+      "original_object_relpath": "startup-scrt1-pie/main.o",
+      "compile_args": [
+        "-fPIE"
+      ],
+      "link_args": [
+        "-nostartfiles",
+        "-pie"
+      ],
+      "required_startfiles": [
+        "/usr/lib64/Scrt1.o",
+        "/usr/lib64/crti.o",
+        "/usr/lib64/crtn.o"
+      ],
+      "exercised_dsos": [
+        "ld.so",
+        "libc"
+      ],
+      "run_mode": "safe-loader"
+    },
+    {
+      "case_id": "startup-rcrt1-static-pie",
+      "owner_phase": "impl_10_final_fixup_and_audit",
+      "coverage_class": "startup-rcrt1",
+      "object_source_kind": "original_sysroot_fixture",
+      "fixture_source_path": "safe/tests/io/link-compat-startup.c",
+      "upstream_object_path": null,
+      "original_object_relpath": "startup-rcrt1-static-pie/main.o",
+      "compile_args": [
+        "-fPIE"
+      ],
+      "link_args": [
+        "-nostartfiles",
+        "-static-pie"
+      ],
+      "required_startfiles": [
+        "/usr/lib64/rcrt1.o",
+        "/usr/lib64/crti.o",
+        "/usr/lib64/crtn.o"
+      ],
+      "exercised_dsos": [
+        "ld.so",
+        "libc"
+      ],
+      "run_mode": "skip"
+    },
+    {
+      "case_id": "profiling-gcrt1",
+      "owner_phase": "impl_10_final_fixup_and_audit",
+      "coverage_class": "profiling-startfile",
+      "object_source_kind": "original_sysroot_fixture",
+      "fixture_source_path": "safe/tests/io/link-compat-profiling-startfile.c",
+      "upstream_object_path": null,
+      "original_object_relpath": "profiling-gcrt1/main.o",
+      "compile_args": [
+        "-pg"
+      ],
+      "link_args": [
+        "-nostartfiles",
+        "-pg"
+      ],
+      "required_startfiles": [
+        "/usr/lib64/gcrt1.o",
+        "/usr/lib64/crti.o",
+        "/usr/lib64/crtn.o"
+      ],
+      "exercised_dsos": [
+        "ld.so",
+        "libc"
+      ],
+      "run_mode": "safe-loader"
+    },
+    {
+      "case_id": "profiling-grcrt1-static-pie",
+      "owner_phase": "impl_10_final_fixup_and_audit",
+      "coverage_class": "profiling-startfile-static-pie",
+      "object_source_kind": "original_sysroot_fixture",
+      "fixture_source_path": "safe/tests/io/link-compat-profiling-startfile.c",
+      "upstream_object_path": null,
+      "original_object_relpath": "profiling-grcrt1-static-pie/main.o",
+      "compile_args": [
+        "-fPIE",
+        "-pg"
+      ],
+      "link_args": [
+        "-nostartfiles",
+        "-static-pie",
+        "-pg"
+      ],
+      "required_startfiles": [
+        "/usr/lib64/grcrt1.o",
+        "/usr/lib64/crti.o",
+        "/usr/lib64/crtn.o"
+      ],
+      "exercised_dsos": [
+        "ld.so",
+        "libc"
+      ],
+      "run_mode": "skip"
     },
     {
       "case_id": "ordinary-dynamic",
