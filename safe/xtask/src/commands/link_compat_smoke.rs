@@ -1,6 +1,6 @@
 use crate::common::{
     command_output, install_path_to_root, link_compat_corpus_path, load_link_compat_corpus,
-    make_ld_library_path, repo_path, resolve_safe_workspace_path,
+    load_package_manifest, make_ld_library_path, repo_path, resolve_safe_workspace_path,
     resolve_upstream_source_build_dir, run_command, safe_root,
 };
 use anyhow::{anyhow, bail, Context, Result};
@@ -21,6 +21,8 @@ pub struct Args {
     pub install_root: PathBuf,
     #[arg(long, default_value = "work/original-build")]
     pub build_root: PathBuf,
+    #[arg(long, default_value_t = false)]
+    pub strict_dev_assets: bool,
 }
 
 pub fn run(args: Args) -> Result<()> {
@@ -44,6 +46,9 @@ pub fn run(args: Args) -> Result<()> {
     let corpus = load_link_compat_corpus()?;
     verify_final_corpus_coverage(&corpus)?;
     verify_final_manifest_closure()?;
+    if args.strict_dev_assets {
+        verify_strict_dev_assets(&install_root, &build_root)?;
+    }
     let scratch = safe_root().join("work/link-smoke");
     let original_objects_root = scratch.join("original-objects");
     let relink_root = scratch.join("relinked");
@@ -261,6 +266,146 @@ fn verify_final_manifest_closure() -> Result<()> {
 fn is_code_bearing_dev_link_path(path: &str) -> bool {
     (path.starts_with("/usr/lib64/") || path.starts_with("/usr/lib64/audit/"))
         && (path.ends_with(".o") || path.ends_with(".a") || path.ends_with(".so"))
+}
+
+fn verify_strict_dev_assets(install_root: &Path, build_root: &Path) -> Result<()> {
+    let manifest = load_package_manifest("libc6-dev")?;
+    let original_root = build_root.join("testroot.pristine");
+    let mut failures = Vec::new();
+
+    for entry in manifest.entries {
+        if entry.path.ends_with(".a") {
+            let safe_path = install_path_to_root(install_root, &entry.path);
+            if !safe_path.exists() {
+                failures.push(format!("missing installed static archive {}", entry.path));
+                continue;
+            }
+            if entry.asset_kind == "synthetic_empty_archive" {
+                let members = archive_members(&safe_path)?;
+                let symbols = global_defined_symbols(&safe_path)?;
+                if !members.is_empty() || !symbols.is_empty() {
+                    failures.push(format!(
+                        "{} synthetic archive must stay empty; members={:?} symbols={:?}",
+                        entry.path, members, symbols
+                    ));
+                }
+                continue;
+            }
+            let original_path = install_path_to_root(&original_root, &entry.path);
+            if !original_path.exists() {
+                failures.push(format!(
+                    "missing original static archive oracle {} for {}",
+                    original_path.display(),
+                    entry.path
+                ));
+                continue;
+            }
+            if !is_ar_archive(&safe_path)? || !is_ar_archive(&original_path)? {
+                let safe_contents = fs::read(&safe_path)
+                    .with_context(|| format!("failed to read {}", safe_path.display()))?;
+                let original_contents = fs::read(&original_path)
+                    .with_context(|| format!("failed to read {}", original_path.display()))?;
+                if safe_contents != original_contents {
+                    failures.push(format!("{} linker-script contents mismatch", entry.path));
+                }
+                continue;
+            }
+            let safe_members = archive_members(&safe_path)?;
+            let original_members = archive_members(&original_path)?;
+            if safe_members != original_members {
+                failures.push(format!(
+                    "{} archive member list mismatch: original {} members, safe {} members",
+                    entry.path,
+                    original_members.len(),
+                    safe_members.len()
+                ));
+            }
+            let safe_symbols = global_defined_symbols(&safe_path)?;
+            let original_symbols = global_defined_symbols(&original_path)?;
+            if safe_symbols != original_symbols {
+                failures.push(format!(
+                    "{} global symbol set mismatch: original {} symbols, safe {} symbols",
+                    entry.path,
+                    original_symbols.len(),
+                    safe_symbols.len()
+                ));
+            }
+        }
+    }
+
+    for startfile in REQUIRED_STARTFILES {
+        let install_path = format!("/usr/lib64/{startfile}");
+        let safe_path = install_path_to_root(install_root, &install_path);
+        let original_path = install_path_to_root(&original_root, &install_path);
+        if !safe_path.exists() {
+            failures.push(format!("missing installed startfile {install_path}"));
+            continue;
+        }
+        if !original_path.exists() {
+            failures.push(format!(
+                "missing original startfile oracle {} for {}",
+                original_path.display(),
+                install_path
+            ));
+            continue;
+        }
+        if let Err(error) = ensure_relocatable_object(&safe_path) {
+            failures.push(format!("{install_path}: {error:#}"));
+        }
+        let safe_symbols = global_defined_symbols(&safe_path)?;
+        let original_symbols = global_defined_symbols(&original_path)?;
+        if safe_symbols != original_symbols {
+            failures.push(format!(
+                "{} global symbol set mismatch: original {:?}, safe {:?}",
+                install_path, original_symbols, safe_symbols
+            ));
+        }
+    }
+
+    if failures.is_empty() {
+        Ok(())
+    } else {
+        bail!(
+            "strict development asset checks failed:\n{}",
+            failures.join("\n")
+        )
+    }
+}
+
+const REQUIRED_STARTFILES: &[&str] = &[
+    "Mcrt1.o", "Scrt1.o", "crt1.o", "crti.o", "crtn.o", "gcrt1.o", "grcrt1.o", "rcrt1.o",
+];
+
+fn is_ar_archive(path: &Path) -> Result<bool> {
+    let bytes = fs::read(path).with_context(|| format!("failed to read {}", path.display()))?;
+    Ok(bytes.starts_with(b"!<arch>\n"))
+}
+
+fn archive_members(path: &Path) -> Result<Vec<String>> {
+    let output = command_output(Command::new("ar").arg("t").arg(path))
+        .with_context(|| format!("failed to list archive members for {}", path.display()))?;
+    Ok(output.lines().map(ToString::to_string).collect())
+}
+
+fn global_defined_symbols(path: &Path) -> Result<BTreeSet<String>> {
+    let output = command_output(Command::new("nm").arg("-g").arg("--defined-only").arg(path))
+        .with_context(|| format!("failed to list global symbols for {}", path.display()))?;
+    Ok(output
+        .lines()
+        .filter_map(|line| line.split_whitespace().last().map(ToString::to_string))
+        .collect())
+}
+
+fn ensure_relocatable_object(path: &Path) -> Result<()> {
+    let header = command_output(Command::new("readelf").arg("-h").arg(path))
+        .with_context(|| format!("failed to read ELF header for {}", path.display()))?;
+    if header.contains("Type:                              REL")
+        || header.contains("Type:                              DYN")
+        || header.contains("Type:                              EXEC")
+    {
+        return Ok(());
+    }
+    bail!("not a valid ELF object: {}", path.display())
 }
 
 fn relink_case(

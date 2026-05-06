@@ -30,5 +30,6 @@ pub fn run(args: Args) -> Result<()> {
         build_root: args.build_root,
         docker_image: args.docker_image,
         privileged_container_tests: args.privileged_container_tests,
+        require_execution_ledger: false,
     })
 }

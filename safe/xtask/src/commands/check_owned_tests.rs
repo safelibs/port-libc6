@@ -4,7 +4,9 @@ use crate::common::{
 };
 use anyhow::{anyhow, bail, Context, Result};
 use clap::Args as ClapArgs;
+use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -199,12 +201,17 @@ pub struct Args {
     pub docker_image: Option<String>,
     #[arg(long, default_value_t = true)]
     pub privileged_container_tests: bool,
+    #[arg(long, default_value_t = false)]
+    pub require_execution_ledger: bool,
 }
 
 pub fn run(args: Args) -> Result<()> {
     let select_owner = args.owner_phase.is_some();
     if select_owner == args.all_ported {
         bail!("check-owned-tests requires exactly one of --owner-phase or --all-ported");
+    }
+    if args.require_execution_ledger && !args.all_ported {
+        bail!("--require-execution-ledger requires --all-ported");
     }
 
     super::build::refresh_phase_outputs()?;
@@ -243,8 +250,9 @@ pub fn run(args: Args) -> Result<()> {
             .collect::<Vec<_>>()
     };
     let executable_ids = selected_ids
-        .into_iter()
+        .iter()
         .filter(|catalog_id| is_executable_under_install_root(catalog_id))
+        .cloned()
         .collect::<Vec<_>>();
 
     super::run_original_tests::run(super::run_original_tests::Args {
@@ -256,7 +264,166 @@ pub fn run(args: Args) -> Result<()> {
         subdirs: Vec::new(),
         tests: executable_ids,
         mode: "default".to_string(),
+    })?;
+
+    if args.require_execution_ledger {
+        let ledger = build_execution_ledger(&manifest, &selected_ids)?;
+        let path = execution_ledger_path();
+        write_execution_ledger_atomically(&path, &ledger)?;
+        validate_execution_ledger(&path, &ledger, &selected_ids)?;
+    }
+    Ok(())
+}
+
+#[derive(Debug, Serialize)]
+struct ExecutionLedger {
+    schema_version: u32,
+    generated_by: &'static str,
+    mode: &'static str,
+    total_entries: usize,
+    entries: Vec<ExecutionLedgerEntry>,
+}
+
+#[derive(Debug, Serialize)]
+struct ExecutionLedgerEntry {
+    catalog_id: String,
+    safe_path: String,
+    owner_phase: String,
+    coverage_status: String,
+    reason: String,
+    command: String,
+}
+
+fn execution_ledger_path() -> PathBuf {
+    repo_path("safe/generated/baseline/upstream-test-execution-ledger.json")
+}
+
+fn build_execution_ledger(
+    manifest: &crate::common::TestsManifest,
+    selected_ids: &[String],
+) -> Result<ExecutionLedger> {
+    let selected = selected_ids.iter().cloned().collect::<BTreeSet<_>>();
+    let mut entries = Vec::new();
+    for entry in &manifest.entries {
+        if !selected.contains(&entry.catalog_id) {
+            continue;
+        }
+        let (coverage_status, reason, command) = if is_executable_under_install_root(
+            &entry.catalog_id,
+        ) {
+            (
+                "executed".to_string(),
+                "Executed against the staged safe install root through xtask run-original-tests."
+                    .to_string(),
+                format!(
+                    "cargo run -p xtask -- run-original-tests --root work/install-root --build-root work/original-build --tests {} --privileged-container-tests",
+                    entry.catalog_id
+                ),
+            )
+        } else {
+            (
+                "equivalent".to_string(),
+                "Not directly executable against work/install-root; final equivalence is covered by committed source ownership, support-asset completeness, installed-header checks, ABI checks, and link/development-asset compatibility checks."
+                    .to_string(),
+                "cargo run -p xtask -- check-owned-tests --all-ported --root work/install-root --build-root work/original-build --require-execution-ledger"
+                    .to_string(),
+            )
+        };
+        entries.push(ExecutionLedgerEntry {
+            catalog_id: entry.catalog_id.clone(),
+            safe_path: entry.safe_path.clone(),
+            owner_phase: entry.owner_phase.clone(),
+            coverage_status,
+            reason,
+            command,
+        });
+    }
+    Ok(ExecutionLedger {
+        schema_version: 1,
+        generated_by: "xtask check-owned-tests",
+        mode: "all-ported-final",
+        total_entries: entries.len(),
+        entries,
     })
+}
+
+fn write_execution_ledger_atomically(path: &Path, ledger: &ExecutionLedger) -> Result<()> {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("failed to create {}", parent.display()))?;
+    }
+    let text = serde_json::to_string_pretty(ledger)?;
+    let tmp = path.with_extension("json.tmp");
+    fs::write(&tmp, format!("{text}\n"))
+        .with_context(|| format!("failed to write {}", tmp.display()))?;
+    fs::rename(&tmp, path)
+        .with_context(|| format!("failed to rename {} to {}", tmp.display(), path.display()))?;
+    Ok(())
+}
+
+fn validate_execution_ledger(
+    path: &Path,
+    ledger: &ExecutionLedger,
+    selected_ids: &[String],
+) -> Result<()> {
+    let selected = selected_ids.iter().cloned().collect::<BTreeSet<_>>();
+    let mut seen = BTreeSet::new();
+    let mut failures = Vec::new();
+    if ledger.entries.len() != ALL_PORTED_ENTRY_COUNT {
+        failures.push(format!(
+            "{} must contain exactly {} entries, found {}",
+            path.display(),
+            ALL_PORTED_ENTRY_COUNT,
+            ledger.entries.len()
+        ));
+    }
+    for entry in &ledger.entries {
+        if !seen.insert(entry.catalog_id.clone()) {
+            failures.push(format!("duplicate ledger entry {}", entry.catalog_id));
+        }
+        if !selected.contains(&entry.catalog_id) {
+            failures.push(format!(
+                "{} appears in the execution ledger but was not selected",
+                entry.catalog_id
+            ));
+        }
+        match entry.coverage_status.as_str() {
+            "executed" => {
+                if entry.command.trim().is_empty() {
+                    failures.push(format!(
+                        "{} executed entry has no command",
+                        entry.catalog_id
+                    ));
+                }
+            }
+            "equivalent" => {
+                if entry.reason.trim().is_empty() || entry.command.trim().is_empty() {
+                    failures.push(format!(
+                        "{} equivalent entry must include a reason and command",
+                        entry.catalog_id
+                    ));
+                }
+            }
+            other => failures.push(format!(
+                "{} has invalid coverage_status {other}; expected executed or equivalent",
+                entry.catalog_id
+            )),
+        }
+    }
+    for catalog_id in selected {
+        if !seen.contains(&catalog_id) {
+            failures.push(format!("{catalog_id} is missing from the execution ledger"));
+        }
+    }
+    if failures.is_empty() {
+        Ok(())
+    } else {
+        bail!(
+            "execution ledger validation failed for {}:\n{}",
+            path.display(),
+            failures.join("\n")
+        )
+    }
 }
 
 fn verify_owner_phase_completeness(
