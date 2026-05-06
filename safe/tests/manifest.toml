@@ -1,5 +1,5 @@
 [metadata]
-phase = "impl_09_math_and_aux_dsos"
+phase = "impl_06_io_stdio_string_path"
 notes = [
     "Every entry from test-port-plan.json is represented exactly once.",
     "Entries keep any already-committed later-phase port status in place while completed phases are refreshed from the ownership plan.",

@@ -19,9 +19,15 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use toml::Value as TomlValue;
 
+const PHASE_06_ID: &str = "impl_06_io_stdio_string_path";
+const PHASE_07_ID: &str = "impl_07_nss_resolver_nscd";
+const PHASE_08_ID: &str = "impl_08_locale_iconv_posix_parsers";
+const PHASE_09_ID: &str = "impl_09_math_and_aux_dsos";
+const FINAL_CUTOVER_PHASE: &str = "impl_10_final_fixup_and_audit";
+
 const PHASE_EXTRA_NOTES: [&str; 4] = [
-    "Phase 9 extends the safe-built public DSO cutover through libdl, libm, libmvec, libpcprofile, librt, and libutil, replaces the remaining math/dev/time helper wrappers with Rust frontends, and keeps explicit backend inventory only for the temporary backend DSOs and helper payloads that remain phase-10 cleanup.",
-    "The safe test tree carries every phase-9-owned argp, catgets, debug, dlfcn, gmon, gnulib, intl, login, math, mathvec, resource, rt, sunrpc, sysvipc, wcsmbs, wctype, and normalized sysdeps entry from the committed ownership plan together with the tracked manual zero-entry sentinel and shared script rows.",
+    "Phase 6 moves the first libc-family public DSO payloads onto the safe build path, keeps private baseline backend copies explicitly inventoried, and records remaining libc6-dev build-testroot carryovers as final-cutover obligations.",
+    "The safe test tree carries every phase-6-owned stdio, stdlib, libio, string, io, time, dirent, assert, ctype, termios, timezone, normalized sysdeps, generated placeholder, and shared script row from the committed ownership plan.",
     "check-owned-tests validates exact ownership completeness against the committed test catalog and test-port plan before it executes ported rows.",
     "stage-upstream-build is the only supported way to adopt or recreate safe/work/original-build for relink smokes, package derivation, and upstream-test execution.",
 ];
@@ -195,6 +201,7 @@ pub fn run(args: Args) -> Result<()> {
     validate_args(&args)?;
     refresh_phase_outputs()?;
     super::stage_upstream_build::ensure_default_staged_upstream_build()?;
+    build_rust_runtime_crates(&args)?;
     let artifact_root = build_output_root(&args);
     build_hybrid_abi_shells(&args, &artifact_root)?;
     write_active_build_state(&args, &artifact_root)?;
@@ -255,6 +262,25 @@ fn profile_dir(profile: &str) -> &str {
     }
 }
 
+fn build_rust_runtime_crates(args: &Args) -> Result<()> {
+    let mut command = Command::new("cargo");
+    command
+        .arg("build")
+        .arg("-p")
+        .arg("core-runtime")
+        .arg("-p")
+        .arg("libc6")
+        .arg("-p")
+        .arg("libpthread")
+        .arg("-p")
+        .arg("libthread-db")
+        .current_dir(safe_root());
+    if args.profile == "release" {
+        command.arg("--release");
+    }
+    run_command(&mut command).context("failed to build Rust runtime crates")
+}
+
 fn build_hybrid_abi_shells(args: &Args, artifact_root: &Path) -> Result<()> {
     if artifact_root.exists() {
         fs::remove_dir_all(artifact_root)
@@ -308,6 +334,11 @@ fn link_hybrid_shell(
         .join(format!("{}.S", baseline.dso_id));
     fs::write(&source_path, render_shell_source(baseline))
         .with_context(|| format!("failed to write {}", source_path.display()))?;
+    let resolver_path = scratch_root
+        .join("sources")
+        .join(format!("{}-resolver.c", baseline.dso_id));
+    fs::write(&resolver_path, render_forwarding_resolver_source(baseline))
+        .with_context(|| format!("failed to write {}", resolver_path.display()))?;
 
     let version_script = safe_root()
         .join("generated/version-scripts")
@@ -325,7 +356,11 @@ fn link_hybrid_shell(
     if baseline_has_version_defs(baseline) {
         command.arg(format!("-Wl,--version-script={}", version_script.display()));
     }
-    command.arg("-o").arg(&output_path).arg(&source_path);
+    command
+        .arg("-o")
+        .arg(&output_path)
+        .arg(&source_path)
+        .arg(&resolver_path);
     run_command(&mut command).with_context(|| {
         format!(
             "failed to link hybrid shell {} at {}",
@@ -355,6 +390,8 @@ fn copy_public_cutover_dso(
         output_install_path,
     )?)
     .with_context(|| format!("failed to resolve staged upstream payload {output_install_path}"))?;
+    write_forwarding_veneer_oracle(baseline, scratch_root)?;
+    validate_private_backend_exports(baseline, &source)?;
     copy_file_or_symlink(&source, &output_path)?;
     if is_elf_payload(&output_path) {
         add_safelibs_public_note(&output_path, scratch_root, &baseline.dso_id)?;
@@ -414,7 +451,10 @@ fn resolve_upstream_install_payload(upstream_root: &Path, install_path: &str) ->
 
 fn add_safelibs_public_note(output_path: &Path, scratch_root: &Path, tag: &str) -> Result<()> {
     let note_path = scratch_root.join("notes").join(format!("{tag}.txt"));
-    let note_text = format!("phase={PHASE_ID}\nartifact={tag}\nkind=public-dso-cutover\n");
+    let note_text = format!(
+        "phase={PHASE_ID}\nowner_phase={}\nartifact={tag}\nkind=safe-build-public-dso-cutover\nrust_crates=core-runtime,libc6,libpthread,libthread-db\n",
+        owner_phase_for_dso_id(tag)
+    );
     fs::write(&note_path, &note_text)
         .with_context(|| format!("failed to write {}", note_path.display()))?;
     run_command(
@@ -454,6 +494,69 @@ fn is_elf_payload(path: &Path) -> bool {
         .status()
         .map(|status| status.success())
         .unwrap_or(false)
+}
+
+fn validate_private_backend_exports(baseline: &AbiBaseline, backend_path: &Path) -> Result<()> {
+    let dynsyms = command_output(
+        Command::new("readelf")
+            .arg("--dyn-syms")
+            .arg("--wide")
+            .arg(backend_path),
+    )
+    .with_context(|| format!("failed to inspect backend {}", backend_path.display()))?;
+    let exported = parse_defined_dynsym_names(&dynsyms);
+    let mut missing = Vec::new();
+    for export in shell_export_symbols(baseline) {
+        match export {
+            ShellExport::Plain(name) => {
+                if !exported.contains(&name) {
+                    missing.push(name);
+                }
+            }
+            ShellExport::Versioned { raw, name, version } => {
+                if !exported.contains(&raw)
+                    && !exported.contains(&format!("{name}@@{version}"))
+                    && !exported.contains(&format!("{name}@{version}"))
+                    && !exported
+                        .iter()
+                        .any(|candidate| versioned_export_matches(candidate, &name, &version))
+                {
+                    missing.push(raw);
+                }
+            }
+        }
+    }
+    if missing.is_empty() {
+        Ok(())
+    } else {
+        bail!(
+            "private backend {} for {} is missing baseline exports: {}",
+            backend_path.display(),
+            baseline.dso_id,
+            missing.join(", ")
+        )
+    }
+}
+
+fn versioned_export_matches(candidate: &str, expected_name: &str, expected_version: &str) -> bool {
+    let Some((candidate_name, candidate_version)) = split_export_version(candidate) else {
+        return false;
+    };
+    candidate_name == expected_name
+        && (candidate_version == expected_version
+            || candidate_version.starts_with(&format!("{expected_version}.")))
+}
+
+fn parse_defined_dynsym_names(text: &str) -> BTreeSet<String> {
+    let mut names = BTreeSet::new();
+    for line in text.lines() {
+        let fields = line.split_whitespace().collect::<Vec<_>>();
+        if fields.len() < 8 || !fields[0].ends_with(':') || fields[6] == "UND" {
+            continue;
+        }
+        names.insert(fields[7].to_string());
+    }
+    names
 }
 
 fn shell_output_install_path(baseline: &AbiBaseline, soname: &str) -> Result<String> {
@@ -501,13 +604,20 @@ fn render_shell_source(baseline: &AbiBaseline) -> String {
         .collect::<String>();
     let exports = shell_export_symbols(baseline);
     let mut lines = vec![
-        format!("/* Generated hybrid ABI shell for {}. */", baseline.dso_id),
+        format!(
+            "/* Generated forwarding ABI veneer set for {}. */",
+            baseline.dso_id
+        ),
+        "/* Missing Rust-provided exports resolve by exact version through dlvsym. */"
+            .to_string(),
         ".text".to_string(),
     ];
 
     if exports.is_empty() {
-        lines.extend(render_plain_stub(
-            &format!("__hybrid_abi_shell_{ident}_anchor"),
+        lines.extend(render_forwarding_veneer(
+            &format!("__safelibs_abi_shell_{ident}_anchor"),
+            "__safelibs_anchor",
+            "",
             0,
         ));
         return lines.join("\n") + "\n";
@@ -515,13 +625,13 @@ fn render_shell_source(baseline: &AbiBaseline) -> String {
 
     for (index, export) in exports.iter().enumerate() {
         match export {
-            ShellExport::Versioned(raw) => {
-                let impl_name = format!("__hybrid_export_{ident}_{index}");
-                lines.extend(render_internal_stub(&impl_name));
+            ShellExport::Versioned { raw, name, version } => {
+                let impl_name = format!("__safelibs_export_{ident}_{index}");
+                lines.extend(render_forwarding_veneer(&impl_name, name, version, index));
                 lines.push(format!(".symver {impl_name}, {raw}"));
             }
             ShellExport::Plain(name) => {
-                lines.extend(render_plain_stub(name, index));
+                lines.extend(render_forwarding_veneer(name, name, "", index));
             }
         }
     }
@@ -529,19 +639,90 @@ fn render_shell_source(baseline: &AbiBaseline) -> String {
     lines.join("\n") + "\n"
 }
 
-fn render_internal_stub(symbol: &str) -> Vec<String> {
+fn write_forwarding_veneer_oracle(baseline: &AbiBaseline, scratch_root: &Path) -> Result<()> {
+    let source_path = scratch_root
+        .join("sources")
+        .join(format!("{}-forwarding-veneers.S", baseline.dso_id));
+    fs::write(&source_path, render_shell_source(baseline))
+        .with_context(|| format!("failed to write {}", source_path.display()))
+}
+
+fn render_forwarding_veneer(
+    exported_symbol: &str,
+    backend_symbol: &str,
+    backend_version: &str,
+    index: usize,
+) -> Vec<String> {
+    let symbol_label = format!(".Lsafelibs_symbol_{index}");
+    let version_label = format!(".Lsafelibs_version_{index}");
     vec![
-        format!(".globl {symbol}"),
-        format!(".type {symbol}, @function"),
-        format!("{symbol}:"),
-        "    xor %eax, %eax".to_string(),
-        "    ret".to_string(),
-        format!(".size {symbol}, .-{symbol}"),
+        ".pushsection .rodata".to_string(),
+        format!("{symbol_label}:"),
+        format!("    .asciz \"{}\"", escape_asm_string(backend_symbol)),
+        format!("{version_label}:"),
+        format!("    .asciz \"{}\"", escape_asm_string(backend_version)),
+        ".popsection".to_string(),
+        format!(".globl {exported_symbol}"),
+        format!(".type {exported_symbol}, @function"),
+        format!("{exported_symbol}:"),
+        "    push %rax".to_string(),
+        "    push %rdi".to_string(),
+        "    push %rsi".to_string(),
+        "    push %rdx".to_string(),
+        "    push %rcx".to_string(),
+        "    push %r8".to_string(),
+        "    push %r9".to_string(),
+        format!("    leaq {symbol_label}(%rip), %rdi"),
+        format!("    leaq {version_label}(%rip), %rsi"),
+        "    call __safelibs_resolve_versioned_symbol@PLT".to_string(),
+        "    mov %rax, %r11".to_string(),
+        "    pop %r9".to_string(),
+        "    pop %r8".to_string(),
+        "    pop %rcx".to_string(),
+        "    pop %rdx".to_string(),
+        "    pop %rsi".to_string(),
+        "    pop %rdi".to_string(),
+        "    pop %rax".to_string(),
+        "    jmp *%r11".to_string(),
+        format!(".size {exported_symbol}, .-{exported_symbol}"),
     ]
 }
 
-fn render_plain_stub(symbol: &str, _index: usize) -> Vec<String> {
-    render_internal_stub(symbol)
+fn escape_asm_string(input: &str) -> String {
+    input.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
+fn render_forwarding_resolver_source(baseline: &AbiBaseline) -> String {
+    let soname = baseline.soname.as_deref().unwrap_or(&baseline.dso_id);
+    let backend_path = format!("/usr/libexec/safelibs/backends/{soname}");
+    format!(
+        r#"#define _GNU_SOURCE
+#include <dlfcn.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+static void *safelibs_backend_handle;
+
+void *__safelibs_resolve_versioned_symbol(const char *name, const char *version) {{
+    if (safelibs_backend_handle == 0) {{
+        safelibs_backend_handle = dlopen("{backend_path}", RTLD_NOW | RTLD_LOCAL);
+        if (safelibs_backend_handle == 0) {{
+            _exit(127);
+        }}
+    }}
+    void *resolved = 0;
+    if (version != 0 && version[0] != 0) {{
+        resolved = dlvsym(safelibs_backend_handle, name, version);
+    }} else {{
+        resolved = dlsym(safelibs_backend_handle, name);
+    }}
+    if (resolved == 0) {{
+        _exit(127);
+    }}
+    return resolved;
+}}
+"#
+    )
 }
 
 fn shell_export_symbols(baseline: &AbiBaseline) -> Vec<ShellExport> {
@@ -551,8 +732,12 @@ fn shell_export_symbols(baseline: &AbiBaseline) -> Vec<ShellExport> {
         if !seen.insert(raw.clone()) || is_version_marker(raw) {
             continue;
         }
-        if raw.contains("@@") || raw.contains('@') {
-            exports.push(ShellExport::Versioned(raw.clone()));
+        if let Some((name, version)) = split_export_version(raw) {
+            exports.push(ShellExport::Versioned {
+                raw: raw.clone(),
+                name: name.to_string(),
+                version: version.to_string(),
+            });
         } else {
             exports.push(ShellExport::Plain(raw.clone()));
         }
@@ -560,12 +745,23 @@ fn shell_export_symbols(baseline: &AbiBaseline) -> Vec<ShellExport> {
     exports
 }
 
+fn split_export_version(raw: &str) -> Option<(&str, &str)> {
+    if let Some((name, version)) = raw.split_once("@@") {
+        return Some((name, version));
+    }
+    raw.split_once('@')
+}
+
 fn is_version_marker(raw: &str) -> bool {
     raw == "Name" || raw.starts_with("GLIBC_")
 }
 
 enum ShellExport {
-    Versioned(String),
+    Versioned {
+        raw: String,
+        name: String,
+        version: String,
+    },
     Plain(String),
 }
 
@@ -1082,8 +1278,8 @@ against the checked-in upstream build outputs while the runtime remains hybrid.
   harness and smoke checks.
 - `cargo run -p xtask -- run-original-tests ...` populates that build tree from
   the committed safe test sources and the checked-in upstream build artifacts.
-- Phase 9 extends that committed test tree with the remaining math, aux-DSO,
-  wide-character, and shared sysdeps-owned coverage without inventing a
+- Phase 6 extends that committed test tree with the I/O, stdio, string, path,
+  time, libc-family, and normalized sysdeps-owned coverage without inventing a
   parallel workflow.
 "#,
     )?;
@@ -1097,17 +1293,16 @@ by the safe libc port.
 - `safe/tests/support/**` mirrors the committed upstream support subtree.
 - `safe/tests/manifest.toml` is the authoritative phase ownership ledger for the
   copied tests.
-- Phase 9 adds the remaining argp, catgets, debug, dlfcn, gmon, gnulib, intl,
-  login, math, mathvec, resource, rt, sunrpc, sysvipc, wcsmbs, wctype, and
-  shared sysdeps entries while preserving the earlier committed phase ownership
-  in place.
+- Phase 6 adds the stdio, stdlib, libio, string, io, time, dirent, assert,
+  ctype, termios, timezone, generated placeholder, shared script, and normalized
+  sysdeps entries while preserving later committed port statuses in place.
 "#,
     )?;
     write_text_file(
         &safe_root().join("tests/core/README.md"),
         r#"# Core Runtime Test Notes
 
-Phase 7 keeps the earlier runtime stdlib allowlist intact. Only the entropy
+Phase 6 keeps the earlier runtime stdlib allowlist intact. Only the entropy
 coverage points `tst-getrandom` and `tst-arc4random*` remain phase-5-owned;
 every other stdlib catalog entry is phase-6-owned.
 "#,
@@ -1116,7 +1311,7 @@ every other stdlib catalog entry is phase-6-owned.
     let crate_readmes = [
         (
             "safe/crates/libc6/README.md",
-            "# libc6 Runtime Port\n\nPhase 9 keeps the startup port in place, carries the low-level runtime exports under `safe/crates/libc6/src/sys/**`, and extends the safe-built public DSO cutover through libdl, libm, libmvec, libpcprofile, librt, and libutil while the remaining dev/time helper entrypoints move onto committed Rust frontends.",
+            "# libc6 Runtime Port\n\nPhase 6 keeps the startup port in place, carries the low-level runtime exports under `safe/crates/libc6/src/sys/**`, and moves the first libc-family public DSO payloads onto the safe build path while private baseline backend copies remain explicitly inventoried.",
         ),
         (
             "safe/crates/ldso/README.md",
@@ -1124,19 +1319,19 @@ every other stdlib catalog entry is phase-6-owned.
         ),
         (
             "safe/crates/core-runtime/README.md",
-            "# core-runtime\n\nPhase 9 keeps low-level syscall wrappers, errno and TLS state, futex helpers, allocator entrypoints, signal bookkeeping, and entropy interfaces under `safe/crates/core-runtime/src/**` while the libc-family package cutover extends through the remaining math and auxiliary DSO surfaces.",
+            "# core-runtime\n\nPhase 6 keeps low-level syscall wrappers, errno and TLS state, futex helpers, allocator entrypoints, signal bookkeeping, path helpers, time helpers, and entropy interfaces under `safe/crates/core-runtime/src/**` while the libc-family package cutover begins.",
         ),
         (
             "safe/crates/libpthread/README.md",
-            "# libpthread Runtime State\n\nPhase 9 keeps the Rust-side pthread bookkeeping, futex-backed synchronization helpers, and setxid coordination under `safe/crates/libpthread/src/**` while the remaining math and auxiliary DSO cutovers reuse the same safe-built packaging path.",
+            "# libpthread Runtime State\n\nPhase 6 keeps the Rust-side pthread bookkeeping, futex-backed synchronization helpers, and setxid coordination under `safe/crates/libpthread/src/**` while the first libc-family DSO cutover reuses the safe-built packaging path.",
         ),
         (
             "safe/crates/libthread-db/README.md",
-            "# libthread-db Surface\n\nPhase 9 records the debugger-facing proc-service and thread-db surface under `safe/crates/libthread-db/src/**` while the remaining libc-family cutovers continue to reuse the same safe build path.",
+            "# libthread-db Surface\n\nPhase 6 records the debugger-facing proc-service and thread-db surface under `safe/crates/libthread-db/src/**` while libc-family cutover provenance is tracked through the safe build path.",
         ),
         (
             "safe/crates/aux-dsos/README.md",
-            "# Hybrid Aux DSOs\n\nPhase 9 tracks the remaining math and auxiliary DSOs through generated version scripts, safe-build public provenance, and explicit private backend inventory for the final cleanup phase.",
+            "# Hybrid Aux DSOs\n\nLater phases extend the same generated version-script, safe-build public provenance, and explicit private backend inventory model introduced by the phase-6 libc-family cutover.",
         ),
         (
             "safe/crates/compat-asm/x86_64/README.md",
@@ -1258,7 +1453,7 @@ fn refresh_package_scope() -> Result<()> {
     let mut doc: PackageScopeDoc =
         load_current_or_head_doc("safe/upstream-compat/package-scope.toml")?;
     doc.metadata.phase = PHASE_ID.to_string();
-    let note = "Phase 9 keeps required package manifests in place, extends the libc-family public DSO cutover through libdl, libm, libmvec, libpcprofile, librt, and libutil, ships the remaining dev/time entrypoints as Rust frontends, and tracks only the temporary backend DSOs plus helper backends still delegated to preserved upstream payloads.";
+    let note = "Phase 6 keeps required package manifests in place, moves the first libc-family public DSOs and public libc6-dev link names onto the safe build path, and tracks private baseline backend DSOs plus remaining libc6-dev startup/static/audit carryovers as explicit final-cutover obligations.";
     if !doc.metadata.notes.iter().any(|entry| entry == note) {
         doc.metadata.notes.push(note.to_string());
     }
@@ -1281,7 +1476,7 @@ fn refresh_cve_status() -> Result<()> {
     let path = safe_root().join("upstream-compat/cve-status.toml");
     let mut doc: CveStatusDoc = load_current_or_head_doc("safe/upstream-compat/cve-status.toml")?;
     doc.metadata.phase = PHASE_ID.to_string();
-    let note = "Phase 9 updates the math, aux-DSO, sunrpc, x32, and remaining helper-tool CVE dispositions after the libdl/libm/libmvec/libpcprofile/librt/libutil public provenance cutover and the dev/time helper frontend cutover.";
+    let note = "Phase 6 updates runtime, path, time, entropy, realpath, strftime, makecontext, and pointer-guard CVE dispositions after the first libc-family public provenance cutover.";
     if !doc.metadata.notes.iter().any(|entry| entry == note) {
         doc.metadata.notes.push(note.to_string());
     }
@@ -1352,7 +1547,7 @@ fn refresh_safety_policy() -> Result<()> {
         metadata.insert(
             "phase_note".to_string(),
             TomlValue::String(
-                "Phase 9 keeps the reviewed unsafe and fallback policy entries in sync while libdl/libm/libmvec/libpcprofile/librt/libutil move onto the safe-build public provenance path and the remaining dev/time helper entrypoints move off temporary wrappers and onto Rust frontends.".to_string(),
+                "Phase 6 keeps the reviewed unsafe and fallback policy entries in sync while the first libc-family public DSOs move onto the safe-build public provenance path and private backend copies remain explicitly tracked.".to_string(),
             ),
         );
     }
@@ -1361,7 +1556,7 @@ fn refresh_safety_policy() -> Result<()> {
             .entry("notes")
             .or_insert_with(|| TomlValue::Array(Vec::new()));
         if let Some(notes) = notes.as_array_mut() {
-            let note = "Phase 9 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope tracks the temporary math/aux DSO backends plus preserved helper backends explicitly.";
+            let note = "Phase 6 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope tracks the private libc-family backend DSOs and preserved helper backends explicitly.";
             if !notes
                 .iter()
                 .filter_map(TomlValue::as_str)
@@ -1577,19 +1772,33 @@ fn refresh_fallback_inventory() -> Result<()> {
                 path: path.to_string(),
                 source_path: Some(format!("build/testroot.pristine{}", path.replace("/usr/libexec/safelibs/backends", "/usr/lib64"))),
                 classification: "private_baseline_backend_dso".to_string(),
-                owning_phase: PHASE_ID.to_string(),
+                owning_phase: owner_phase_for_libc_family_path(path).to_string(),
                 shipped: true,
                 package_scope_refs: vec![path.to_string()],
                 audit_notes: notes.to_string(),
             },
         );
     }
+    upsert_fallback_entry(
+        &mut inventory.entries,
+        FallbackInventoryEntry {
+            path: "safe/crates/compat-asm/x86_64/forwarding-veneer-template.S".to_string(),
+            source_path: Some(
+                "safe/crates/compat-asm/x86_64/forwarding-veneer-template.S".to_string(),
+            ),
+            classification: "compat_asm_forwarding_veneer_template".to_string(),
+            owning_phase: PHASE_06_ID.to_string(),
+            shipped: false,
+            package_scope_refs: Vec::new(),
+            audit_notes: "Checked-in amd64 template for generated dlvsym forwarding veneers; the package build emits per-DSO generated sources from this shape and does not ship the template itself.".to_string(),
+        },
+    );
 
     inventory.metadata = json!({
         "notes": [
             "This inventory is the single committed ledger of non-Rust source, script, assembly, template, and fallback assets planned under safe/**.",
             "Later phases must update this file in place instead of maintaining ad hoc fallback lists.",
-            "Phase 9 keeps the public libc-family DSOs on the safe build path through the remaining math and auxiliary DSOs, removes the temporary dev/time helper wrappers, and limits remaining copied-upstream payloads to explicitly tracked backend binaries plus later-phase libc6-dev obligations."
+            "Phase 6 moves the first libc-family public DSOs onto the safe build path and limits remaining copied-upstream runtime payloads to explicitly tracked private backend binaries plus later-phase libc6-dev obligations."
         ],
         "phase": PHASE_ID
     });
@@ -1601,6 +1810,7 @@ fn normalize_libc_family_package_manifests() -> Result<()> {
 
     let libc6_path = safe_root().join("generated/baseline/package-files/libc6.json");
     let mut libc6: PackageManifest = load_json(&libc6_path)?;
+    set_package_manifest_phase(&mut libc6);
     for path in [
         "/usr/lib64/ld-linux-x86-64.so.2",
         "/usr/lib64/libBrokenLocale.so.1",
@@ -1622,8 +1832,8 @@ fn normalize_libc_family_package_manifests() -> Result<()> {
                 asset_kind: "rust_target".to_string(),
                 executable: false,
                 symlink_target: None,
-                owner_phase: Some(PHASE_ID.to_string()),
-                verification: Some("libc-family-cutover".to_string()),
+                owner_phase: Some(owner_phase_for_libc_family_path(path).to_string()),
+                verification: Some(verification_for_libc_family_path(path).to_string()),
             },
         );
     }
@@ -1648,8 +1858,8 @@ fn normalize_libc_family_package_manifests() -> Result<()> {
                 asset_kind: "private_baseline_backend_dso".to_string(),
                 executable: false,
                 symlink_target: None,
-                owner_phase: Some(PHASE_ID.to_string()),
-                verification: Some("libc-family-cutover".to_string()),
+                owner_phase: Some(owner_phase_for_libc_family_path(path).to_string()),
+                verification: Some(verification_for_libc_family_path(path).to_string()),
             },
         );
     }
@@ -1683,17 +1893,8 @@ fn normalize_libc_family_package_manifests() -> Result<()> {
                 asset_kind: "rust_target".to_string(),
                 executable: false,
                 symlink_target: None,
-                owner_phase: Some(PHASE_ID.to_string()),
-                verification: Some(match path {
-                    "/usr/lib64/libanl.so.1"
-                    | "/usr/lib64/libnsl.so.1"
-                    | "/usr/lib64/libnss_compat.so.2"
-                    | "/usr/lib64/libnss_dns.so.2"
-                    | "/usr/lib64/libnss_files.so.2"
-                    | "/usr/lib64/libnss_hesiod.so.2"
-                    | "/usr/lib64/libresolv.so.2" => "network-tools".to_string(),
-                    _ => "dev-and-time-tools".to_string(),
-                }),
+                owner_phase: Some(owner_phase_for_libc_family_path(path).to_string()),
+                verification: Some(verification_for_libc_family_path(path).to_string()),
             },
         );
     }
@@ -1714,19 +1915,8 @@ fn normalize_libc_family_package_manifests() -> Result<()> {
                 asset_kind: "private_baseline_backend_dso".to_string(),
                 executable: false,
                 symlink_target: None,
-                owner_phase: Some(PHASE_ID.to_string()),
-                verification: Some(match *path {
-                    "/usr/libexec/safelibs/backends/libanl.so.1"
-                    | "/usr/libexec/safelibs/backends/libnsl.so.1"
-                    | "/usr/libexec/safelibs/backends/libnss_compat.so.2"
-                    | "/usr/libexec/safelibs/backends/libnss_dns.so.2"
-                    | "/usr/libexec/safelibs/backends/libnss_files.so.2"
-                    | "/usr/libexec/safelibs/backends/libnss_hesiod.so.2"
-                    | "/usr/libexec/safelibs/backends/libresolv.so.2" => {
-                        "network-tools".to_string()
-                    }
-                    _ => "dev-and-time-tools".to_string(),
-                }),
+                owner_phase: Some(owner_phase_for_libc_family_path(path).to_string()),
+                verification: Some(verification_for_libc_family_path(path).to_string()),
             },
         );
     }
@@ -1735,6 +1925,7 @@ fn normalize_libc_family_package_manifests() -> Result<()> {
 
     let libc6_dev_path = safe_root().join("generated/baseline/package-files/libc6-dev.json");
     let mut libc6_dev: PackageManifest = load_json(&libc6_dev_path)?;
+    set_package_manifest_phase(&mut libc6_dev);
     for path in [
         "/usr/lib64/libBrokenLocale.so",
         "/usr/lib64/libc.so",
@@ -1772,8 +1963,8 @@ fn normalize_libc_family_package_manifests() -> Result<()> {
                 } else {
                     None
                 },
-                owner_phase: Some(PHASE_ID.to_string()),
-                verification: Some("libc-family-cutover".to_string()),
+                owner_phase: Some(owner_phase_for_libc_family_path(path).to_string()),
+                verification: Some(verification_for_libc_family_path(path).to_string()),
             },
         );
     }
@@ -1789,7 +1980,7 @@ fn normalize_libc_family_package_manifests() -> Result<()> {
             asset_kind: "generated_compat_archive".to_string(),
             executable: false,
             symlink_target: None,
-            owner_phase: Some(PHASE_ID.to_string()),
+            owner_phase: Some(PHASE_06_ID.to_string()),
             verification: Some("libc-family-cutover".to_string()),
         },
     );
@@ -1831,14 +2022,8 @@ fn normalize_libc_family_package_manifests() -> Result<()> {
                     "/usr/lib64/libresolv.so" => Some("../../lib64/libresolv.so.2".to_string()),
                     _ => None,
                 },
-                owner_phase: Some(PHASE_ID.to_string()),
-                verification: Some(match *path {
-                    "/usr/lib64/libanl.so"
-                    | "/usr/lib64/libnss_compat.so"
-                    | "/usr/lib64/libnss_hesiod.so"
-                    | "/usr/lib64/libresolv.so" => "network-tools".to_string(),
-                    _ => "dev-and-time-tools".to_string(),
-                }),
+                owner_phase: Some(owner_phase_for_libc_family_path(path).to_string()),
+                verification: Some(verification_for_libc_family_path(path).to_string()),
             },
         );
     }
@@ -1860,6 +2045,63 @@ fn public_build_source_path(build_root: &str, install_path: &str) -> String {
     )
 }
 
+fn owner_phase_for_dso_id(dso_id: &str) -> &'static str {
+    match dso_id {
+        "libanl" | "libnsl" | "libnss_compat" | "libnss_dns" | "libnss_files"
+        | "libnss_hesiod" | "libresolv" => PHASE_07_ID,
+        "libBrokenLocale" => PHASE_08_ID,
+        "libdl" | "libm" | "libmvec" | "libpcprofile" | "librt" | "libutil" => PHASE_09_ID,
+        _ => PHASE_06_ID,
+    }
+}
+
+fn owner_phase_for_libc_family_path(path: &str) -> &'static str {
+    match path {
+        "/usr/lib64/libanl.so.1"
+        | "/usr/lib64/libnsl.so.1"
+        | "/usr/lib64/libnss_compat.so.2"
+        | "/usr/lib64/libnss_dns.so.2"
+        | "/usr/lib64/libnss_files.so.2"
+        | "/usr/lib64/libnss_hesiod.so.2"
+        | "/usr/lib64/libresolv.so.2"
+        | "/usr/lib64/libanl.so"
+        | "/usr/lib64/libnss_compat.so"
+        | "/usr/lib64/libnss_hesiod.so"
+        | "/usr/lib64/libresolv.so"
+        | "/usr/libexec/safelibs/backends/libanl.so.1"
+        | "/usr/libexec/safelibs/backends/libnsl.so.1"
+        | "/usr/libexec/safelibs/backends/libnss_compat.so.2"
+        | "/usr/libexec/safelibs/backends/libnss_dns.so.2"
+        | "/usr/libexec/safelibs/backends/libnss_files.so.2"
+        | "/usr/libexec/safelibs/backends/libnss_hesiod.so.2"
+        | "/usr/libexec/safelibs/backends/libresolv.so.2" => PHASE_07_ID,
+        "/usr/lib64/libBrokenLocale.so.1" | "/usr/lib64/libBrokenLocale.so" => PHASE_08_ID,
+        "/usr/lib64/libdl.so.2"
+        | "/usr/lib64/libm.so.6"
+        | "/usr/lib64/libmvec.so.1"
+        | "/usr/lib64/libpcprofile.so"
+        | "/usr/lib64/librt.so.1"
+        | "/usr/lib64/libutil.so.1"
+        | "/usr/lib64/libm.so"
+        | "/usr/lib64/libmvec.so"
+        | "/usr/libexec/safelibs/backends/libdl.so.2"
+        | "/usr/libexec/safelibs/backends/libm.so.6"
+        | "/usr/libexec/safelibs/backends/libmvec.so.1"
+        | "/usr/libexec/safelibs/backends/libpcprofile.so"
+        | "/usr/libexec/safelibs/backends/librt.so.1"
+        | "/usr/libexec/safelibs/backends/libutil.so.1" => PHASE_09_ID,
+        _ => PHASE_06_ID,
+    }
+}
+
+fn verification_for_libc_family_path(path: &str) -> &'static str {
+    match owner_phase_for_libc_family_path(path) {
+        PHASE_07_ID => "network-tools",
+        PHASE_09_ID => "dev-and-time-tools",
+        _ => "libc-family-cutover",
+    }
+}
+
 fn normalize_tool_package_manifests() -> Result<()> {
     let mut manifests = BTreeMap::<String, PackageManifest>::new();
 
@@ -1879,6 +2121,7 @@ fn normalize_tool_package_manifests() -> Result<()> {
                     entries: Vec::new(),
                 })
             });
+        set_package_manifest_phase(manifest);
         upsert_package_entry(
             &mut manifest.entries,
             PackageEntry {
@@ -2047,7 +2290,7 @@ fn update_package_scope_libc_family_files(files: &mut Vec<TomlValue>) -> Result<
             value.insert("temporary".to_string(), TomlValue::Boolean(true));
             value.insert(
                 "final_cutover_phase".to_string(),
-                TomlValue::String("impl_10_final_fixup_and_audit".to_string()),
+                TomlValue::String(FINAL_CUTOVER_PHASE.to_string()),
             );
         }
     }
@@ -2092,6 +2335,7 @@ fn update_package_scope_tool_files(files: &mut Vec<TomlValue>) -> Result<()> {
 fn normalize_locale_script_package_manifest() -> Result<()> {
     let path = safe_root().join("generated/baseline/package-files/locales.json");
     let mut manifest: PackageManifest = load_json(&path)?;
+    set_package_manifest_phase(&mut manifest);
     for (install_path, source_path) in LOCALE_DATA_FILES {
         upsert_package_entry(
             &mut manifest.entries,
@@ -2105,7 +2349,7 @@ fn normalize_locale_script_package_manifest() -> Result<()> {
                 asset_kind: "data_asset".to_string(),
                 executable: false,
                 symlink_target: None,
-                owner_phase: Some(PHASE_ID.to_string()),
+                owner_phase: Some(PHASE_08_ID.to_string()),
                 verification: Some("locale-tools".to_string()),
             },
         );
@@ -2123,7 +2367,7 @@ fn normalize_locale_script_package_manifest() -> Result<()> {
                 asset_kind: "script_asset".to_string(),
                 executable,
                 symlink_target: None,
-                owner_phase: Some(PHASE_ID.to_string()),
+                owner_phase: Some(PHASE_08_ID.to_string()),
                 verification: Some("locale-tools".to_string()),
             },
         );
@@ -2170,7 +2414,7 @@ fn mark_package_scope_temporary(files: &mut [TomlValue], path: &str) {
         table.insert("temporary".to_string(), TomlValue::Boolean(true));
         table.insert(
             "final_cutover_phase".to_string(),
-            TomlValue::String("impl_10_final_fixup_and_audit".to_string()),
+            TomlValue::String(FINAL_CUTOVER_PHASE.to_string()),
         );
     }
 }
@@ -2253,6 +2497,18 @@ fn upsert_package_entry(entries: &mut Vec<PackageEntry>, new_entry: PackageEntry
         *existing = new_entry;
     } else {
         entries.push(new_entry);
+    }
+}
+
+fn set_package_manifest_phase(manifest: &mut PackageManifest) {
+    let Some(root) = manifest.metadata.as_object_mut() else {
+        return;
+    };
+    let metadata = root
+        .entry("metadata".to_string())
+        .or_insert_with(|| json!({}));
+    if let Some(metadata) = metadata.as_object_mut() {
+        metadata.insert("phase".to_string(), json!(PHASE_ID));
     }
 }
 

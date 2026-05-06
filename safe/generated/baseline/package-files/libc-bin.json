@@ -11,7 +11,7 @@
       "original/debian/sysdeps/linux.mk"
     ],
     "package": "libc-bin",
-    "phase": "impl_01_safe_bootstrap",
+    "phase": "impl_06_io_stdio_string_path",
     "scope": "required_package"
   },
   "entries": [

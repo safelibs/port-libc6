@@ -14,7 +14,7 @@ pub struct Args {
     pub build_root: PathBuf,
     #[arg(long)]
     pub docker_image: Option<String>,
-    #[arg(long, default_value_t = false)]
+    #[arg(long, default_value_t = true)]
     pub privileged_container_tests: bool,
 }
 

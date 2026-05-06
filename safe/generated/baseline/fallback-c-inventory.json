@@ -3,9 +3,9 @@
     "notes": [
       "This inventory is the single committed ledger of non-Rust source, script, assembly, template, and fallback assets planned under safe/**.",
       "Later phases must update this file in place instead of maintaining ad hoc fallback lists.",
-      "Phase 9 keeps the public libc-family DSOs on the safe build path through the remaining math and auxiliary DSOs, removes the temporary dev/time helper wrappers, and limits remaining copied-upstream payloads to explicitly tracked backend binaries plus later-phase libc6-dev obligations."
+      "Phase 6 moves the first libc-family public DSOs onto the safe build path and limits remaining copied-upstream runtime payloads to explicitly tracked private backend binaries plus later-phase libc6-dev obligations."
     ],
-    "phase": "impl_09_math_and_aux_dsos"
+    "phase": "impl_06_io_stdio_string_path"
   },
   "entries": [
     {
@@ -265,7 +265,7 @@
       "path": "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2",
       "source_path": "build/testroot.pristine/usr/lib64/ld-linux-x86-64.so.2",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
+      "owning_phase": "impl_06_io_stdio_string_path",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2"
@@ -276,7 +276,7 @@
       "path": "/usr/libexec/safelibs/backends/libanl.so.1",
       "source_path": "build/testroot.pristine/usr/lib64/libanl.so.1",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
+      "owning_phase": "impl_07_nss_resolver_nscd",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libanl.so.1"
@@ -287,7 +287,7 @@
       "path": "/usr/libexec/safelibs/backends/libc.so.6",
       "source_path": "build/testroot.pristine/usr/lib64/libc.so.6",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
+      "owning_phase": "impl_06_io_stdio_string_path",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libc.so.6"
@@ -298,7 +298,7 @@
       "path": "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0",
       "source_path": "build/testroot.pristine/usr/lib64/libc_malloc_debug.so.0",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
+      "owning_phase": "impl_06_io_stdio_string_path",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0"
@@ -331,7 +331,7 @@
       "path": "/usr/libexec/safelibs/backends/libmemusage.so",
       "source_path": "build/testroot.pristine/usr/lib64/libmemusage.so",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
+      "owning_phase": "impl_06_io_stdio_string_path",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libmemusage.so"
@@ -353,7 +353,7 @@
       "path": "/usr/libexec/safelibs/backends/libnsl.so.1",
       "source_path": "build/testroot.pristine/usr/lib64/libnsl.so.1",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
+      "owning_phase": "impl_07_nss_resolver_nscd",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libnsl.so.1"
@@ -364,7 +364,7 @@
       "path": "/usr/libexec/safelibs/backends/libnss_compat.so.2",
       "source_path": "build/testroot.pristine/usr/lib64/libnss_compat.so.2",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
+      "owning_phase": "impl_07_nss_resolver_nscd",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libnss_compat.so.2"
@@ -375,7 +375,7 @@
       "path": "/usr/libexec/safelibs/backends/libnss_dns.so.2",
       "source_path": "build/testroot.pristine/usr/lib64/libnss_dns.so.2",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
+      "owning_phase": "impl_07_nss_resolver_nscd",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libnss_dns.so.2"
@@ -386,7 +386,7 @@
       "path": "/usr/libexec/safelibs/backends/libnss_files.so.2",
       "source_path": "build/testroot.pristine/usr/lib64/libnss_files.so.2",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
+      "owning_phase": "impl_07_nss_resolver_nscd",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libnss_files.so.2"
@@ -397,7 +397,7 @@
       "path": "/usr/libexec/safelibs/backends/libnss_hesiod.so.2",
       "source_path": "build/testroot.pristine/usr/lib64/libnss_hesiod.so.2",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
+      "owning_phase": "impl_07_nss_resolver_nscd",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libnss_hesiod.so.2"
@@ -419,7 +419,7 @@
       "path": "/usr/libexec/safelibs/backends/libpthread.so.0",
       "source_path": "build/testroot.pristine/usr/lib64/libpthread.so.0",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
+      "owning_phase": "impl_06_io_stdio_string_path",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libpthread.so.0"
@@ -430,7 +430,7 @@
       "path": "/usr/libexec/safelibs/backends/libresolv.so.2",
       "source_path": "build/testroot.pristine/usr/lib64/libresolv.so.2",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
+      "owning_phase": "impl_07_nss_resolver_nscd",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libresolv.so.2"
@@ -452,7 +452,7 @@
       "path": "/usr/libexec/safelibs/backends/libthread_db.so.1",
       "source_path": "build/testroot.pristine/usr/lib64/libthread_db.so.1",
       "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
+      "owning_phase": "impl_06_io_stdio_string_path",
       "shipped": true,
       "package_scope_refs": [
         "/usr/libexec/safelibs/backends/libthread_db.so.1"
@@ -623,6 +623,15 @@
         "/usr/share/locales/remove-language-pack"
       ],
       "audit_notes": "Phase-3 fallback-backed entrypoint shipped through safe/crates/libc-support-tools; verification remains locale-tools."
+    },
+    {
+      "path": "safe/crates/compat-asm/x86_64/forwarding-veneer-template.S",
+      "source_path": "safe/crates/compat-asm/x86_64/forwarding-veneer-template.S",
+      "classification": "compat_asm_forwarding_veneer_template",
+      "owning_phase": "impl_06_io_stdio_string_path",
+      "shipped": false,
+      "package_scope_refs": [],
+      "audit_notes": "Checked-in amd64 template for generated dlvsym forwarding veneers; the package build emits per-DSO generated sources from this shape and does not ship the template itself."
     },
     {
       "path": "safe/debian/debhelper.in/libc-alt.install",

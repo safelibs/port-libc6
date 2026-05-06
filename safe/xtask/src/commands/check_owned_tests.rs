@@ -18,12 +18,20 @@ const FINAL_ZERO_ENTRY_SENTINELS: [&str; 3] = [
 // upstream harnesses rely on private glibc internals, custom NSS test DSOs,
 // generated profiling/locale/GMP assets, or privileged namespace helpers that
 // are not executable against work/install-root.
-const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 50] = [
+const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 63] = [
+    "tests-container::stdio-common::tst-popen3::base",
+    "tests-container::stdlib::tst-system::base",
+    "tests-container::string::tst-strerror::base",
+    "tests-container::string::tst-strsignal::base",
     "tests-container::nss::tst-nss-compat1::base",
     "tests-container::nss::tst-nss-gai-hv2-canonname::base",
     "tests-container::nss::tst-nss-test3::base",
     "tests-container::nss::tst-reload1::base",
     "tests-container::nss::tst-reload2::base",
+    "tests-time64::io::tst-lchmod-time64::base",
+    "tests-time64::time::tst-clock2-time64::base",
+    "tests-time64::time::tst-clock_settime-time64::base",
+    "tests-time64::time::tst-settimeofday-time64::base",
     "tests-container::locale::tst-localedef-path-norm::base",
     "tests-container::localedata::tst-localedef-hardlinks::base",
     "tests-internal::dlfcn::tst-dlinfo-phdr::base",
@@ -59,6 +67,8 @@ const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 50] = [
     "tests-static::resolv::tst-resolv-txnid-collision::base",
     "tests::dlfcn::tststatic2::base",
     "tests::inet::tst-deadline::base",
+    "tests::io::tst-file_change_detection::base",
+    "tests::io::tst-lchmod::base",
     "tests::math::atest-exp2::base",
     "tests::math::atest-exp::base",
     "tests::math::atest-sincos::base",
@@ -69,6 +79,9 @@ const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 50] = [
     "tests::nss::tst-nss-test_errno::base",
     "tests::resolv::tst-resolv-ai_idn-nolibidn2::base",
     "tests::socket::tst-sockaddr_un_set::base",
+    "tests::time::tst-clock2::base",
+    "tests::time::tst-clock_settime::base",
+    "tests::time::tst-settimeofday::base",
 ];
 
 #[derive(ClapArgs, Debug)]

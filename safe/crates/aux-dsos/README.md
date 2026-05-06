@@ -1,3 +1,3 @@
 # Hybrid Aux DSOs
 
-Phase 9 tracks the remaining math and auxiliary DSOs through generated version scripts, safe-build public provenance, and explicit private backend inventory for the final cleanup phase.
+Later phases extend the same generated version-script, safe-build public provenance, and explicit private backend inventory model introduced by the phase-6 libc-family cutover.

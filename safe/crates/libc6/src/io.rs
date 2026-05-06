@@ -4,7 +4,8 @@ pub fn read_to_end<R: Read>(reader: &mut R, limit: usize) -> io::Result<Vec<u8>>
     let mut buffer = Vec::new();
     let mut chunk = [0u8; 4096];
     while buffer.len() < limit {
-        let read = reader.read(&mut chunk[..chunk.len().min(limit - buffer.len())])?;
+        let max_read = chunk.len().min(limit - buffer.len());
+        let read = reader.read(&mut chunk[..max_read])?;
         if read == 0 {
             break;
         }

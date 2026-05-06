@@ -4182,7 +4182,7 @@ fn resolve_shell_script_recipe_args(
             let Some(recipe_line) = logical_lines.get(index + 1) else {
                 continue;
             };
-            if !recipe_line.contains("$<") {
+            if !recipe_line.contains("$<") && !recipe_line.contains("$^") {
                 continue;
             }
             let built_binary = resolve_shell_recipe_primary_binary(
@@ -4194,14 +4194,23 @@ fn resolve_shell_script_recipe_args(
                 common_objdir,
                 staged_subdir,
             )?;
-            let Some((_, raw_args)) = recipe_line.split_once("$<") else {
+            let raw_args = if let Some((_, raw_args)) = recipe_line.split_once("$<") {
+                raw_args.to_string()
+            } else if let Some((_, raw_args)) = recipe_line.split_once("$^") {
+                let primary_binary = binary.or(built_binary.as_deref()).ok_or_else(|| {
+                    anyhow!("failed to resolve $^ primary binary for {}", entry.catalog_id)
+                })?;
+                format!("{} {raw_args}", primary_binary.display())
+            } else {
                 continue;
             };
             let raw_args = raw_args
                 .split_once(';')
                 .map(|(head, _)| head)
-                .unwrap_or(raw_args);
-            let expanded_refs = expand_make_variable_refs(&makefile, raw_args, 0)?;
+                .unwrap_or(raw_args.as_str());
+            let target_out = objpfx_root.join(format!("{stem}.out"));
+            let raw_args = raw_args.replace("$@", &target_out.display().to_string());
+            let expanded_refs = expand_make_variable_refs(&makefile, &raw_args, 0)?;
             let expanded = expand_shell_script_special_vars(
                 config,
                 binary,

@@ -1,5 +1,5 @@
 [metadata]
-phase = "impl_09_math_and_aux_dsos"
+phase = "impl_06_io_stdio_string_path"
 notes = [
     "Required-package baselines remain derived from the checked-in build/testroot.pristine tree, while the committed packaging surface now lives under safe/debian/** and safe/generated/packaging/package-build-manifest.json.",
     "Later phases must consume the committed safe packaging files in place instead of reading undeclared inputs from original/debian/**.",
@@ -11,6 +11,7 @@ notes = [
     "Phase 7 keeps required package manifests in place, extends the libc-family public DSO cutover through the network-facing DSOs and link names, and tracks the copied upstream payloads under explicit private backend paths.",
     "Phase 8 keeps required package manifests in place, extends the libc-family public DSO cutover through libBrokenLocale, ships the locale helper scripts directly from safe/debian/local/**, and tracks only the helper backends that still delegate to preserved upstream locale binaries.",
     "Phase 9 keeps required package manifests in place, extends the libc-family public DSO cutover through libdl, libm, libmvec, libpcprofile, librt, and libutil, ships the remaining dev/time entrypoints as Rust frontends, and tracks only the temporary backend DSOs plus helper backends still delegated to preserved upstream payloads.",
+    "Phase 6 keeps required package manifests in place, moves the first libc-family public DSOs and public libc6-dev link names onto the safe build path, and tracks private baseline backend DSOs plus remaining libc6-dev startup/static/audit carryovers as explicit final-cutover obligations.",
 ]
 
 [debug_derivation]

@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "phase": "impl_09_math_and_aux_dsos",
+    "phase": "impl_06_io_stdio_string_path",
     "notes": [
       "This corpus is the authoritative relink-compatibility case list for original-object verification.",
       "Phase 6 seeds startup-object, ordinary dynamic, PIE, static, static-PIE, and GLIBC_PRIVATE coverage.",

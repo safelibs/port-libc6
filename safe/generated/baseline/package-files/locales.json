@@ -11,7 +11,7 @@
       "original/debian/sysdeps/linux.mk"
     ],
     "package": "locales",
-    "phase": "impl_01_safe_bootstrap",
+    "phase": "impl_06_io_stdio_string_path",
     "scope": "required_package"
   },
   "entries": [
@@ -38,7 +38,7 @@
       "asset_kind": "script_asset",
       "executable": true,
       "symlink_target": null,
-      "owner_phase": "impl_09_math_and_aux_dsos",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "locale-tools"
     },
     {
@@ -51,7 +51,7 @@
       "asset_kind": "script_asset",
       "executable": true,
       "symlink_target": null,
-      "owner_phase": "impl_09_math_and_aux_dsos",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "locale-tools"
     },
     {
@@ -64,7 +64,7 @@
       "asset_kind": "script_asset",
       "executable": true,
       "symlink_target": null,
-      "owner_phase": "impl_09_math_and_aux_dsos",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "locale-tools"
     },
     {
@@ -77,7 +77,7 @@
       "asset_kind": "data_asset",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_09_math_and_aux_dsos",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "locale-tools"
     },
     {
@@ -7942,7 +7942,7 @@
       "asset_kind": "script_asset",
       "executable": true,
       "symlink_target": null,
-      "owner_phase": "impl_09_math_and_aux_dsos",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "locale-tools"
     },
     {
@@ -7955,7 +7955,7 @@
       "asset_kind": "script_asset",
       "executable": true,
       "symlink_target": null,
-      "owner_phase": "impl_09_math_and_aux_dsos",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "locale-tools"
     }
   ]

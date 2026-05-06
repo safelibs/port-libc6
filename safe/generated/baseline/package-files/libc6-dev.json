@@ -11,7 +11,7 @@
       "original/debian/sysdeps/linux.mk"
     ],
     "package": "libc6-dev",
-    "phase": "impl_01_safe_bootstrap",
+    "phase": "impl_06_io_stdio_string_path",
     "scope": "required_package"
   },
   "entries": [
@@ -6343,7 +6343,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libBrokenLocale.so.1",
-      "owner_phase": "impl_09_math_and_aux_dsos",
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
       "verification": "libc-family-cutover"
     },
     {
@@ -6369,7 +6369,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libanl.so.1",
-      "owner_phase": "impl_09_math_and_aux_dsos",
+      "owner_phase": "impl_07_nss_resolver_nscd",
       "verification": "network-tools"
     },
     {
@@ -6395,7 +6395,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_09_math_and_aux_dsos",
+      "owner_phase": "impl_06_io_stdio_string_path",
       "verification": "libc-family-cutover"
     },
     {
@@ -6408,7 +6408,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libc_malloc_debug.so.0",
-      "owner_phase": "impl_09_math_and_aux_dsos",
+      "owner_phase": "impl_06_io_stdio_string_path",
       "verification": "libc-family-cutover"
     },
     {
@@ -6538,7 +6538,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libnss_compat.so.2",
-      "owner_phase": "impl_09_math_and_aux_dsos",
+      "owner_phase": "impl_07_nss_resolver_nscd",
       "verification": "network-tools"
     },
     {
@@ -6551,7 +6551,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libnss_hesiod.so.2",
-      "owner_phase": "impl_09_math_and_aux_dsos",
+      "owner_phase": "impl_07_nss_resolver_nscd",
       "verification": "network-tools"
     },
     {
@@ -6577,7 +6577,7 @@
       "asset_kind": "generated_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": "impl_09_math_and_aux_dsos",
+      "owner_phase": "impl_06_io_stdio_string_path",
       "verification": "libc-family-cutover"
     },
     {
@@ -6603,7 +6603,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libresolv.so.2",
-      "owner_phase": "impl_09_math_and_aux_dsos",
+      "owner_phase": "impl_07_nss_resolver_nscd",
       "verification": "network-tools"
     },
     {
@@ -6629,7 +6629,7 @@
       "asset_kind": "rust_target",
       "executable": false,
       "symlink_target": "../../lib64/libthread_db.so.1",
-      "owner_phase": "impl_09_math_and_aux_dsos",
+      "owner_phase": "impl_06_io_stdio_string_path",
       "verification": "libc-family-cutover"
     },
     {
