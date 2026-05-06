@@ -23911,7 +23911,7 @@ site_id = "safe/crates/core-runtime/src/syscall.rs:17"
 
 [[reviewed_unsafe_entries]]
 line = 107
-owning_phase = "impl_05_core_runtime_threads_entropy"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
@@ -23919,7 +23919,7 @@ site_id = "safe/crates/network-identity/src/lib.rs:107"
 
 [[reviewed_unsafe_entries]]
 line = 113
-owning_phase = "impl_05_core_runtime_threads_entropy"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
@@ -23927,7 +23927,7 @@ site_id = "safe/crates/network-identity/src/lib.rs:113"
 
 [[reviewed_unsafe_entries]]
 line = 210
-owning_phase = "impl_05_core_runtime_threads_entropy"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
@@ -23935,7 +23935,7 @@ site_id = "safe/crates/network-identity/src/lib.rs:210"
 
 [[reviewed_unsafe_entries]]
 line = 218
-owning_phase = "impl_05_core_runtime_threads_entropy"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
@@ -23943,7 +23943,7 @@ site_id = "safe/crates/network-identity/src/lib.rs:218"
 
 [[reviewed_unsafe_entries]]
 line = 23
-owning_phase = "impl_05_core_runtime_threads_entropy"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
@@ -23951,7 +23951,7 @@ site_id = "safe/crates/network-identity/src/lib.rs:23"
 
 [[reviewed_unsafe_entries]]
 line = 29
-owning_phase = "impl_05_core_runtime_threads_entropy"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
@@ -23959,7 +23959,7 @@ site_id = "safe/crates/network-identity/src/lib.rs:29"
 
 [[reviewed_unsafe_entries]]
 line = 35
-owning_phase = "impl_05_core_runtime_threads_entropy"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
@@ -23967,7 +23967,7 @@ site_id = "safe/crates/network-identity/src/lib.rs:35"
 
 [[reviewed_unsafe_entries]]
 line = 41
-owning_phase = "impl_05_core_runtime_threads_entropy"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
@@ -23975,7 +23975,7 @@ site_id = "safe/crates/network-identity/src/lib.rs:41"
 
 [[reviewed_unsafe_entries]]
 line = 47
-owning_phase = "impl_05_core_runtime_threads_entropy"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
@@ -23983,7 +23983,7 @@ site_id = "safe/crates/network-identity/src/lib.rs:47"
 
 [[reviewed_unsafe_entries]]
 line = 57
-owning_phase = "impl_05_core_runtime_threads_entropy"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
@@ -23991,7 +23991,7 @@ site_id = "safe/crates/network-identity/src/lib.rs:57"
 
 [[reviewed_unsafe_entries]]
 line = 70
-owning_phase = "impl_05_core_runtime_threads_entropy"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
@@ -23999,7 +23999,7 @@ site_id = "safe/crates/network-identity/src/lib.rs:70"
 
 [[reviewed_unsafe_entries]]
 line = 93
-owning_phase = "impl_05_core_runtime_threads_entropy"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
@@ -24007,7 +24007,7 @@ site_id = "safe/crates/network-identity/src/lib.rs:93"
 
 [[reviewed_unsafe_entries]]
 line = 94
-owning_phase = "impl_05_core_runtime_threads_entropy"
+owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"

@@ -775,6 +775,9 @@ fn owner_phase_for_repo_path(path: &str) -> &'static str {
         {
             "impl_04_loader_startup_secure_exec"
         }
+        path if path.starts_with("safe/crates/network-identity/") => {
+            "impl_07_nss_resolver_nscd"
+        }
         path if path.starts_with("safe/crates/core-runtime/")
             || path.starts_with("safe/crates/libpthread/")
             || path.starts_with("safe/crates/libthread-db/")
@@ -946,6 +949,14 @@ mod tests {
         assert_eq!(
             owner_phase_for_repo_path("safe/crates/core-runtime/src/entropy.rs"),
             "impl_05_core_runtime_threads_entropy"
+        );
+    }
+
+    #[test]
+    fn maps_network_identity_paths_to_phase_seven() {
+        assert_eq!(
+            owner_phase_for_repo_path("safe/crates/network-identity/src/lib.rs"),
+            "impl_07_nss_resolver_nscd"
         );
     }
 
