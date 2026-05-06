@@ -251,10 +251,32 @@ pub fn build_output_root(args: &Args) -> PathBuf {
 }
 
 pub fn load_active_build_root() -> Result<PathBuf> {
-    let state_path = active_build_state_path();
-    let state: HybridBuildState = load_json(&state_path)
-        .with_context(|| format!("failed to load {}", state_path.display()))?;
+    let state = load_active_build_state()?;
     Ok(PathBuf::from(state.artifact_root))
+}
+
+pub fn ensure_active_build_profile(target: &str, profile: &str) -> Result<PathBuf> {
+    let expected_target = normalized_target(target);
+    match load_active_build_state() {
+        Ok(state) if state.target == expected_target && state.profile == profile => {
+            let artifact_root = PathBuf::from(&state.artifact_root);
+            if artifact_root.exists() {
+                return Ok(artifact_root);
+            }
+        }
+        _ => {}
+    }
+
+    run(Args {
+        target: target.to_string(),
+        profile: profile.to_string(),
+    })?;
+    load_active_build_root()
+}
+
+fn load_active_build_state() -> Result<HybridBuildState> {
+    let state_path = active_build_state_path();
+    load_json(&state_path).with_context(|| format!("failed to load {}", state_path.display()))
 }
 
 fn active_build_state_path() -> PathBuf {

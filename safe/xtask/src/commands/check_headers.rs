@@ -25,7 +25,7 @@ pub fn run(args: Args) -> Result<()> {
     } else {
         safe_root().join(args.install_root)
     };
-    super::install_root::materialize_install_root(&install_root, true, false)?;
+    super::install_root::materialize_install_root(&install_root, false, true)?;
     let log_dir = safe_root().join("work/check-headers");
     if log_dir.exists() {
         fs::remove_dir_all(&log_dir)

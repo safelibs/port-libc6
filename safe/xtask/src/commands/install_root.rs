@@ -26,10 +26,6 @@ pub struct Args {
 
 pub fn run(args: Args) -> Result<()> {
     super::build::refresh_phase_outputs()?;
-    super::build::run(super::build::Args {
-        target: "amd64".to_string(),
-        profile: "dev".to_string(),
-    })?;
     let dest = resolve_safe_path(&args.dest);
     materialize_install_root(&dest, args.include_testroot_only, args.clean)
 }
@@ -45,10 +41,7 @@ pub fn materialize_install_root(
     include_testroot_only: bool,
     clean: bool,
 ) -> Result<()> {
-    super::build::run(super::build::Args {
-        target: "amd64".to_string(),
-        profile: "dev".to_string(),
-    })?;
+    super::build::ensure_active_build_profile("amd64", "release")?;
     if clean && dest.exists() {
         fs::remove_dir_all(dest).with_context(|| format!("failed to remove {}", dest.display()))?;
     }

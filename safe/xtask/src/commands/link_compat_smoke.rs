@@ -31,10 +31,7 @@ pub fn run(args: Args) -> Result<()> {
         );
     }
 
-    super::build::run(super::build::Args {
-        target: "amd64".to_string(),
-        profile: "dev".to_string(),
-    })?;
+    super::build::ensure_active_build_profile("amd64", "release")?;
     super::stage_upstream_build::ensure_staged_upstream_build(
         Path::new("original"),
         &args.build_root,
@@ -42,7 +39,7 @@ pub fn run(args: Args) -> Result<()> {
 
     let install_root = resolve_safe_workspace_path(&args.install_root)?;
     let build_root = resolve_upstream_source_build_dir(&args.build_root)?;
-    super::install_root::materialize_install_root(&install_root, true, false)?;
+    super::install_root::materialize_install_root(&install_root, false, true)?;
 
     let corpus = load_link_compat_corpus()?;
     verify_final_corpus_coverage(&corpus)?;
