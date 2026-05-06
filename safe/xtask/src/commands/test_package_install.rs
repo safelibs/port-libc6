@@ -22,9 +22,11 @@ pub fn run(args: Args) -> Result<()> {
         && args.smoke_set != "network-tools"
         && args.smoke_set != "locale-tools"
         && args.smoke_set != "dev-and-time-tools"
+        && args.smoke_set != "backend-payload-closure"
+        && args.smoke_set != "dev-link-artifacts"
     {
         bail!(
-            "unsupported smoke set {}; expected basic-required-packages, libc-family-cutover, loader-tools, runtime-tools, network-tools, locale-tools, or dev-and-time-tools",
+            "unsupported smoke set {}; expected basic-required-packages, libc-family-cutover, loader-tools, runtime-tools, network-tools, locale-tools, dev-and-time-tools, backend-payload-closure, or dev-link-artifacts",
             args.smoke_set
         );
     }
@@ -102,6 +104,120 @@ compare_public_payload() {
     printf 'installed public payload %s still matches private backend %s\n' "$path" "$backend_path" >&2
     return 1
   fi
+}
+
+assert_no_backend_payloads_in_manifests() {
+  log "Checking final manifests for private backend payload closure"
+  for manifest in /workspace/safe/generated/baseline/package-files/*.json \
+    /workspace/safe/generated/install-manifests/required-packages.json \
+    /workspace/safe/generated/install-manifests/test-install-root.json; do
+    if jq -e '.entries[] | select((.asset_kind == "private_baseline_backend_dso") or (.path | startswith("/usr/libexec/safelibs/backends/")))' "$manifest" >/tmp/backend-manifest-hit.json; then
+      printf 'manifest %s still contains a private backend payload:\n' "$manifest" >&2
+      cat /tmp/backend-manifest-hit.json >&2
+      return 1
+    fi
+  done
+
+  if jq -e '.entries[] | select((.classification == "private_baseline_backend_dso") or (.path | startswith("/usr/libexec/safelibs/backends/")))' \
+    /workspace/safe/generated/baseline/fallback-c-inventory.json >/tmp/backend-fallback-hit.json; then
+    printf 'fallback inventory still contains a shipped private backend payload:\n' >&2
+    cat /tmp/backend-fallback-hit.json >&2
+    return 1
+  fi
+
+  if grep -q 'asset_kind = "private_baseline_backend_dso"\|path = "/usr/libexec/safelibs/backends/' \
+    /workspace/safe/upstream-compat/package-scope.toml; then
+    printf 'package-scope still references private backend payloads\n' >&2
+    return 1
+  fi
+}
+
+smoke_backend_payload_closure() {
+  assert_no_backend_payloads_in_manifests
+
+  log "Checking installed filesystem for removed backend DSO directory"
+  if [ -e /usr/libexec/safelibs/backends ]; then
+    find /usr/libexec/safelibs/backends -mindepth 1 -print >&2
+    printf 'private backend DSO directory still exists in installed package filesystem\n' >&2
+    return 1
+  fi
+}
+
+is_final_dev_link_payload() {
+  case "$1" in
+    /usr/lib64/*.o|/usr/lib64/*.a|/usr/lib64/*.so|/usr/lib64/audit/*.so)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+compare_dev_link_payloads() {
+  log "Checking libc6-dev code-bearing link provenance and installed bytes"
+  jq -r '.entries[] | select(.package == "libc6-dev" and .shipped_status == "shipped") | [.path, .source_origin, .asset_kind, (.source_path // ""), (.symlink_target // "")] | @tsv' \
+    /workspace/safe/generated/baseline/package-files/libc6-dev.json | \
+  while IFS=$'\t' read -r path origin asset_kind source_path symlink_target; do
+    if ! is_final_dev_link_payload "$path"; then
+      continue
+    fi
+    if [ "$origin" = "build_testroot" ]; then
+      printf 'final libc6-dev link payload %s still uses build_testroot provenance\n' "$path" >&2
+      exit 1
+    fi
+    if [ "$asset_kind" = "synthetic_empty_archive" ]; then
+      ar t "$path" >/tmp/synthetic-archive-members.txt
+      if [ -s /tmp/synthetic-archive-members.txt ]; then
+        printf 'synthetic empty archive %s unexpectedly has members\n' "$path" >&2
+        exit 1
+      fi
+      continue
+    fi
+    if [ -n "$symlink_target" ]; then
+      test -L "$path"
+      continue
+    fi
+    if [ -z "$source_path" ]; then
+      printf 'final libc6-dev link payload %s is missing source_path\n' "$path" >&2
+      exit 1
+    fi
+    compare_public_payload /workspace/safe/generated/baseline/package-files/libc6-dev.json "$path"
+  done
+}
+
+smoke_dev_link_artifacts() {
+  compare_dev_link_payloads
+
+  log "Compiling and running dynamic, PIE, static, and static-PIE samples"
+  cat >/tmp/safelibs-dev-link.c <<'EOF'
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+
+int main(void) {
+  double value = cos(0.0);
+  if (value < 0.99 || value > 1.01) {
+    return 1;
+  }
+  puts(strlen("safelibs") == 8 ? "ok" : "bad");
+  return 0;
+}
+EOF
+  cc /tmp/safelibs-dev-link.c -o /tmp/safelibs-dynamic -lm
+  /tmp/safelibs-dynamic | grep -qx ok
+  cc -fPIE /tmp/safelibs-dev-link.c -pie -o /tmp/safelibs-pie -lm
+  /tmp/safelibs-pie | grep -qx ok
+  cc /tmp/safelibs-dev-link.c -static -o /tmp/safelibs-static -lm
+  /tmp/safelibs-static | grep -qx ok
+  cc -fPIE /tmp/safelibs-dev-link.c -static-pie -o /tmp/safelibs-static-pie -lm
+  /tmp/safelibs-static-pie | grep -qx ok
+
+  log "Exercising every shipped startfile through direct linker input"
+  for startfile in Mcrt1.o Scrt1.o crt1.o gcrt1.o grcrt1.o rcrt1.o crti.o crtn.o; do
+    test -f "/usr/lib64/$startfile"
+    ld -r -o "/tmp/$startfile.reloc" "/usr/lib64/$startfile"
+  done
 }
 
 smoke_basic_required_packages() {
@@ -262,7 +378,7 @@ smoke_network_tools() {
     done
   done
 
-  log "Checking explicit network backend inventory"
+  log "Checking removed network backend inventory"
   for path in \
     /usr/libexec/safelibs/backends/libanl.so.1 \
     /usr/libexec/safelibs/backends/libnsl.so.1 \
@@ -271,7 +387,10 @@ smoke_network_tools() {
     /usr/libexec/safelibs/backends/libnss_files.so.2 \
     /usr/libexec/safelibs/backends/libnss_hesiod.so.2 \
     /usr/libexec/safelibs/backends/libresolv.so.2; do
-    test -e "$path"
+    if [ -e "$path" ]; then
+      printf 'private network backend payload still ships: %s\n' "$path" >&2
+      exit 1
+    fi
   done
 
   log "Checking network tool entrypoints"
@@ -421,7 +540,7 @@ smoke_libc_family_cutover() {
     done
   done
 
-  log "Checking explicit private backend inventory"
+  log "Checking removed private backend inventory"
   for path in \
     /usr/libexec/safelibs/backends/ld-linux-x86-64.so.2 \
     /usr/libexec/safelibs/backends/libc.so.6 \
@@ -429,7 +548,10 @@ smoke_libc_family_cutover() {
     /usr/libexec/safelibs/backends/libthread_db.so.1 \
     /usr/libexec/safelibs/backends/libc_malloc_debug.so.0 \
     /usr/libexec/safelibs/backends/libmemusage.so; do
-    test -f "$path"
+    if [ -e "$path" ]; then
+      printf 'private libc-family backend payload still ships: %s\n' "$path" >&2
+      exit 1
+    fi
   done
 
   log "Comparing installed public payloads with staged safe-build sources"
@@ -491,7 +613,7 @@ smoke_dev_and_time_tools() {
     done
   done
 
-  log "Checking explicit aux-DSO backend inventory"
+  log "Checking removed aux-DSO backend inventory"
   for path in \
     /usr/libexec/safelibs/backends/libdl.so.2 \
     /usr/libexec/safelibs/backends/libm.so.6 \
@@ -499,7 +621,10 @@ smoke_dev_and_time_tools() {
     /usr/libexec/safelibs/backends/libpcprofile.so \
     /usr/libexec/safelibs/backends/librt.so.1 \
     /usr/libexec/safelibs/backends/libutil.so.1; do
-    test -f "$path"
+    if [ -e "$path" ]; then
+      printf 'private aux-DSO backend payload still ships: %s\n' "$path" >&2
+      exit 1
+    fi
   done
 
   log "Comparing installed remaining public payloads with staged safe-build sources"
@@ -573,7 +698,7 @@ log "Updating base package indexes"
 apt-get update
 
 log "Installing bootstrap tools"
-apt-get install -y --no-install-recommends ca-certificates jq dpkg-dev binutils file debconf
+apt-get install -y --no-install-recommends ca-certificates jq dpkg-dev binutils file debconf build-essential
 
 log "Configuring the local safe apt repository"
 /workspace/safe/scripts/install-safe-repo.sh "$deb_dir_rel"
@@ -604,6 +729,12 @@ case "${SAFE_SMOKE_SET}" in
     ;;
   dev-and-time-tools)
     smoke_dev_and_time_tools
+    ;;
+  backend-payload-closure)
+    smoke_backend_payload_closure
+    ;;
+  dev-link-artifacts)
+    smoke_dev_link_artifacts
     ;;
   *)
     printf 'unsupported smoke set in container: %s\n' "${SAFE_SMOKE_SET}" >&2

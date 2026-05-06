@@ -37,6 +37,8 @@ pub struct Args {
     #[arg(long)]
     pub deny_shipped_temporary_fallback_binaries: bool,
     #[arg(long)]
+    pub deny_shipped_private_backend_dsos: bool,
+    #[arg(long)]
     pub require_cve_disposition: bool,
     #[arg(long)]
     pub require_package_scope_clean: bool,
@@ -75,6 +77,7 @@ pub fn run(args: Args) -> Result<()> {
         && !args.deny_unreviewed_unsafe
         && !args.deny_untracked_fallback_c
         && !args.deny_shipped_temporary_fallback_binaries
+        && !args.deny_shipped_private_backend_dsos
         && !args.require_cve_disposition
         && !args.require_package_scope_clean
     {
@@ -95,6 +98,9 @@ pub fn run(args: Args) -> Result<()> {
     }
     if args.deny_shipped_temporary_fallback_binaries {
         enforce_no_shipped_temporary_fallback_binaries(&context.fallback_json)?;
+    }
+    if args.deny_shipped_private_backend_dsos {
+        enforce_no_shipped_private_backend_dsos(&context.package_scope, &context.fallback_json)?;
     }
     if args.require_cve_disposition {
         enforce_cve_disposition(&context.policy, &context.cve_status, &context.cve_index)?;
@@ -268,6 +274,20 @@ fn verify_policy_schema(policy: &TomlValue) -> Result<()> {
     if deny_phase != "impl_10_final_fixup_and_audit" {
         bail!("unexpected deny phase for shipped temporary fallback binaries");
     }
+    let deny_private_backend_phase = policy_table
+        .get("deny_shipped_private_backend_dso_by_phase")
+        .and_then(TomlValue::as_str)
+        .ok_or_else(|| anyhow!("missing deny_shipped_private_backend_dso_by_phase"))?;
+    if deny_private_backend_phase != "impl_10_final_fixup_and_audit" {
+        bail!("unexpected deny phase for shipped private backend DSOs");
+    }
+    if !policy_table
+        .get("forbid_shipped_private_backend_dsos")
+        .and_then(TomlValue::as_bool)
+        .unwrap_or(false)
+    {
+        bail!("safety policy must explicitly forbid shipped private backend DSOs");
+    }
 
     for phase in PHASE_IDS {
         let mode = phase_modes
@@ -280,6 +300,11 @@ fn verify_policy_schema(policy: &TomlValue) -> Result<()> {
             .ok_or_else(|| anyhow!("missing strongest_mode for {phase}"))?;
         if phase == "impl_01_safe_bootstrap" && strongest != "--verify-policy" {
             bail!("impl_01 strongest_mode must be --verify-policy");
+        }
+        if phase == "impl_10_final_fixup_and_audit"
+            && !strongest.contains("--deny-shipped-private-backend-dsos")
+        {
+            bail!("impl_10 strongest_mode must include --deny-shipped-private-backend-dsos");
         }
     }
 
@@ -328,6 +353,15 @@ fn verify_package_scope_cross_references(
                 .unwrap_or(false)
         {
             bail!("safety policy must explicitly forbid shipped temporary_fallback_binary entries");
+        }
+        if classification == "private_baseline_backend_dso"
+            && shipped
+            && policy_table
+                .get("forbid_shipped_private_backend_dsos")
+                .and_then(TomlValue::as_bool)
+                .unwrap_or(false)
+        {
+            bail!("fallback inventory still ships private baseline backend DSO {path}");
         }
 
         let mut package_refs = BTreeSet::new();
@@ -502,6 +536,58 @@ fn enforce_no_shipped_temporary_fallback_binaries(fallback_json: &JsonValue) -> 
     Ok(())
 }
 
+fn enforce_no_shipped_private_backend_dsos(
+    package_scope: &TomlValue,
+    fallback_json: &JsonValue,
+) -> Result<()> {
+    let mut failures = Vec::new();
+    let files = package_scope
+        .get("files")
+        .and_then(TomlValue::as_array)
+        .ok_or_else(|| anyhow!("package-scope must contain files array"))?;
+    for entry in files.iter().filter_map(TomlValue::as_table) {
+        let path = entry
+            .get("path")
+            .and_then(TomlValue::as_str)
+            .unwrap_or("<unknown>");
+        let shipped = entry.get("shipped_status").and_then(TomlValue::as_str) == Some("shipped");
+        if shipped
+            && (entry.get("asset_kind").and_then(TomlValue::as_str)
+                == Some("private_baseline_backend_dso")
+                || path.starts_with("/usr/libexec/safelibs/backends/"))
+        {
+            failures.push(format!("package-scope: {path}"));
+        }
+    }
+
+    let entries = fallback_json
+        .get("entries")
+        .and_then(JsonValue::as_array)
+        .ok_or_else(|| anyhow!("fallback inventory must contain an entries array"))?;
+    for entry in entries {
+        let path = entry
+            .get("path")
+            .and_then(JsonValue::as_str)
+            .unwrap_or("<unknown>");
+        let shipped = entry.get("shipped").and_then(JsonValue::as_bool) == Some(true);
+        if shipped
+            && (entry.get("classification").and_then(JsonValue::as_str)
+                == Some("private_baseline_backend_dso")
+                || path.starts_with("/usr/libexec/safelibs/backends/"))
+        {
+            failures.push(format!("fallback inventory: {path}"));
+        }
+    }
+
+    if !failures.is_empty() {
+        bail!(
+            "private baseline backend DSOs are still shipped:\n{}",
+            failures.join("\n")
+        );
+    }
+    Ok(())
+}
+
 fn enforce_cve_disposition(
     policy: &TomlValue,
     cve_status: &TomlValue,
@@ -573,8 +659,11 @@ fn enforce_package_scope_clean(package_scope: &TomlValue) -> Result<()> {
         .iter()
         .filter_map(TomlValue::as_table)
         .filter(|entry| {
-            entry.get("asset_kind").and_then(TomlValue::as_str) == Some("temporary_fallback_binary")
-                && entry.get("shipped_status").and_then(TomlValue::as_str) == Some("shipped")
+            entry.get("shipped_status").and_then(TomlValue::as_str) == Some("shipped")
+                && matches!(
+                    entry.get("asset_kind").and_then(TomlValue::as_str),
+                    Some("temporary_fallback_binary") | Some("private_baseline_backend_dso")
+                )
         })
         .filter_map(|entry| entry.get("path").and_then(TomlValue::as_str))
         .map(str::to_string)
@@ -775,9 +864,7 @@ fn owner_phase_for_repo_path(path: &str) -> &'static str {
         {
             "impl_04_loader_startup_secure_exec"
         }
-        path if path.starts_with("safe/crates/network-identity/") => {
-            "impl_07_nss_resolver_nscd"
-        }
+        path if path.starts_with("safe/crates/network-identity/") => "impl_07_nss_resolver_nscd",
         path if path.starts_with("safe/crates/core-runtime/")
             || path.starts_with("safe/crates/libpthread/")
             || path.starts_with("safe/crates/libthread-db/")
@@ -879,6 +966,7 @@ fn collect_required_package_fallback_assets(
             || !matches!(
                 asset_kind,
                 "asm_shim"
+                    | "compat_asm"
                     | "temporary_fallback_binary"
                     | "tracked_backend_binary"
                     | "private_baseline_backend_dso"

@@ -36,7 +36,7 @@ struct ControlParagraph {
 pub fn run(args: Args) -> Result<()> {
     super::build::run(super::build::Args {
         target: "amd64".to_string(),
-        profile: "dev".to_string(),
+        profile: "release".to_string(),
     })?;
     let build_manifest = load_package_build_manifest()?;
     validate_build_manifest(&build_manifest)?;
@@ -195,8 +195,18 @@ fn stage_package_entry(package_root: &Path, entry: &PackageEntry) -> Result<()> 
     if entry.package == "libc6-dbg" {
         return stage_debug_entry(package_root, entry);
     }
-    if entry.asset_kind == "generated_compat_archive" {
+    if entry.asset_kind == "generated_compat_archive"
+        || entry.asset_kind == "synthetic_empty_archive"
+    {
         return stage_generated_compat_archive(package_root, entry);
+    }
+    if entry.asset_kind == "private_baseline_backend_dso"
+        || entry.path.starts_with("/usr/libexec/safelibs/backends/")
+    {
+        bail!(
+            "final package payload must not ship private backend DSO {}",
+            entry.path
+        );
     }
     if let Some(tool) = find_required_tool(&entry.path) {
         return stage_required_tool(package_root, tool);

@@ -52,6 +52,16 @@ fi
 
 cp "${debs[@]}" "$SCRATCH_REPO/pool/"
 
+for deb in "${debs[@]}"; do
+  pkg=$(dpkg-deb --field "$deb" Package)
+  version=$(dpkg-deb --field "$deb" Version)
+  if [[ " ${PACKAGES[*]} " == *" $pkg "* && "$version" != "$SAFE_VERSION" ]]; then
+    printf 'unexpected safe package version for %s: %s (expected %s)\n' \
+      "$pkg" "$version" "$SAFE_VERSION" >&2
+    exit 1
+  fi
+done
+
 (
   cd "$SCRATCH_REPO"
   dpkg-scanpackages pool /dev/null \

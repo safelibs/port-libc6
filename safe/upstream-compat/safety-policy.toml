@@ -20,9 +20,10 @@ notes = [
     "Phase 8 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope tracks the preserved locale helper backends explicitly.",
     "Phase 8 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope tracks private DSO backends and confirms locale helper backend removal explicitly.",
     "Phase 9 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope confirms dev/time helper backend removal explicitly.",
+    "Phase 10 auto-populates reviewed unsafe and reviewed fallback entry tables from the committed crates and fallback inventory while package-scope confirms private backend removal explicitly.",
 ]
-phase = "impl_09_math_and_aux_dsos"
-phase_note = "Phase 9 keeps the reviewed unsafe and fallback policy entries in sync while dev/time helpers move onto phase-owned Rust implementations and private DSO backend copies remain explicitly tracked."
+phase = "impl_10_final_fixup_and_audit"
+phase_note = "Phase 10 enforces final package closure: no shipped temporary fallback binaries and no shipped private baseline backend DSOs."
 purpose = "Authoritative policy schema for unsafe Rust reviews, tracked non-Rust fallbacks, and cross-manifest safety validation."
 
 [phase_modes.impl_01_safe_bootstrap]
@@ -53,7 +54,7 @@ strongest_mode = "--deny-unreviewed-unsafe --deny-untracked-fallback-c"
 strongest_mode = "--deny-unreviewed-unsafe --deny-untracked-fallback-c"
 
 [phase_modes.impl_10_final_fixup_and_audit]
-strongest_mode = "--deny-unreviewed-unsafe --deny-untracked-fallback-c --deny-shipped-temporary-fallback-binaries --require-cve-disposition --require-package-scope-clean"
+strongest_mode = "--deny-unreviewed-unsafe --deny-untracked-fallback-c --deny-shipped-temporary-fallback-binaries --deny-shipped-private-backend-dsos --require-cve-disposition --require-package-scope-clean"
 
 [policy]
 allowed_cve_statuses = [
@@ -67,7 +68,9 @@ cross_reference_files = [
     "safe/upstream-compat/cve-status.toml",
     "safe/generated/security/relevant-cves-index.json",
 ]
+deny_shipped_private_backend_dso_by_phase = "impl_10_final_fixup_and_audit"
 deny_shipped_temporary_fallback_binary_by_phase = "impl_10_final_fixup_and_audit"
+forbid_shipped_private_backend_dsos = true
 forbid_shipped_temporary_fallback_binaries = true
 
 [reviewed_fallback]
@@ -90,56 +93,56 @@ reviewer = "phase-5-auto-review"
 shipped = false
 
 [[reviewed_fallback_entries]]
-audit_notes = "Required-package startup or assembly shim carried by the safe port surface."
-classification = "asm_shim"
+audit_notes = "Final amd64 startup object is staged from the safe build root and tracked as a compatibility assembly payload for Debian libc6-dev link compatibility."
+classification = "compat_asm"
 owning_phase = "impl_04_loader_startup_secure_exec"
 path = "/usr/lib64/Mcrt1.o"
 reviewer = "phase-5-auto-review"
 shipped = true
 
 [[reviewed_fallback_entries]]
-audit_notes = "Required-package startup or assembly shim carried by the safe port surface."
-classification = "asm_shim"
+audit_notes = "Final amd64 startup object is staged from the safe build root and tracked as a compatibility assembly payload for Debian libc6-dev link compatibility."
+classification = "compat_asm"
 owning_phase = "impl_04_loader_startup_secure_exec"
 path = "/usr/lib64/Scrt1.o"
 reviewer = "phase-5-auto-review"
 shipped = true
 
 [[reviewed_fallback_entries]]
-audit_notes = "Required-package startup or assembly shim carried by the safe port surface."
-classification = "asm_shim"
+audit_notes = "Final amd64 startup object is staged from the safe build root and tracked as a compatibility assembly payload for Debian libc6-dev link compatibility."
+classification = "compat_asm"
 owning_phase = "impl_04_loader_startup_secure_exec"
 path = "/usr/lib64/crt1.o"
 reviewer = "phase-5-auto-review"
 shipped = true
 
 [[reviewed_fallback_entries]]
-audit_notes = "Required-package startup or assembly shim carried by the safe port surface."
-classification = "asm_shim"
+audit_notes = "Final amd64 startup object is staged from the safe build root and tracked as a compatibility assembly payload for Debian libc6-dev link compatibility."
+classification = "compat_asm"
 owning_phase = "impl_04_loader_startup_secure_exec"
 path = "/usr/lib64/crti.o"
 reviewer = "phase-5-auto-review"
 shipped = true
 
 [[reviewed_fallback_entries]]
-audit_notes = "Required-package startup or assembly shim carried by the safe port surface."
-classification = "asm_shim"
+audit_notes = "Final amd64 startup object is staged from the safe build root and tracked as a compatibility assembly payload for Debian libc6-dev link compatibility."
+classification = "compat_asm"
 owning_phase = "impl_04_loader_startup_secure_exec"
 path = "/usr/lib64/crtn.o"
 reviewer = "phase-5-auto-review"
 shipped = true
 
 [[reviewed_fallback_entries]]
-audit_notes = "Required-package startup or assembly shim carried by the safe port surface."
-classification = "asm_shim"
+audit_notes = "Final amd64 startup object is staged from the safe build root and tracked as a compatibility assembly payload for Debian libc6-dev link compatibility."
+classification = "compat_asm"
 owning_phase = "impl_04_loader_startup_secure_exec"
 path = "/usr/lib64/gcrt1.o"
 reviewer = "phase-5-auto-review"
 shipped = true
 
 [[reviewed_fallback_entries]]
-audit_notes = "Required-package startup or assembly shim carried by the safe port surface."
-classification = "asm_shim"
+audit_notes = "Final amd64 startup object is staged from the safe build root and tracked as a compatibility assembly payload for Debian libc6-dev link compatibility."
+classification = "compat_asm"
 owning_phase = "impl_04_loader_startup_secure_exec"
 path = "/usr/lib64/grcrt1.o"
 reviewer = "phase-5-auto-review"
@@ -162,170 +165,10 @@ reviewer = "phase-5-auto-review"
 shipped = true
 
 [[reviewed_fallback_entries]]
-audit_notes = "Required-package startup or assembly shim carried by the safe port surface."
-classification = "asm_shim"
+audit_notes = "Final amd64 startup object is staged from the safe build root and tracked as a compatibility assembly payload for Debian libc6-dev link compatibility."
+classification = "compat_asm"
 owning_phase = "impl_04_loader_startup_secure_exec"
 path = "/usr/lib64/rcrt1.o"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private baseline loader copy retained only as an explicitly inventoried backend payload while the public loader path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_06_io_stdio_string_path"
-path = "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private copied upstream libBrokenLocale payload retained only as an explicitly inventoried backend while the public compatibility DSO path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_08_locale_iconv_posix_parsers"
-path = "/usr/libexec/safelibs/backends/libBrokenLocale.so.1"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private copied upstream libanl payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_07_nss_resolver_nscd"
-path = "/usr/libexec/safelibs/backends/libanl.so.1"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private baseline libc copy retained only as an explicitly inventoried backend payload while the public libc path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_06_io_stdio_string_path"
-path = "/usr/libexec/safelibs/backends/libc.so.6"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private baseline libc_malloc_debug copy retained only as an explicitly inventoried backend payload while the public malloc-debug path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_06_io_stdio_string_path"
-path = "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private copied upstream libdl payload retained only as an explicitly inventoried backend while the public dlfcn-facing DSO path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_09_math_and_aux_dsos"
-path = "/usr/libexec/safelibs/backends/libdl.so.2"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private copied upstream libm payload retained only as an explicitly inventoried backend while the public math DSO path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_09_math_and_aux_dsos"
-path = "/usr/libexec/safelibs/backends/libm.so.6"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private baseline libmemusage copy retained only as an explicitly inventoried backend payload while the public memusage path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_06_io_stdio_string_path"
-path = "/usr/libexec/safelibs/backends/libmemusage.so"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private copied upstream libmvec payload retained only as an explicitly inventoried backend while the public vector math DSO path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_09_math_and_aux_dsos"
-path = "/usr/libexec/safelibs/backends/libmvec.so.1"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private copied upstream libnsl payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_07_nss_resolver_nscd"
-path = "/usr/libexec/safelibs/backends/libnsl.so.1"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private copied upstream libnss_compat payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_07_nss_resolver_nscd"
-path = "/usr/libexec/safelibs/backends/libnss_compat.so.2"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private copied upstream libnss_dns payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_07_nss_resolver_nscd"
-path = "/usr/libexec/safelibs/backends/libnss_dns.so.2"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private copied upstream libnss_files payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_07_nss_resolver_nscd"
-path = "/usr/libexec/safelibs/backends/libnss_files.so.2"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private copied upstream libnss_hesiod payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_07_nss_resolver_nscd"
-path = "/usr/libexec/safelibs/backends/libnss_hesiod.so.2"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private copied upstream libpcprofile payload retained only as an explicitly inventoried backend while the public profiling DSO path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_09_math_and_aux_dsos"
-path = "/usr/libexec/safelibs/backends/libpcprofile.so"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private baseline libpthread copy retained only as an explicitly inventoried backend payload while the public libpthread path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_06_io_stdio_string_path"
-path = "/usr/libexec/safelibs/backends/libpthread.so.0"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private copied upstream libresolv payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_07_nss_resolver_nscd"
-path = "/usr/libexec/safelibs/backends/libresolv.so.2"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private copied upstream librt payload retained only as an explicitly inventoried backend while the public realtime DSO path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_09_math_and_aux_dsos"
-path = "/usr/libexec/safelibs/backends/librt.so.1"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private baseline libthread_db copy retained only as an explicitly inventoried backend payload while the public libthread_db path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_06_io_stdio_string_path"
-path = "/usr/libexec/safelibs/backends/libthread_db.so.1"
-reviewer = "phase-5-auto-review"
-shipped = true
-
-[[reviewed_fallback_entries]]
-audit_notes = "Private copied upstream libutil payload retained only as an explicitly inventoried backend while the public login/helper DSO path comes from the safe build root."
-classification = "private_baseline_backend_dso"
-owning_phase = "impl_09_math_and_aux_dsos"
-path = "/usr/libexec/safelibs/backends/libutil.so.1"
 reviewer = "phase-5-auto-review"
 shipped = true
 
@@ -358,6 +201,14 @@ audit_notes = "Checked-in amd64 template for generated dlvsym forwarding veneers
 classification = "compat_asm_forwarding_veneer_template"
 owning_phase = "impl_06_io_stdio_string_path"
 path = "safe/crates/compat-asm/x86_64/forwarding-veneer-template.S"
+reviewer = "phase-5-auto-review"
+shipped = false
+
+[[reviewed_fallback_entries]]
+audit_notes = "Checked-in review anchor for final amd64 startfile compatibility objects; the package ships built object payloads recorded separately by install path."
+classification = "compat_asm"
+owning_phase = "impl_04_loader_startup_secure_exec"
+path = "safe/crates/compat-asm/x86_64/startfiles.S"
 reviewer = "phase-5-auto-review"
 shipped = false
 

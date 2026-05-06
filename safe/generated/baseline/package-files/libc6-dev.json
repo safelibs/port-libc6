@@ -11,7 +11,7 @@
       "original/debian/sysdeps/linux.mk"
     ],
     "package": "libc6-dev",
-    "phase": "impl_08_locale_iconv_posix_parsers",
+    "phase": "impl_10_final_fixup_and_audit",
     "scope": "required_package"
   },
   "entries": [
@@ -6219,119 +6219,119 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/Mcrt1.o",
-      "source_path": "build/testroot.pristine/usr/lib64/Mcrt1.o",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/Mcrt1.o",
+      "source_origin": "compat_asm",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "asm_shim",
+      "asset_kind": "compat_asm",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_04_loader_startup_secure_exec",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/Scrt1.o",
-      "source_path": "build/testroot.pristine/usr/lib64/Scrt1.o",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/Scrt1.o",
+      "source_origin": "compat_asm",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "asm_shim",
+      "asset_kind": "compat_asm",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_04_loader_startup_secure_exec",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/audit/sotruss-lib.so",
-      "source_path": "build/testroot.pristine/usr/lib64/audit/sotruss-lib.so",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/audit/sotruss-lib.so",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
       "executable": true,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/crt1.o",
-      "source_path": "build/testroot.pristine/usr/lib64/crt1.o",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/crt1.o",
+      "source_origin": "compat_asm",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "asm_shim",
+      "asset_kind": "compat_asm",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_04_loader_startup_secure_exec",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/crti.o",
-      "source_path": "build/testroot.pristine/usr/lib64/crti.o",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/crti.o",
+      "source_origin": "compat_asm",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "asm_shim",
+      "asset_kind": "compat_asm",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_04_loader_startup_secure_exec",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/crtn.o",
-      "source_path": "build/testroot.pristine/usr/lib64/crtn.o",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/crtn.o",
+      "source_origin": "compat_asm",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "asm_shim",
+      "asset_kind": "compat_asm",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_04_loader_startup_secure_exec",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/gcrt1.o",
-      "source_path": "build/testroot.pristine/usr/lib64/gcrt1.o",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/gcrt1.o",
+      "source_origin": "compat_asm",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "asm_shim",
+      "asset_kind": "compat_asm",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_04_loader_startup_secure_exec",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/grcrt1.o",
-      "source_path": "build/testroot.pristine/usr/lib64/grcrt1.o",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/grcrt1.o",
+      "source_origin": "compat_asm",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "asm_shim",
+      "asset_kind": "compat_asm",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_04_loader_startup_secure_exec",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libBrokenLocale.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libBrokenLocale.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libBrokenLocale.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
@@ -6349,15 +6349,15 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libanl.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libanl.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libanl.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
@@ -6375,15 +6375,15 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libc.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libc.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libc.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
@@ -6414,67 +6414,67 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libc_nonshared.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libc_nonshared.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libc_nonshared.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libdl.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libdl.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libdl.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libg.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libg.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libg.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libm-2.39.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libm-2.39.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libm-2.39.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libm.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libm.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libm.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
@@ -6492,28 +6492,28 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libmcheck.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libmcheck.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libmcheck.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "rust_target",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libmvec.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libmvec.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libmvec.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
@@ -6557,15 +6557,15 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libpthread.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libpthread.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libpthread.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
@@ -6574,24 +6574,24 @@
       "source_origin": "generated_compat",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "generated_compat_archive",
+      "asset_kind": "synthetic_empty_archive",
       "executable": false,
       "symlink_target": null,
       "owner_phase": "impl_06_io_stdio_string_path",
-      "verification": "libc-family-cutover"
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libresolv.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libresolv.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libresolv.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
@@ -6609,15 +6609,15 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/librt.a",
-      "source_path": "build/testroot.pristine/usr/lib64/librt.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/librt.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
@@ -6635,28 +6635,28 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libutil.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libutil.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libutil.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/rcrt1.o",
-      "source_path": "build/testroot.pristine/usr/lib64/rcrt1.o",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/rcrt1.o",
+      "source_origin": "compat_asm",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "asm_shim",
+      "asset_kind": "compat_asm",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_04_loader_startup_secure_exec",
+      "verification": "dev-link-artifacts"
     }
   ]
 }

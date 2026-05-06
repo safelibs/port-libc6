@@ -85,8 +85,8 @@ fn ensure_phase06_public_artifacts_are_safe_built(build_root: Option<PathBuf>) -
                 .arg(".note.safelibs")
                 .arg(&stripped),
         )?;
-        let generated =
-            fs::read(&stripped).with_context(|| format!("failed to read {}", stripped.display()))?;
+        let generated = fs::read(&stripped)
+            .with_context(|| format!("failed to read {}", stripped.display()))?;
         let baseline_bytes = fs::read(&baseline)
             .with_context(|| format!("failed to read {}", baseline.display()))?;
         if generated == baseline_bytes {

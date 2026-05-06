@@ -72,6 +72,7 @@ Section: libdevel
 Priority: optional
 Multi-Arch: same
 Depends: libc6 (= @SAFE_VERSION@), libc-dev-bin (= @SAFE_VERSION@), linux-libc-dev
+Provides: libc-dev
 Suggests: manpages-dev
 Description: GNU C Library: Development libraries and header files
  This package ships the headers, startup objects, development symlinks, and

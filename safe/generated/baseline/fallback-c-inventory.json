@@ -3,9 +3,9 @@
     "notes": [
       "This inventory is the single committed ledger of non-Rust source, script, assembly, template, and fallback assets planned under safe/**.",
       "Later phases must update this file in place instead of maintaining ad hoc fallback lists.",
-      "Phase 9 removes dev/time helper backend binaries and limits remaining copied-upstream payloads to explicitly tracked private DSO backends."
+      "Phase 10 removes shipped private baseline backend DSOs and leaves no temporary fallback binaries in the package payload."
     ],
-    "phase": "impl_09_math_and_aux_dsos"
+    "phase": "impl_10_final_fixup_and_audit"
   },
   "entries": [
     {
@@ -21,80 +21,80 @@
     },
     {
       "path": "/usr/lib64/Mcrt1.o",
-      "source_path": "build/testroot.pristine/usr/lib64/Mcrt1.o",
-      "classification": "asm_shim",
+      "source_path": "safe/crates/compat-asm/x86_64/startfiles.S",
+      "classification": "compat_asm",
       "owning_phase": "impl_04_loader_startup_secure_exec",
       "shipped": true,
       "package_scope_refs": [
         "/usr/lib64/Mcrt1.o"
       ],
-      "audit_notes": "Required-package startup or assembly shim carried by the safe port surface."
+      "audit_notes": "Final amd64 startup object is staged from the safe build root and tracked as a compatibility assembly payload for Debian libc6-dev link compatibility."
     },
     {
       "path": "/usr/lib64/Scrt1.o",
-      "source_path": "build/testroot.pristine/usr/lib64/Scrt1.o",
-      "classification": "asm_shim",
+      "source_path": "safe/crates/compat-asm/x86_64/startfiles.S",
+      "classification": "compat_asm",
       "owning_phase": "impl_04_loader_startup_secure_exec",
       "shipped": true,
       "package_scope_refs": [
         "/usr/lib64/Scrt1.o"
       ],
-      "audit_notes": "Required-package startup or assembly shim carried by the safe port surface."
+      "audit_notes": "Final amd64 startup object is staged from the safe build root and tracked as a compatibility assembly payload for Debian libc6-dev link compatibility."
     },
     {
       "path": "/usr/lib64/crt1.o",
-      "source_path": "build/testroot.pristine/usr/lib64/crt1.o",
-      "classification": "asm_shim",
+      "source_path": "safe/crates/compat-asm/x86_64/startfiles.S",
+      "classification": "compat_asm",
       "owning_phase": "impl_04_loader_startup_secure_exec",
       "shipped": true,
       "package_scope_refs": [
         "/usr/lib64/crt1.o"
       ],
-      "audit_notes": "Required-package startup or assembly shim carried by the safe port surface."
+      "audit_notes": "Final amd64 startup object is staged from the safe build root and tracked as a compatibility assembly payload for Debian libc6-dev link compatibility."
     },
     {
       "path": "/usr/lib64/crti.o",
-      "source_path": "build/testroot.pristine/usr/lib64/crti.o",
-      "classification": "asm_shim",
+      "source_path": "safe/crates/compat-asm/x86_64/startfiles.S",
+      "classification": "compat_asm",
       "owning_phase": "impl_04_loader_startup_secure_exec",
       "shipped": true,
       "package_scope_refs": [
         "/usr/lib64/crti.o"
       ],
-      "audit_notes": "Required-package startup or assembly shim carried by the safe port surface."
+      "audit_notes": "Final amd64 startup object is staged from the safe build root and tracked as a compatibility assembly payload for Debian libc6-dev link compatibility."
     },
     {
       "path": "/usr/lib64/crtn.o",
-      "source_path": "build/testroot.pristine/usr/lib64/crtn.o",
-      "classification": "asm_shim",
+      "source_path": "safe/crates/compat-asm/x86_64/startfiles.S",
+      "classification": "compat_asm",
       "owning_phase": "impl_04_loader_startup_secure_exec",
       "shipped": true,
       "package_scope_refs": [
         "/usr/lib64/crtn.o"
       ],
-      "audit_notes": "Required-package startup or assembly shim carried by the safe port surface."
+      "audit_notes": "Final amd64 startup object is staged from the safe build root and tracked as a compatibility assembly payload for Debian libc6-dev link compatibility."
     },
     {
       "path": "/usr/lib64/gcrt1.o",
-      "source_path": "build/testroot.pristine/usr/lib64/gcrt1.o",
-      "classification": "asm_shim",
+      "source_path": "safe/crates/compat-asm/x86_64/startfiles.S",
+      "classification": "compat_asm",
       "owning_phase": "impl_04_loader_startup_secure_exec",
       "shipped": true,
       "package_scope_refs": [
         "/usr/lib64/gcrt1.o"
       ],
-      "audit_notes": "Required-package startup or assembly shim carried by the safe port surface."
+      "audit_notes": "Final amd64 startup object is staged from the safe build root and tracked as a compatibility assembly payload for Debian libc6-dev link compatibility."
     },
     {
       "path": "/usr/lib64/grcrt1.o",
-      "source_path": "build/testroot.pristine/usr/lib64/grcrt1.o",
-      "classification": "asm_shim",
+      "source_path": "safe/crates/compat-asm/x86_64/startfiles.S",
+      "classification": "compat_asm",
       "owning_phase": "impl_04_loader_startup_secure_exec",
       "shipped": true,
       "package_scope_refs": [
         "/usr/lib64/grcrt1.o"
       ],
-      "audit_notes": "Required-package startup or assembly shim carried by the safe port surface."
+      "audit_notes": "Final amd64 startup object is staged from the safe build root and tracked as a compatibility assembly payload for Debian libc6-dev link compatibility."
     },
     {
       "path": "/usr/lib64/libc_nonshared.a",
@@ -120,234 +120,14 @@
     },
     {
       "path": "/usr/lib64/rcrt1.o",
-      "source_path": "build/testroot.pristine/usr/lib64/rcrt1.o",
-      "classification": "asm_shim",
+      "source_path": "safe/crates/compat-asm/x86_64/startfiles.S",
+      "classification": "compat_asm",
       "owning_phase": "impl_04_loader_startup_secure_exec",
       "shipped": true,
       "package_scope_refs": [
         "/usr/lib64/rcrt1.o"
       ],
-      "audit_notes": "Required-package startup or assembly shim carried by the safe port surface."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/ld-linux-x86-64.so.2",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_06_io_stdio_string_path",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2"
-      ],
-      "audit_notes": "Private baseline loader copy retained only as an explicitly inventoried backend payload while the public loader path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/libBrokenLocale.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libBrokenLocale.so.1",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_08_locale_iconv_posix_parsers",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/libBrokenLocale.so.1"
-      ],
-      "audit_notes": "Private copied upstream libBrokenLocale payload retained only as an explicitly inventoried backend while the public compatibility DSO path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/libanl.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libanl.so.1",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/libanl.so.1"
-      ],
-      "audit_notes": "Private copied upstream libanl payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/libc.so.6",
-      "source_path": "build/testroot.pristine/usr/lib64/libc.so.6",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_06_io_stdio_string_path",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/libc.so.6"
-      ],
-      "audit_notes": "Private baseline libc copy retained only as an explicitly inventoried backend payload while the public libc path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0",
-      "source_path": "build/testroot.pristine/usr/lib64/libc_malloc_debug.so.0",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_06_io_stdio_string_path",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0"
-      ],
-      "audit_notes": "Private baseline libc_malloc_debug copy retained only as an explicitly inventoried backend payload while the public malloc-debug path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/libdl.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libdl.so.2",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/libdl.so.2"
-      ],
-      "audit_notes": "Private copied upstream libdl payload retained only as an explicitly inventoried backend while the public dlfcn-facing DSO path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/libm.so.6",
-      "source_path": "build/testroot.pristine/usr/lib64/libm.so.6",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/libm.so.6"
-      ],
-      "audit_notes": "Private copied upstream libm payload retained only as an explicitly inventoried backend while the public math DSO path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/libmemusage.so",
-      "source_path": "build/testroot.pristine/usr/lib64/libmemusage.so",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_06_io_stdio_string_path",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/libmemusage.so"
-      ],
-      "audit_notes": "Private baseline libmemusage copy retained only as an explicitly inventoried backend payload while the public memusage path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/libmvec.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libmvec.so.1",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/libmvec.so.1"
-      ],
-      "audit_notes": "Private copied upstream libmvec payload retained only as an explicitly inventoried backend while the public vector math DSO path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/libnsl.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libnsl.so.1",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/libnsl.so.1"
-      ],
-      "audit_notes": "Private copied upstream libnsl payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/libnss_compat.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libnss_compat.so.2",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/libnss_compat.so.2"
-      ],
-      "audit_notes": "Private copied upstream libnss_compat payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/libnss_dns.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libnss_dns.so.2",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/libnss_dns.so.2"
-      ],
-      "audit_notes": "Private copied upstream libnss_dns payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/libnss_files.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libnss_files.so.2",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/libnss_files.so.2"
-      ],
-      "audit_notes": "Private copied upstream libnss_files payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/libnss_hesiod.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libnss_hesiod.so.2",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/libnss_hesiod.so.2"
-      ],
-      "audit_notes": "Private copied upstream libnss_hesiod payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/libpcprofile.so",
-      "source_path": "build/testroot.pristine/usr/lib64/libpcprofile.so",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/libpcprofile.so"
-      ],
-      "audit_notes": "Private copied upstream libpcprofile payload retained only as an explicitly inventoried backend while the public profiling DSO path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/libpthread.so.0",
-      "source_path": "build/testroot.pristine/usr/lib64/libpthread.so.0",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_06_io_stdio_string_path",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/libpthread.so.0"
-      ],
-      "audit_notes": "Private baseline libpthread copy retained only as an explicitly inventoried backend payload while the public libpthread path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/libresolv.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libresolv.so.2",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_07_nss_resolver_nscd",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/libresolv.so.2"
-      ],
-      "audit_notes": "Private copied upstream libresolv payload retained only as an explicitly inventoried backend while the public network-facing DSO path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/librt.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/librt.so.1",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/librt.so.1"
-      ],
-      "audit_notes": "Private copied upstream librt payload retained only as an explicitly inventoried backend while the public realtime DSO path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/libthread_db.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libthread_db.so.1",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_06_io_stdio_string_path",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/libthread_db.so.1"
-      ],
-      "audit_notes": "Private baseline libthread_db copy retained only as an explicitly inventoried backend payload while the public libthread_db path comes from the safe build root."
-    },
-    {
-      "path": "/usr/libexec/safelibs/backends/libutil.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libutil.so.1",
-      "classification": "private_baseline_backend_dso",
-      "owning_phase": "impl_09_math_and_aux_dsos",
-      "shipped": true,
-      "package_scope_refs": [
-        "/usr/libexec/safelibs/backends/libutil.so.1"
-      ],
-      "audit_notes": "Private copied upstream libutil payload retained only as an explicitly inventoried backend while the public login/helper DSO path comes from the safe build root."
+      "audit_notes": "Final amd64 startup object is staged from the safe build root and tracked as a compatibility assembly payload for Debian libc6-dev link compatibility."
     },
     {
       "path": "/usr/libexec/safelibs/loader-tools/ld.so.backend",
@@ -390,6 +170,15 @@
       "shipped": false,
       "package_scope_refs": [],
       "audit_notes": "Checked-in amd64 template for generated dlvsym forwarding veneers; the package build emits per-DSO generated sources from this shape and does not ship the template itself."
+    },
+    {
+      "path": "safe/crates/compat-asm/x86_64/startfiles.S",
+      "source_path": "safe/crates/compat-asm/x86_64/startfiles.S",
+      "classification": "compat_asm",
+      "owning_phase": "impl_04_loader_startup_secure_exec",
+      "shipped": false,
+      "package_scope_refs": [],
+      "audit_notes": "Checked-in review anchor for final amd64 startfile compatibility objects; the package ships built object payloads recorded separately by install path."
     },
     {
       "path": "safe/debian/debhelper.in/libc-alt.install",

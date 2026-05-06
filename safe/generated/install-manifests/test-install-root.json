@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "phase": "impl_08_locale_iconv_posix_parsers",
+    "phase": "impl_10_final_fixup_and_audit",
     "include_testroot_only": true,
     "package_count": 8,
     "packages": [
@@ -6573,19 +6573,6 @@
     },
     {
       "package": "libc6-dbg",
-      "path": "/usr/lib/debug/.build-id/02/d77a489f419fd53e0ecd8348f9e33194f4cef5.debug",
-      "source_path": "/usr/lib64/libthread_db.so.1",
-      "source_origin": "derived_debug",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "debug_asset",
-      "executable": true,
-      "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
-      "verification": "libc-family-cutover"
-    },
-    {
-      "package": "libc6-dbg",
       "path": "/usr/lib/debug/.build-id/03/276b883247461bfed97e0b191951d13aedd64b.debug",
       "source_path": "/usr/lib64/gconv/TIS-620.so",
       "source_origin": "derived_debug",
@@ -6609,6 +6596,19 @@
       "symlink_target": null,
       "owner_phase": null,
       "verification": "basic-required-packages"
+    },
+    {
+      "package": "libc6-dbg",
+      "path": "/usr/lib/debug/.build-id/05/e94442f240fe3c0b4eedbe9c72eb65bb292102.debug",
+      "source_path": "/usr/lib64/libmemusage.so",
+      "source_origin": "derived_debug",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "debug_asset",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "libc-family-cutover"
     },
     {
       "package": "libc6-dbg",
@@ -6700,19 +6700,6 @@
       "symlink_target": null,
       "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "dev-and-time-tools"
-    },
-    {
-      "package": "libc6-dbg",
-      "path": "/usr/lib/debug/.build-id/0c/64bd8b0b9facfaae86477d469d79301face1a2.debug",
-      "source_path": "/usr/lib64/libnss_compat.so.2",
-      "source_origin": "derived_debug",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "debug_asset",
-      "executable": true,
-      "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
-      "verification": "network-tools"
     },
     {
       "package": "libc6-dbg",
@@ -7067,19 +7054,6 @@
     },
     {
       "package": "libc6-dbg",
-      "path": "/usr/lib/debug/.build-id/2d/00ecd8fe6875bbe68d0f111bfa46a16ce029c0.debug",
-      "source_path": "/usr/lib64/libnss_files.so.2",
-      "source_origin": "derived_debug",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "debug_asset",
-      "executable": true,
-      "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
-      "verification": "network-tools"
-    },
-    {
-      "package": "libc6-dbg",
       "path": "/usr/lib/debug/.build-id/2f/33a9976be582aa110cbc8d9f7e6843c7d789ec.debug",
       "source_path": "/usr/lib64/gconv/ISO8859-15.so",
       "source_origin": "derived_debug",
@@ -7363,19 +7337,6 @@
       "symlink_target": null,
       "owner_phase": null,
       "verification": "basic-required-packages"
-    },
-    {
-      "package": "libc6-dbg",
-      "path": "/usr/lib/debug/.build-id/3d/dc284c617ef1901d3c5e1395d915d3838d7e5d.debug",
-      "source_path": "/usr/lib64/libresolv.so.2",
-      "source_origin": "derived_debug",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "debug_asset",
-      "executable": true,
-      "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
-      "verification": "network-tools"
     },
     {
       "package": "libc6-dbg",
@@ -7743,6 +7704,19 @@
     },
     {
       "package": "libc6-dbg",
+      "path": "/usr/lib/debug/.build-id/53/cd45501ed4c54943a3754b4125e68023da9b54.debug",
+      "source_path": "/usr/lib64/libBrokenLocale.so.1",
+      "source_origin": "derived_debug",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "debug_asset",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_08_locale_iconv_posix_parsers",
+      "verification": "libc-family-cutover"
+    },
+    {
+      "package": "libc6-dbg",
       "path": "/usr/lib/debug/.build-id/54/55b209c34b91371a8caf7f8ae38e8bbaea1fc9.debug",
       "source_path": "/usr/lib64/gconv/IBM870.so",
       "source_origin": "derived_debug",
@@ -7753,6 +7727,19 @@
       "symlink_target": null,
       "owner_phase": null,
       "verification": "basic-required-packages"
+    },
+    {
+      "package": "libc6-dbg",
+      "path": "/usr/lib/debug/.build-id/54/8a273116dac4697ed63e55d6a2f614937d82c0.debug",
+      "source_path": "/usr/lib64/libthread_db.so.1",
+      "source_origin": "derived_debug",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "debug_asset",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "libc-family-cutover"
     },
     {
       "package": "libc6-dbg",
@@ -7831,6 +7818,19 @@
       "symlink_target": null,
       "owner_phase": null,
       "verification": "basic-required-packages"
+    },
+    {
+      "package": "libc6-dbg",
+      "path": "/usr/lib/debug/.build-id/59/f8822b168e497abe35284a2eefef0c174da344.debug",
+      "source_path": "/usr/lib64/libnsl.so.1",
+      "source_origin": "derived_debug",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "debug_asset",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
     },
     {
       "package": "libc6-dbg",
@@ -7990,6 +7990,19 @@
     },
     {
       "package": "libc6-dbg",
+      "path": "/usr/lib/debug/.build-id/68/bc981a05a2724ea82fa97d0efb27655428b8f4.debug",
+      "source_path": "/usr/lib64/libresolv.so.2",
+      "source_origin": "derived_debug",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "debug_asset",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
+    },
+    {
+      "package": "libc6-dbg",
       "path": "/usr/lib/debug/.build-id/68/f6662b18245c094469b68bbd2d554a0a1b83b0.debug",
       "source_path": "/usr/lib64/gconv/IBM1160.so",
       "source_origin": "derived_debug",
@@ -8042,6 +8055,19 @@
     },
     {
       "package": "libc6-dbg",
+      "path": "/usr/lib/debug/.build-id/72/842c2da53fddd1da6270438e35f857d1523748.debug",
+      "source_path": "/usr/lib64/libnss_files.so.2",
+      "source_origin": "derived_debug",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "debug_asset",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
+    },
+    {
+      "package": "libc6-dbg",
       "path": "/usr/lib/debug/.build-id/73/0b8f0a14a0b1576661dd130d3cfe1187a613a8.debug",
       "source_path": "/usr/lib64/gconv/EBCDIC-ES-S.so",
       "source_origin": "derived_debug",
@@ -8068,16 +8094,16 @@
     },
     {
       "package": "libc6-dbg",
-      "path": "/usr/lib/debug/.build-id/73/dab5f2953e9cc370cb36fec3d5a9fe2b64a5d7.debug",
-      "source_path": "/usr/lib64/libBrokenLocale.so.1",
+      "path": "/usr/lib/debug/.build-id/73/65c249ae3ad406e998acb117ca655abcc09211.debug",
+      "source_path": "/usr/lib64/libnss_dns.so.2",
       "source_origin": "derived_debug",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "debug_asset",
       "executable": true,
       "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
-      "verification": "libc-family-cutover"
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
     },
     {
       "package": "libc6-dbg",
@@ -8169,19 +8195,6 @@
       "symlink_target": null,
       "owner_phase": null,
       "verification": "basic-required-packages"
-    },
-    {
-      "package": "libc6-dbg",
-      "path": "/usr/lib/debug/.build-id/78/72d4dc3d958dd70ca453fb34ca20939f9a30ee.debug",
-      "source_path": "/usr/lib64/libanl.so.1",
-      "source_origin": "derived_debug",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "debug_asset",
-      "executable": true,
-      "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
-      "verification": "network-tools"
     },
     {
       "package": "libc6-dbg",
@@ -8325,19 +8338,6 @@
       "symlink_target": null,
       "owner_phase": null,
       "verification": "basic-required-packages"
-    },
-    {
-      "package": "libc6-dbg",
-      "path": "/usr/lib/debug/.build-id/82/cda6761ed3e5463d2fb1494fb80a901dc9829a.debug",
-      "source_path": "/usr/lib64/libnss_dns.so.2",
-      "source_origin": "derived_debug",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "debug_asset",
-      "executable": true,
-      "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
-      "verification": "network-tools"
     },
     {
       "package": "libc6-dbg",
@@ -8679,6 +8679,19 @@
     },
     {
       "package": "libc6-dbg",
+      "path": "/usr/lib/debug/.build-id/9c/9ef4d7ba573674a3c3a899567b3a926ebbec21.debug",
+      "source_path": "/usr/lib64/libnss_hesiod.so.2",
+      "source_origin": "derived_debug",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "debug_asset",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
+    },
+    {
+      "package": "libc6-dbg",
       "path": "/usr/lib/debug/.build-id/9d/64d68f9d70c0975c4ceeffc8d9284b30020f0a.debug",
       "source_path": "/usr/lib64/gconv/IBM922.so",
       "source_origin": "derived_debug",
@@ -8952,19 +8965,6 @@
     },
     {
       "package": "libc6-dbg",
-      "path": "/usr/lib/debug/.build-id/b1/03dc26150f440fd8e5d95187b49a5495b26431.debug",
-      "source_path": "/usr/lib64/libnss_hesiod.so.2",
-      "source_origin": "derived_debug",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "debug_asset",
-      "executable": true,
-      "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
-      "verification": "network-tools"
-    },
-    {
-      "package": "libc6-dbg",
       "path": "/usr/lib/debug/.build-id/b1/e73334332ecefb5eb426659aed9b817951a50c.debug",
       "source_path": "/usr/lib64/gconv/IBM275.so",
       "source_origin": "derived_debug",
@@ -9053,19 +9053,6 @@
       "symlink_target": null,
       "owner_phase": null,
       "verification": "basic-required-packages"
-    },
-    {
-      "package": "libc6-dbg",
-      "path": "/usr/lib/debug/.build-id/b9/23d9c32a2b5926a7f8bb74c768f395cc96c853.debug",
-      "source_path": "/usr/lib64/libmemusage.so",
-      "source_origin": "derived_debug",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "debug_asset",
-      "executable": true,
-      "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
-      "verification": "libc-family-cutover"
     },
     {
       "package": "libc6-dbg",
@@ -9446,6 +9433,19 @@
     },
     {
       "package": "libc6-dbg",
+      "path": "/usr/lib/debug/.build-id/d1/b357b1cc5c15f30a4fd49c47507c7550532d41.debug",
+      "source_path": "/usr/lib64/libnss_compat.so.2",
+      "source_origin": "derived_debug",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "debug_asset",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
+    },
+    {
+      "package": "libc6-dbg",
       "path": "/usr/lib/debug/.build-id/d4/c1f595dc443e5429925d2abfb8c29c331a4a06.debug",
       "source_path": "/usr/lib64/gconv/KOI-8.so",
       "source_origin": "derived_debug",
@@ -9732,6 +9732,19 @@
     },
     {
       "package": "libc6-dbg",
+      "path": "/usr/lib/debug/.build-id/e2/ca33e6a2ba942a86c1db25ba01bf8aaea71cd0.debug",
+      "source_path": "/usr/lib64/libanl.so.1",
+      "source_origin": "derived_debug",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "debug_asset",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
+    },
+    {
+      "package": "libc6-dbg",
       "path": "/usr/lib/debug/.build-id/e2/d9d24dadcdf160f7f81885a71ca0e62df89374.debug",
       "source_path": "/usr/lib64/libc_malloc_debug.so.0",
       "source_origin": "derived_debug",
@@ -9849,19 +9862,6 @@
     },
     {
       "package": "libc6-dbg",
-      "path": "/usr/lib/debug/.build-id/ed/0a65355b0ccd26a8791a6f36f91338e412fe7c.debug",
-      "source_path": "/usr/lib64/libpthread.so.0",
-      "source_origin": "derived_debug",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "debug_asset",
-      "executable": true,
-      "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
-      "verification": "libc-family-cutover"
-    },
-    {
-      "package": "libc6-dbg",
       "path": "/usr/lib/debug/.build-id/ed/963bf59436d2f6a4b31368b835f58bace1405a.debug",
       "source_path": "/usr/lib64/gconv/ANSI_X3.110.so",
       "source_origin": "derived_debug",
@@ -9901,16 +9901,16 @@
     },
     {
       "package": "libc6-dbg",
-      "path": "/usr/lib/debug/.build-id/f0/fa913db365cced2dc0d565e6e26fee7ab170b9.debug",
-      "source_path": "/usr/lib64/libnsl.so.1",
+      "path": "/usr/lib/debug/.build-id/f0/d2113952d00716b3d254ace4888eda2422211f.debug",
+      "source_path": "/usr/lib64/libpthread.so.0",
       "source_origin": "derived_debug",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "debug_asset",
       "executable": true,
       "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
-      "verification": "network-tools"
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "libc-family-cutover"
     },
     {
       "package": "libc6-dbg",
@@ -10123,80 +10123,80 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/Mcrt1.o",
-      "source_path": "build/testroot.pristine/usr/lib64/Mcrt1.o",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/Mcrt1.o",
+      "source_origin": "compat_asm",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "asm_shim",
+      "asset_kind": "compat_asm",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_04_loader_startup_secure_exec",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/Scrt1.o",
-      "source_path": "build/testroot.pristine/usr/lib64/Scrt1.o",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/Scrt1.o",
+      "source_origin": "compat_asm",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "asm_shim",
+      "asset_kind": "compat_asm",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_04_loader_startup_secure_exec",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/audit/sotruss-lib.so",
-      "source_path": "build/testroot.pristine/usr/lib64/audit/sotruss-lib.so",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/audit/sotruss-lib.so",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
       "asset_kind": "rust_target",
       "executable": true,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/crt1.o",
-      "source_path": "build/testroot.pristine/usr/lib64/crt1.o",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/crt1.o",
+      "source_origin": "compat_asm",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "asm_shim",
+      "asset_kind": "compat_asm",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_04_loader_startup_secure_exec",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/crti.o",
-      "source_path": "build/testroot.pristine/usr/lib64/crti.o",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/crti.o",
+      "source_origin": "compat_asm",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "asm_shim",
+      "asset_kind": "compat_asm",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_04_loader_startup_secure_exec",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/crtn.o",
-      "source_path": "build/testroot.pristine/usr/lib64/crtn.o",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/crtn.o",
+      "source_origin": "compat_asm",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "asm_shim",
+      "asset_kind": "compat_asm",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_04_loader_startup_secure_exec",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6",
@@ -13516,28 +13516,28 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/gcrt1.o",
-      "source_path": "build/testroot.pristine/usr/lib64/gcrt1.o",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/gcrt1.o",
+      "source_origin": "compat_asm",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "asm_shim",
+      "asset_kind": "compat_asm",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_04_loader_startup_secure_exec",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/grcrt1.o",
-      "source_path": "build/testroot.pristine/usr/lib64/grcrt1.o",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/grcrt1.o",
+      "source_origin": "compat_asm",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "asm_shim",
+      "asset_kind": "compat_asm",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_04_loader_startup_secure_exec",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6",
@@ -13555,15 +13555,15 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libBrokenLocale.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libBrokenLocale.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libBrokenLocale.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
@@ -13594,15 +13594,15 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libanl.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libanl.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libanl.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
@@ -13633,15 +13633,15 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libc.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libc.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libc.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
@@ -13698,28 +13698,28 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libc_nonshared.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libc_nonshared.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libc_nonshared.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libdl.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libdl.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libdl.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6",
@@ -13737,41 +13737,41 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libg.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libg.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libg.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libm-2.39.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libm-2.39.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libm-2.39.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libm.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libm.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libm.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
@@ -13802,15 +13802,15 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libmcheck.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libmcheck.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libmcheck.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "rust_target",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6",
@@ -13828,15 +13828,15 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libmvec.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libmvec.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libmvec.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
@@ -13971,15 +13971,15 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libpthread.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libpthread.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libpthread.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6",
@@ -14001,24 +14001,24 @@
       "source_origin": "generated_compat",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "generated_compat_archive",
+      "asset_kind": "synthetic_empty_archive",
       "executable": false,
       "symlink_target": null,
       "owner_phase": "impl_06_io_stdio_string_path",
-      "verification": "libc-family-cutover"
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libresolv.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libresolv.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libresolv.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6-dev",
@@ -14049,15 +14049,15 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/librt.a",
-      "source_path": "build/testroot.pristine/usr/lib64/librt.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/librt.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6",
@@ -14101,15 +14101,15 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/libutil.a",
-      "source_path": "build/testroot.pristine/usr/lib64/libutil.a",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/libutil.a",
+      "source_origin": "safe_build",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "data_asset",
+      "asset_kind": "safe_compat_archive",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "libc6",
@@ -14127,15 +14127,15 @@
     {
       "package": "libc6-dev",
       "path": "/usr/lib64/rcrt1.o",
-      "source_path": "build/testroot.pristine/usr/lib64/rcrt1.o",
-      "source_origin": "build_testroot",
+      "source_path": "safe/work/libc-family-build/amd64/usr/lib64/rcrt1.o",
+      "source_origin": "compat_asm",
       "scope": "required_package",
       "shipped_status": "shipped",
-      "asset_kind": "asm_shim",
+      "asset_kind": "compat_asm",
       "executable": false,
       "symlink_target": null,
-      "owner_phase": null,
-      "verification": null
+      "owner_phase": "impl_04_loader_startup_secure_exec",
+      "verification": "dev-link-artifacts"
     },
     {
       "package": "testroot-only",
@@ -14175,266 +14175,6 @@
       "symlink_target": null,
       "owner_phase": null,
       "verification": null
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/ld-linux-x86-64.so.2",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
-      "verification": "libc-family-cutover"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/libBrokenLocale.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libBrokenLocale.so.1",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_08_locale_iconv_posix_parsers",
-      "verification": "libc-family-cutover"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/libanl.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libanl.so.1",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
-      "verification": "network-tools"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/libc.so.6",
-      "source_path": "build/testroot.pristine/usr/lib64/libc.so.6",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
-      "verification": "libc-family-cutover"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0",
-      "source_path": "build/testroot.pristine/usr/lib64/libc_malloc_debug.so.0",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
-      "verification": "libc-family-cutover"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/libdl.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libdl.so.2",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_09_math_and_aux_dsos",
-      "verification": "dev-and-time-tools"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/libm.so.6",
-      "source_path": "build/testroot.pristine/usr/lib64/libm.so.6",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_09_math_and_aux_dsos",
-      "verification": "dev-and-time-tools"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/libmemusage.so",
-      "source_path": "build/testroot.pristine/usr/lib64/libmemusage.so",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
-      "verification": "libc-family-cutover"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/libmvec.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libmvec.so.1",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_09_math_and_aux_dsos",
-      "verification": "dev-and-time-tools"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/libnsl.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libnsl.so.1",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
-      "verification": "network-tools"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/libnss_compat.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libnss_compat.so.2",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
-      "verification": "network-tools"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/libnss_dns.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libnss_dns.so.2",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
-      "verification": "network-tools"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/libnss_files.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libnss_files.so.2",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
-      "verification": "network-tools"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/libnss_hesiod.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libnss_hesiod.so.2",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
-      "verification": "network-tools"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/libpcprofile.so",
-      "source_path": "build/testroot.pristine/usr/lib64/libpcprofile.so",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_09_math_and_aux_dsos",
-      "verification": "dev-and-time-tools"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/libpthread.so.0",
-      "source_path": "build/testroot.pristine/usr/lib64/libpthread.so.0",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
-      "verification": "libc-family-cutover"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/libresolv.so.2",
-      "source_path": "build/testroot.pristine/usr/lib64/libresolv.so.2",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
-      "verification": "network-tools"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/librt.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/librt.so.1",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_09_math_and_aux_dsos",
-      "verification": "dev-and-time-tools"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/libthread_db.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libthread_db.so.1",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
-      "verification": "libc-family-cutover"
-    },
-    {
-      "package": "libc6",
-      "path": "/usr/libexec/safelibs/backends/libutil.so.1",
-      "source_path": "build/testroot.pristine/usr/lib64/libutil.so.1",
-      "source_origin": "build_testroot",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "private_baseline_backend_dso",
-      "executable": false,
-      "symlink_target": null,
-      "owner_phase": "impl_09_math_and_aux_dsos",
-      "verification": "dev-and-time-tools"
     },
     {
       "package": "libc-bin",

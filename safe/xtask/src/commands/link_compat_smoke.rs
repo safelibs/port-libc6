@@ -5,6 +5,7 @@ use crate::common::{
 };
 use anyhow::{anyhow, bail, Context, Result};
 use clap::Args as ClapArgs;
+use serde_json::Value as JsonValue;
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -44,6 +45,7 @@ pub fn run(args: Args) -> Result<()> {
     super::install_root::materialize_install_root(&install_root, true, false)?;
 
     let corpus = load_link_compat_corpus()?;
+    verify_final_manifest_closure()?;
     let scratch = safe_root().join("work/link-smoke");
     let original_objects_root = scratch.join("original-objects");
     let relink_root = scratch.join("relinked");
@@ -128,10 +130,86 @@ fn materialize_original_object(
     Ok(output)
 }
 
+fn verify_final_manifest_closure() -> Result<()> {
+    let mut failures = Vec::new();
+    for dir in [
+        safe_root().join("generated/baseline/package-files"),
+        safe_root().join("generated/install-manifests"),
+    ] {
+        for entry in
+            fs::read_dir(&dir).with_context(|| format!("failed to read {}", dir.display()))?
+        {
+            let entry = entry?;
+            if entry.path().extension().and_then(|ext| ext.to_str()) != Some("json") {
+                continue;
+            }
+            let doc: JsonValue = serde_json::from_str(
+                &fs::read_to_string(entry.path())
+                    .with_context(|| format!("failed to read {}", entry.path().display()))?,
+            )
+            .with_context(|| format!("failed to parse {}", entry.path().display()))?;
+            for item in doc
+                .get("entries")
+                .and_then(JsonValue::as_array)
+                .into_iter()
+                .flatten()
+            {
+                let path = item
+                    .get("path")
+                    .and_then(JsonValue::as_str)
+                    .unwrap_or("<unknown>");
+                let asset_kind = item
+                    .get("asset_kind")
+                    .and_then(JsonValue::as_str)
+                    .unwrap_or_default();
+                if asset_kind == "private_baseline_backend_dso"
+                    || path.starts_with("/usr/libexec/safelibs/backends/")
+                {
+                    failures.push(format!(
+                        "{} contains private backend {}",
+                        entry.path().display(),
+                        path
+                    ));
+                }
+                if item.get("package").and_then(JsonValue::as_str) == Some("libc6-dev")
+                    && item.get("source_origin").and_then(JsonValue::as_str)
+                        == Some("build_testroot")
+                    && is_code_bearing_dev_link_path(path)
+                {
+                    failures.push(format!(
+                        "{} keeps code-bearing libc6-dev payload {} on build_testroot",
+                        entry.path().display(),
+                        path
+                    ));
+                }
+            }
+        }
+    }
+    let package_scope = fs::read_to_string(safe_root().join("upstream-compat/package-scope.toml"))
+        .context("failed to read package-scope.toml")?;
+    if package_scope.contains("asset_kind = \"private_baseline_backend_dso\"")
+        || package_scope.contains("path = \"/usr/libexec/safelibs/backends/")
+    {
+        failures.push("package-scope still references a private backend DSO".to_string());
+    }
+    if !failures.is_empty() {
+        bail!(
+            "final link-compat manifest closure failed:\n{}",
+            failures.join("\n")
+        );
+    }
+    Ok(())
+}
+
+fn is_code_bearing_dev_link_path(path: &str) -> bool {
+    (path.starts_with("/usr/lib64/") || path.starts_with("/usr/lib64/audit/"))
+        && (path.ends_with(".o") || path.ends_with(".a") || path.ends_with(".so"))
+}
+
 fn relink_case(
     case: &crate::common::LinkCompatCase,
     original_object: &Path,
-    original_sysroot: &Path,
+    _original_sysroot: &Path,
     install_root: &Path,
     relink_root: &Path,
 ) -> Result<PathBuf> {
@@ -156,7 +234,7 @@ fn relink_case(
         command.arg("-no-pie");
     }
     for startfile in &case.required_startfiles {
-        command.arg(original_sysroot.join(startfile.trim_start_matches('/')));
+        command.arg(install_root.join(startfile.trim_start_matches('/')));
     }
     command.arg("-o").arg(&binary).arg(original_object);
     for arg in &case.link_args {
@@ -185,18 +263,15 @@ fn run_case(
         "skip" => Ok(()),
         "direct" => run_direct_case(case, binary),
         "safe-loader" => {
-            let backend_root = install_path_to_root(install_root, "/usr/libexec/safelibs/backends");
             let safe_library_path = make_ld_library_path(install_root);
-            let library_path = format!("{}:{}", safe_library_path, backend_root.display());
             let mut command = Command::new(install_path_to_root(
                 install_root,
                 "/usr/lib64/ld-linux-x86-64.so.2",
             ));
             command
-                .env("SAFELIBS_BACKEND_ROOT", &backend_root)
                 .env("LD_DEBUG", "libs")
                 .arg("--library-path")
-                .arg(library_path)
+                .arg(safe_library_path)
                 .arg(binary);
             let debug = format!("{command:?}");
             let output = command
@@ -209,6 +284,12 @@ fn run_case(
                 bail!("command failed ({}): {debug}\n{combined}", output.status);
             }
             ensure_no_runtime_failure(case, &combined)?;
+            if combined.contains("/usr/libexec/safelibs/backends") {
+                bail!(
+                    "link-compat case {} resolved through a private backend payload",
+                    case.case_id
+                );
+            }
             verify_public_runtime_linkage(case, install_root, &combined)
         }
         other => bail!("unsupported link-compat run_mode {other}"),

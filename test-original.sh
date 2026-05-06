@@ -4,6 +4,9 @@ set -euo pipefail
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 MANIFEST_PATH="$ROOT_DIR/dependents.json"
 DOCKER_IMAGE="${DOCKER_IMAGE:-ubuntu:24.04}"
+SAFE_DEB_DIR_REL="${SAFE_DEB_DIR_REL:-safe/work/debs}"
+SAFE_VERSION=$(jq -r '.safe_package_version' \
+  "$ROOT_DIR/safe/generated/packaging/package-build-manifest.json")
 
 if [[ ! -f "$MANIFEST_PATH" ]]; then
   printf 'Missing manifest: %s\n' "$MANIFEST_PATH" >&2
@@ -18,12 +21,17 @@ fi
 printf 'Using Docker image %s\n' "$DOCKER_IMAGE"
 docker image inspect "$DOCKER_IMAGE" >/dev/null 2>&1 || docker pull "$DOCKER_IMAGE" >/dev/null
 
+printf 'Building safe package set into %s\n' "$SAFE_DEB_DIR_REL"
+"$ROOT_DIR/safe/scripts/build-debs.sh"
+
 # Some package self-tests, especially for strace/valgrind/libvirt, need
 # namespace, ptrace, and other kernel features that Docker's default
 # confinement blocks.
 docker run --rm -i \
   --privileged \
   -e DEBIAN_FRONTEND=noninteractive \
+  -e SAFE_VERSION="$SAFE_VERSION" \
+  -e SAFE_DEB_DIR_REL="$SAFE_DEB_DIR_REL" \
   -v "$ROOT_DIR:/workspace:ro" \
   -w /workspace \
   "$DOCKER_IMAGE" \
@@ -397,6 +405,47 @@ test_dependent() {
   esac
 }
 
+install_builddep_compat_shims() {
+  local upstream_version=${SAFE_VERSION%%+safelibs*}
+  local shim_root="$scratch_root/builddep-shims"
+  local deb_dir="$shim_root/debs"
+  local pkg_root
+  local debian_dir
+
+  rm -rf "$shim_root"
+  mkdir -p "$deb_dir"
+
+  create_shim() {
+    local package=$1
+    local depends=$2
+    pkg_root="$shim_root/$package"
+    debian_dir="$pkg_root/DEBIAN"
+    mkdir -p "$debian_dir"
+    cat >"$debian_dir/control" <<SHIM
+Package: $package
+Version: $upstream_version
+Architecture: amd64
+Maintainer: SafeLibs <noreply@safelibs.local>
+Section: devel
+Priority: optional
+Depends: $depends
+Description: SafeLibs dependent-harness build-dependency shim for $package
+ This package is created inside test-original.sh only. It satisfies Ubuntu
+ source build-dependencies that require exact-version multilib libc companion
+ packages without expanding the final SafeLibs package payload.
+SHIM
+    dpkg-deb --build "$pkg_root" \
+      "$deb_dir/${package}_${upstream_version}_amd64.deb" >/dev/null
+  }
+
+  create_shim libc6-i386 "libc6 (>= $upstream_version)"
+  create_shim libc6-x32 "libc6 (>= $upstream_version)"
+  create_shim libc6-dev-i386 "libc6-dev (>= $upstream_version), libc6-i386 (= $upstream_version)"
+  create_shim libc6-dev-x32 "libc6-dev (>= $upstream_version), libc6-x32 (= $upstream_version)"
+
+  dpkg -i "$deb_dir"/*.deb >/dev/null
+}
+
 build_source_package() {
   local source_package=$1
   local dependent_name=$2
@@ -481,8 +530,21 @@ log "Installing bootstrap tools"
 run_logged apt-bootstrap apt-get install -y --no-install-recommends \
   ca-certificates jq build-essential dpkg-dev fakeroot
 
+log "Configuring local safe apt repository"
+run_logged safe-repo /workspace/safe/scripts/install-safe-repo.sh "$SAFE_DEB_DIR_REL"
+
+log "Installing required safe package set"
+run_logged safe-packages apt-get install -y --no-install-recommends --allow-downgrades \
+  libc6 libc6-dev libc6-dbg libc-bin libc-dev-bin locales nscd
+
+# The staged glibc build is rooted in /usr/lib64, while Ubuntu packages install
+# most non-glibc DSOs under the multiarch directories. Export the multiarch
+# paths for the dependent phase so dpkg maintainer scripts can load freshly
+# unpacked libraries before ldconfig triggers rebuild the cache.
+export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu:/usr/lib64:/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
 mapfile -t runtime_packages < <(jq -r '.dependents[].binary_package' "$manifest_path" | sort -u)
-helper_packages=(dbus-user-session xvfb libvirt-clients libc6-dbg)
+helper_packages=(dbus-user-session xvfb libvirt-clients)
 if (( ${#runtime_packages[@]} == 0 )); then
   printf 'No runtime packages were found in %s.\n' "$manifest_path" >&2
   exit 1
@@ -491,6 +553,9 @@ fi
 log "Installing dependent runtime packages"
 run_logged apt-runtime apt-get install -y --no-install-recommends \
   "${runtime_packages[@]}" "${helper_packages[@]}"
+
+log "Installing source build-dependency compatibility shims"
+run_logged builddep-shims install_builddep_compat_shims
 
 declare -A built_sources=()
 mapfile -t dependents < <(jq -c '.dependents[]' "$manifest_path")
