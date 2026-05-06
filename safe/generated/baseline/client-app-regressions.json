@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "issues": [],
+  "validated_suites": {
+    "phase12_results": [
+      "safe/work/dependent-apps/results/core-network.json",
+      "safe/work/dependent-apps/results/server-media-virtualization.json",
+      "safe/work/dependent-apps/results/diagnostics.json"
+    ],
+    "phase13_results": [
+      "safe/work/dependent-apps/results/source-builds.json"
+    ],
+    "phase14_discovery_snapshot": {
+      "snapshot_dir": "safe/work/dependent-apps/artifact-snapshots/phase14-inputs",
+      "result_files": [
+        "safe/work/dependent-apps/results/core-network.json",
+        "safe/work/dependent-apps/results/server-media-virtualization.json",
+        "safe/work/dependent-apps/results/diagnostics.json",
+        "safe/work/dependent-apps/results/source-builds.json"
+      ],
+      "artifact_sha256s": "safe/work/dependent-apps/artifact-snapshots/phase14-inputs/sha256sums.txt",
+      "candidate_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "head": "d639cc9cdcfc7c9bada3853ab38c1e08f24a0c4b",
+      "created_by": "check_13_freeze_phase14_discovery_inputs"
+    }
+  }
+}

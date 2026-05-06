@@ -19,7 +19,8 @@ usage() {
 Usage: run.sh --image <image:tag> --suite <suite> [--case <case>] [--privileged]
 
 Runs every case in the selected suite by default. Repeat --case to run
-specific app cases from that suite.
+specific app cases from that suite. The impacted suite is resolved from
+safe/generated/baseline/client-app-regressions.json.
 USAGE
 }
 
@@ -96,6 +97,210 @@ write_result() {
   mv "$result_tmp" "$result_path"
 }
 
+run_impacted_suite() {
+  local ledger="$ROOT_DIR/safe/generated/baseline/client-app-regressions.json"
+  local result_path="$DEPENDENT_APPS_RESULTS_DIR/impacted.json"
+  local suite_log_dir="$DEPENDENT_APPS_LOGS_DIR/impacted"
+
+  ((${#requested_cases[@]} == 0)) || dependent_apps_die 'the impacted suite does not accept --case'
+  test -f "$ledger" || dependent_apps_die "missing regression ledger: $ledger"
+  jq -e '(.schema_version == 1) and (.issues | type == "array")' "$ledger" >/dev/null ||
+    dependent_apps_die "malformed regression ledger: $ledger"
+  jq -e 'all(.issues[]; (.impacted_cases | type == "array") and (.impacted_cases | length > 0))' \
+    "$ledger" >/dev/null || dependent_apps_die 'non-empty regression issues must list impacted cases'
+
+  rm -rf "$suite_log_dir"
+  mkdir -p "$suite_log_dir"
+
+  tmp_dir=$(mktemp -d "$DEPENDENT_APPS_WORK_ROOT/tmp.impacted.XXXXXX")
+  cases_json="$tmp_dir/cases.json"
+  printf '[]\n' >"$cases_json"
+  trap 'rm -rf "$tmp_dir"' EXIT
+
+  mapfile -t impacted_case_ids < <(
+    jq -r '[.issues[].impacted_cases[]] | sort | unique | .[]' "$ledger"
+  )
+
+  if ((${#impacted_case_ids[@]} == 0)); then
+    write_result "$tmp_dir/impacted.json" "$result_path" "$cases_json" passed 0 0 0 0
+    return 0
+  fi
+
+  [[ -n "$image" ]] || dependent_apps_die '--image is required for non-empty impacted suite'
+  dependent_apps_require_command docker
+  if ! docker image inspect "$image" >/dev/null 2>&1; then
+    dependent_apps_die "missing image or unavailable Docker daemon: $image"
+  fi
+
+  passed=0
+  failed=0
+  harness_failed=0
+
+  for case_id in "${impacted_case_ids[@]}"; do
+    [[ "$case_id" == */* ]] || dependent_apps_die "invalid impacted case ID: $case_id"
+    original_suite=${case_id%%/*}
+    original_case=${case_id#*/}
+    [[ "$original_suite" =~ ^[A-Za-z0-9._-]+$ ]] ||
+      dependent_apps_die "invalid impacted source suite: $original_suite"
+    [[ "$original_case" =~ ^[A-Za-z0-9._-]+$ ]] ||
+      dependent_apps_die "invalid impacted source case: $original_case"
+    dependent_apps_validate_suite_metadata "$original_suite" ||
+      dependent_apps_die "malformed or unknown suite metadata: $original_suite"
+    original_suite_type=$(dependent_apps_suite_type "$original_suite")
+    if ! dependent_apps_suite_cases "$original_suite" | grep -Fxq "$original_case"; then
+      dependent_apps_die "case $original_case is not part of suite $original_suite"
+    fi
+
+    case "$original_suite_type" in
+      harness-contract)
+        ;;
+      runtime-smoke)
+        case_script=$(dependent_apps_case_script "$original_case")
+        [[ -x "$case_script" ]] || dependent_apps_die "missing executable case script: $case_script"
+        ;;
+      source-build)
+        case_script=$(dependent_apps_source_build_script "$original_case")
+        [[ -x "$case_script" ]] || dependent_apps_die "missing executable case script: $case_script"
+        ;;
+      *)
+        dependent_apps_die "unsupported suite type for $original_suite: $original_suite_type"
+        ;;
+    esac
+
+    case_name=${case_id//\//__}
+    log_rel="safe/work/dependent-apps/logs/impacted/$case_name.log"
+    log_abs="$ROOT_DIR/$log_rel"
+    rerun="bash tests/port/dependent-apps/run.sh --image $image --suite impacted"
+    if (( privileged )); then
+      rerun="$rerun --privileged"
+    fi
+    started_at=$(date +%s)
+
+    {
+      printf 'suite=impacted\n'
+      printf 'case=%s\n' "$case_name"
+      printf 'case_id=%s\n' "$case_id"
+      printf 'safe_version=%s\n' "$safe_version"
+      printf 'source_suite=%s\n' "$original_suite"
+      printf 'source_case=%s\n' "$original_case"
+      printf 'image=%s\n' "$image"
+      printf 'rerun=%s\n\n' "$rerun"
+    } >"$log_abs"
+
+    if [[ "$original_suite_type" == "harness-contract" ]]; then
+      if image_contract_run_case "$image" "$original_case" "$safe_version" >>"$log_abs" 2>&1; then
+        status=passed
+        failure_kind=null
+        passed=$((passed + 1))
+      else
+        status=harness_failed
+        failure_kind='"harness"'
+        harness_failed=$((harness_failed + 1))
+      fi
+    else
+      if [[ "$original_suite_type" == "source-build" ]]; then
+        container_case_script="/workspace/tests/port/dependent-apps/source-builds/$original_case.sh"
+      else
+        container_case_script="/workspace/tests/port/dependent-apps/cases/$original_case.sh"
+      fi
+      case_status_dir="$tmp_dir/status/$case_name"
+      rm -rf "$case_status_dir"
+      mkdir -p "$case_status_dir"
+      container_marker="dependent_apps_container_started=$case_id"
+      docker_args=(docker run --rm)
+      if (( privileged )); then
+        docker_args+=(--privileged)
+      fi
+      docker_args+=(
+        -e "SAFE_VERSION=$safe_version"
+        -e "DEPENDENT_APPS_SUITE=impacted"
+        -e "DEPENDENT_APPS_CASE=$case_name"
+        -e "DEPENDENT_APPS_CASE_ID=$case_id"
+        -e "DEPENDENT_APPS_SOURCE_SUITE=$original_suite"
+        -e "DEPENDENT_APPS_SOURCE_CASE=$original_case"
+        -e "DEPENDENT_APPS_CASE_WORKDIR=/tmp/safelibs-dependent-apps/impacted/$case_name"
+      )
+      if [[ "$original_suite_type" == "source-build" ]]; then
+        docker_args+=(
+          -e "DEPENDENT_APPS_FAILURE_KIND_PATH=/tmp/safelibs-dependent-status/failure-kind"
+          -v "$case_status_dir:/tmp/safelibs-dependent-status:rw"
+        )
+      fi
+      docker_args+=(
+        -v "$HARNESS_DIR:/workspace/tests/port/dependent-apps:ro"
+        -w /workspace
+        "$image"
+        bash -lc 'printf "%s\n" "$1"; shift; exec "$@"' bash "$container_marker" bash "$container_case_script"
+      )
+      if "${docker_args[@]}" >>"$log_abs" 2>&1; then
+        status=passed
+        failure_kind=null
+        passed=$((passed + 1))
+      else
+        exit_code=$?
+        if grep -Fqx "$container_marker" "$log_abs"; then
+          if [[ "$original_suite_type" == "source-build" ]]; then
+            source_failure_kind=""
+            if [[ -f "$case_status_dir/failure-kind" ]]; then
+              source_failure_kind=$(tr -d '\r\n' <"$case_status_dir/failure-kind")
+            fi
+            printf 'source_build_failure_kind=%s\n' "${source_failure_kind:-unset}" >>"$log_abs"
+            case "$source_failure_kind" in
+              compatibility_candidate)
+                status=failed
+                failure_kind='"compatibility_candidate"'
+                failed=$((failed + 1))
+                ;;
+              harness)
+                status=harness_failed
+                failure_kind='"harness"'
+                harness_failed=$((harness_failed + 1))
+                ;;
+              *)
+                printf 'source-build case did not record a valid failure kind for %s with exit code %s\n' \
+                  "$case_id" "$exit_code" >>"$log_abs"
+                status=harness_failed
+                failure_kind='"harness"'
+                harness_failed=$((harness_failed + 1))
+                ;;
+            esac
+          else
+            status=failed
+            failure_kind='"compatibility_candidate"'
+            failed=$((failed + 1))
+          fi
+        else
+          printf 'container startup failed for %s with exit code %s\n' "$case_id" "$exit_code" >>"$log_abs"
+          status=harness_failed
+          failure_kind='"harness"'
+          harness_failed=$((harness_failed + 1))
+        fi
+      fi
+    fi
+
+    duration_seconds=$(( $(date +%s) - started_at ))
+    json_append_case \
+      "$cases_json" "$tmp_dir/cases.next.json" impacted "$case_name" "$case_id" \
+      "$status" "$failure_kind" "$duration_seconds" "$log_rel" "$safe_version" "$rerun"
+  done
+
+  total=${#impacted_case_ids[@]}
+  if (( harness_failed > 0 )); then
+    result_status=failed
+  elif (( failed > 0 )); then
+    result_status=completed_with_compatibility_candidates
+  else
+    result_status=passed
+  fi
+
+  write_result "$tmp_dir/impacted.json" "$result_path" "$cases_json" "$result_status" \
+    "$total" "$passed" "$failed" "$harness_failed"
+
+  if (( harness_failed > 0 )); then
+    return 1
+  fi
+}
+
 while (($#)); do
   case "$1" in
     --image)
@@ -127,22 +332,29 @@ while (($#)); do
   esac
 done
 
-[[ -n "$image" ]] || dependent_apps_die '--image is required'
 [[ -n "$suite" ]] || dependent_apps_die '--suite is required'
-dependent_apps_require_command docker
 dependent_apps_require_command jq
 
 dependent_apps_prepare_work_dirs
 [[ -w "$DEPENDENT_APPS_RESULTS_DIR" ]] || dependent_apps_die "result directory is not writable: $DEPENDENT_APPS_RESULTS_DIR"
 [[ -w "$DEPENDENT_APPS_LOGS_DIR" ]] || dependent_apps_die "log directory is not writable: $DEPENDENT_APPS_LOGS_DIR"
+
+safe_version=$(dependent_apps_safe_version)
+[[ -n "$safe_version" && "$safe_version" != null ]] || dependent_apps_die 'safe package version is missing'
+
+if [[ "$suite" == "impacted" ]]; then
+  run_impacted_suite
+  exit $?
+fi
+
+[[ -n "$image" ]] || dependent_apps_die '--image is required'
+dependent_apps_require_command docker
 dependent_apps_validate_suite_metadata "$suite" || dependent_apps_die "malformed or unknown suite metadata: $suite"
 
 if ! docker image inspect "$image" >/dev/null 2>&1; then
   dependent_apps_die "missing image or unavailable Docker daemon: $image"
 fi
 
-safe_version=$(dependent_apps_safe_version)
-[[ -n "$safe_version" && "$safe_version" != null ]] || dependent_apps_die 'safe package version is missing'
 suite_type=$(dependent_apps_suite_type "$suite")
 mapfile -t suite_cases < <(dependent_apps_suite_cases "$suite")
 
