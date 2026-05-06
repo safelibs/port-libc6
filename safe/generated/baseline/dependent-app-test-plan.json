@@ -6,7 +6,8 @@
     "ubuntu_codename": "noble",
     "counts": {
       "dependent_count": 16,
-      "image_contract_case_count": 5
+      "image_contract_case_count": 5,
+      "runtime_case_count": 16
     },
     "safe_packages": [
       "libc6",
@@ -19,7 +20,8 @@
     ],
     "notes": [
       "Derived from the committed dependents.json inventory without replacing it.",
-      "Phase 11 owns the image-contract suite and helper package contract."
+      "Phase 11 owns the image-contract suite and helper package contract.",
+      "Phase 12 owns runtime smoke suites split by checker runtime needs."
     ]
   },
   "image_helper_packages": {
@@ -45,6 +47,58 @@
         "dependent-packages",
         "helper-packages",
         "libc-resolution"
+      ]
+    },
+    "core-network": {
+      "type": "runtime-smoke",
+      "cases": [
+        "bash",
+        "coreutils",
+        "systemd",
+        "python3.12-minimal",
+        "git",
+        "openssh-client",
+        "network-manager",
+        "nginx"
+      ]
+    },
+    "server-media-virtualization": {
+      "type": "runtime-smoke",
+      "cases": [
+        "postgresql-16",
+        "ffmpeg",
+        "qemu-system-x86",
+        "podman",
+        "gnome-shell"
+      ]
+    },
+    "diagnostics": {
+      "type": "runtime-smoke",
+      "cases": [
+        "strace",
+        "valgrind",
+        "libvirt"
+      ]
+    },
+    "all-runtime": {
+      "type": "runtime-smoke",
+      "cases": [
+        "bash",
+        "coreutils",
+        "systemd",
+        "python3.12-minimal",
+        "git",
+        "openssh-client",
+        "network-manager",
+        "nginx",
+        "postgresql-16",
+        "ffmpeg",
+        "qemu-system-x86",
+        "podman",
+        "gnome-shell",
+        "strace",
+        "valgrind",
+        "libvirt"
       ]
     }
   },

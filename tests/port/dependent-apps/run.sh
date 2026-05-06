@@ -11,11 +11,89 @@ HARNESS_DIR="$ROOT_DIR/tests/port/dependent-apps"
 
 image=""
 suite=""
+privileged=0
+requested_cases=()
 
 usage() {
   cat <<'USAGE' >&2
-Usage: run.sh --image <image:tag> --suite <suite>
+Usage: run.sh --image <image:tag> --suite <suite> [--case <case>] [--privileged]
+
+Runs every case in the selected suite by default. Repeat --case to run
+specific app cases from that suite.
 USAGE
+}
+
+json_append_case() {
+  local cases_json=$1
+  local next_json=$2
+  local suite_name=$3
+  local case_name=$4
+  local case_id=$5
+  local status=$6
+  local failure_kind=$7
+  local duration_seconds=$8
+  local log_rel=$9
+  local safe_version=${10}
+  local rerun=${11}
+  local case_json
+
+  case_json=$(jq -n \
+    --arg suite "$suite_name" \
+    --arg case "$case_name" \
+    --arg case_id "$case_id" \
+    --arg status "$status" \
+    --arg log "$log_rel" \
+    --arg safe_version "$safe_version" \
+    --arg rerun "$rerun" \
+    --argjson failure_kind "$failure_kind" \
+    --argjson duration_seconds "$duration_seconds" \
+    '{
+      case_id: $case_id,
+      case: $case,
+      suite: $suite,
+      status: $status,
+      failure_kind: $failure_kind,
+      duration_seconds: $duration_seconds,
+      log: $log,
+      safe_version: $safe_version,
+      rerun: $rerun
+    }')
+  jq --argjson case "$case_json" '. + [$case]' "$cases_json" >"$next_json"
+  mv "$next_json" "$cases_json"
+}
+
+write_result() {
+  local result_tmp=$1
+  local result_path=$2
+  local cases_json=$3
+  local result_status=$4
+  local total=$5
+  local passed=$6
+  local failed=$7
+  local harness_failed=$8
+
+  jq -n \
+    --arg suite "$suite" \
+    --arg status "$result_status" \
+    --arg safe_version "$safe_version" \
+    --argjson total "$total" \
+    --argjson passed "$passed" \
+    --argjson failed "$failed" \
+    --argjson harness_failed "$harness_failed" \
+    --slurpfile cases "$cases_json" \
+    '{
+      suite: $suite,
+      status: $status,
+      safe_version: $safe_version,
+      summary: {
+        total: $total,
+        passed: $passed,
+        failed: $failed,
+        harness_failed: $harness_failed
+      },
+      cases: $cases[0]
+    }' >"$result_tmp"
+  mv "$result_tmp" "$result_path"
 }
 
 while (($#)); do
@@ -29,6 +107,15 @@ while (($#)); do
       [[ $# -ge 2 ]] || dependent_apps_die '--suite requires a value'
       suite=$2
       shift 2
+      ;;
+    --case|--app)
+      [[ $# -ge 2 ]] || dependent_apps_die "$1 requires a value"
+      requested_cases+=("$2")
+      shift 2
+      ;;
+    --privileged)
+      privileged=1
+      shift
       ;;
     -h|--help)
       usage
@@ -46,17 +133,46 @@ dependent_apps_require_command docker
 dependent_apps_require_command jq
 
 dependent_apps_prepare_work_dirs
+[[ -w "$DEPENDENT_APPS_RESULTS_DIR" ]] || dependent_apps_die "result directory is not writable: $DEPENDENT_APPS_RESULTS_DIR"
+[[ -w "$DEPENDENT_APPS_LOGS_DIR" ]] || dependent_apps_die "log directory is not writable: $DEPENDENT_APPS_LOGS_DIR"
+dependent_apps_validate_suite_metadata "$suite" || dependent_apps_die "malformed or unknown suite metadata: $suite"
+
+if ! docker image inspect "$image" >/dev/null 2>&1; then
+  dependent_apps_die "missing image or unavailable Docker daemon: $image"
+fi
 
 safe_version=$(dependent_apps_safe_version)
-mapfile -t cases < <(dependent_apps_suite_cases "$suite")
-(( ${#cases[@]} > 0 )) || dependent_apps_die "suite has no cases: $suite"
+[[ -n "$safe_version" && "$safe_version" != null ]] || dependent_apps_die 'safe package version is missing'
+suite_type=$(dependent_apps_suite_type "$suite")
+mapfile -t suite_cases < <(dependent_apps_suite_cases "$suite")
 
-case "$suite" in
-  image-contract) ;;
-  *) dependent_apps_die "unsupported suite for this phase: $suite" ;;
-esac
+if (( ${#requested_cases[@]} > 0 )); then
+  cases=()
+  for case_name in "${requested_cases[@]}"; do
+    [[ "$case_name" =~ ^[A-Za-z0-9._-]+$ ]] || dependent_apps_die "invalid case name: $case_name"
+    if ! printf '%s\n' "${suite_cases[@]}" | grep -Fxq "$case_name"; then
+      dependent_apps_die "case $case_name is not part of suite $suite"
+    fi
+    cases+=("$case_name")
+  done
+else
+  cases=("${suite_cases[@]}")
+fi
+(( ${#cases[@]} > 0 )) || dependent_apps_die "suite has no selected cases: $suite"
+
+if [[ "$suite_type" != "harness-contract" ]]; then
+  for case_name in "${cases[@]}"; do
+    case_script=$(dependent_apps_case_script "$case_name")
+    [[ -x "$case_script" ]] || dependent_apps_die "missing executable case script: $case_script"
+  done
+fi
 
 suite_log_dir="$DEPENDENT_APPS_LOGS_DIR/$suite"
+case "$suite_log_dir" in
+  "$DEPENDENT_APPS_LOGS_DIR/$suite") ;;
+  *) dependent_apps_die "refusing unsafe suite log path: $suite_log_dir" ;;
+esac
+rm -rf "$suite_log_dir"
 mkdir -p "$suite_log_dir"
 
 tmp_dir=$(mktemp -d "$DEPENDENT_APPS_WORK_ROOT/tmp.$suite.XXXXXX")
@@ -72,7 +188,10 @@ for case_name in "${cases[@]}"; do
   case_id="$suite/$case_name"
   log_rel="safe/work/dependent-apps/logs/$suite/$case_name.log"
   log_abs="$ROOT_DIR/$log_rel"
-  rerun="bash tests/port/dependent-apps/run.sh --image $image --suite $suite"
+  rerun="bash tests/port/dependent-apps/run.sh --image $image --suite $suite --case $case_name"
+  if (( privileged )); then
+    rerun="$rerun --privileged"
+  fi
   started_at=$(date +%s)
 
   {
@@ -84,72 +203,73 @@ for case_name in "${cases[@]}"; do
     printf 'rerun=%s\n\n' "$rerun"
   } >"$log_abs"
 
-  if image_contract_run_case "$image" "$case_name" "$safe_version" >>"$log_abs" 2>&1; then
-    status=passed
-    failure_kind=null
-    passed=$((passed + 1))
+  if [[ "$suite_type" == "harness-contract" ]]; then
+    if image_contract_run_case "$image" "$case_name" "$safe_version" >>"$log_abs" 2>&1; then
+      status=passed
+      failure_kind=null
+      passed=$((passed + 1))
+    else
+      status=harness_failed
+      failure_kind='"harness"'
+      harness_failed=$((harness_failed + 1))
+    fi
   else
-    status=harness_failed
-    failure_kind='"harness"'
-    harness_failed=$((harness_failed + 1))
+    case_script="/workspace/tests/port/dependent-apps/cases/$case_name.sh"
+    container_marker="dependent_apps_container_started=$case_id"
+    docker_args=(docker run --rm)
+    if (( privileged )); then
+      docker_args+=(--privileged)
+    fi
+    docker_args+=(
+      -e "SAFE_VERSION=$safe_version"
+      -e "DEPENDENT_APPS_SUITE=$suite"
+      -e "DEPENDENT_APPS_CASE=$case_name"
+      -e "DEPENDENT_APPS_CASE_ID=$case_id"
+      -e "DEPENDENT_APPS_CASE_WORKDIR=/tmp/safelibs-dependent-apps/$suite/$case_name"
+      -v "$HARNESS_DIR:/workspace/tests/port/dependent-apps:ro"
+      -w /workspace
+      "$image"
+      bash -lc 'printf "%s\n" "$1"; shift; exec "$@"' bash "$container_marker" bash "$case_script"
+    )
+    if "${docker_args[@]}" >>"$log_abs" 2>&1; then
+      status=passed
+      failure_kind=null
+      passed=$((passed + 1))
+    else
+      exit_code=$?
+      if grep -Fqx "$container_marker" "$log_abs"; then
+        status=failed
+        failure_kind='"compatibility_candidate"'
+        failed=$((failed + 1))
+      else
+        printf 'container startup failed for %s with exit code %s\n' "$case_id" "$exit_code" >>"$log_abs"
+        status=harness_failed
+        failure_kind='"harness"'
+        harness_failed=$((harness_failed + 1))
+      fi
+    fi
   fi
 
   duration_seconds=$(( $(date +%s) - started_at ))
-  case_json=$(jq -n \
-    --arg suite "$suite" \
-    --arg case "$case_name" \
-    --arg case_id "$case_id" \
-    --arg status "$status" \
-    --arg log "$log_rel" \
-    --arg safe_version "$safe_version" \
-    --arg rerun "$rerun" \
-    --argjson failure_kind "$failure_kind" \
-    --argjson duration_seconds "$duration_seconds" \
-    '{
-      suite: $suite,
-      case: $case,
-      case_id: $case_id,
-      status: $status,
-      failure_kind: $failure_kind,
-      duration_seconds: $duration_seconds,
-      log: $log,
-      safe_version: $safe_version,
-      rerun: $rerun
-    }')
-  jq --argjson case "$case_json" '. + [$case]' "$cases_json" >"$tmp_dir/cases.next.json"
-  mv "$tmp_dir/cases.next.json" "$cases_json"
+  json_append_case \
+    "$cases_json" "$tmp_dir/cases.next.json" "$suite" "$case_name" "$case_id" \
+    "$status" "$failure_kind" "$duration_seconds" "$log_rel" "$safe_version" "$rerun"
 done
 
 total=${#cases[@]}
-if (( harness_failed == 0 && failed == 0 )); then
-  result_status=passed
-else
+if (( harness_failed > 0 )); then
   result_status=failed
+elif (( failed > 0 )); then
+  result_status=completed_with_compatibility_candidates
+else
+  result_status=passed
 fi
 
 result_path="$DEPENDENT_APPS_RESULTS_DIR/$suite.json"
-jq -n \
-  --arg suite "$suite" \
-  --arg status "$result_status" \
-  --arg safe_version "$safe_version" \
-  --argjson total "$total" \
-  --argjson passed "$passed" \
-  --argjson failed "$failed" \
-  --argjson harness_failed "$harness_failed" \
-  --slurpfile cases "$cases_json" \
-  '{
-    suite: $suite,
-    status: $status,
-    safe_version: $safe_version,
-    summary: {
-      total: $total,
-      passed: $passed,
-      failed: $failed,
-      harness_failed: $harness_failed
-    },
-    cases: $cases[0]
-  }' >"$result_path"
+result_tmp="$tmp_dir/$suite.json"
+write_result "$result_tmp" "$result_path" "$cases_json" "$result_status" \
+  "$total" "$passed" "$failed" "$harness_failed"
 
-if [[ "$result_status" != passed ]]; then
+if (( harness_failed > 0 )); then
   exit 1
 fi
