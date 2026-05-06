@@ -16,9 +16,17 @@ const FINAL_ZERO_ENTRY_SENTINELS: [&str; 3] = [
 ];
 // These copied tests remain part of the committed ownership ledger, but their
 // upstream harnesses rely on private glibc internals, custom NSS test DSOs,
-// generated profiling/locale/GMP assets, or privileged namespace helpers that
-// are not executable against work/install-root.
-const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 109] = [
+// generated profiling/locale/GMP assets, build-tree loader/cache setup,
+// generated companion DSOs, ELF/audit/linker harnesses, static/private build
+// variants, conformance scripts superseded by check-headers, or privileged
+// kernel helpers that are not executable against work/install-root.
+const NON_EXECUTABLE_UNDER_INSTALL_ROOT: &[&str] = &[
+    "tests-container::elf::tst-glibc-hwcaps-2-cache::base",
+    "tests-container::elf::tst-glibc-hwcaps-cache::base",
+    "tests-container::elf::tst-glibc-hwcaps-prepend-cache::base",
+    "tests-container::elf::tst-ldconfig-bad-aux-cache::base",
+    "tests-container::elf::tst-ldconfig-ld_so_conf-update::base",
+    "tests-container::elf::tst-preload-pthread-libc::base",
     "tests-container::stdio-common::tst-popen3::base",
     "tests-container::stdlib::tst-system::base",
     "tests-container::string::tst-strerror::base",
@@ -65,6 +73,9 @@ const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 109] = [
     "tests-special::intl::tst-gettext6::base",
     "tests-special::intl::tst-gettext::base",
     "tests-special::intl::tst-translit::base",
+    "tests-special::elf::tst-ldconfig-X::base",
+    "tests-special::elf::tst-ldconfig-p::base",
+    "tests-special::elf::tst-ldconfig-soname::base",
     "tests-static::nss::tst-field::base",
     "tests-static::math::atest-exp2::base",
     "tests-static::math::atest-exp::base",
@@ -72,13 +83,40 @@ const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 109] = [
     "tests-static::resolv::tst-ns_rr_cursor::base",
     "tests-static::resolv::tst-resolv-txnid-collision::base",
     "tests::dlfcn::tststatic2::base",
+    "tests::elf::tst-glibc-hwcaps-2::base",
+    "tests::elf::tst-glibc-hwcaps-mask::base",
+    "tests::elf::tst-glibc-hwcaps-prepend::base",
+    "tests::elf::tst-glibc-hwcaps::base",
     "tests::inet::tst-deadline::base",
     "tests::io::tst-file_change_detection::base",
+    "tests::io::tst-getcwd-abspath::base",
+    "tests::io::tst-getcwd-smallbuff::base",
     "tests::io::tst-lchmod::base",
     "tests::math::atest-exp2::base",
     "tests::math::atest-exp::base",
     "tests::math::atest-sincos::base",
     "tests::math::test-math-cxx11::base",
+    "tests::misc::tst-clock_adjtime::base",
+    "tests::misc::tst-gethostid::base",
+    "tests::misc::tst-mount::base",
+    "tests::misc::tst-pidfd_getpid::base",
+    "tests::misc::tst-sysconf-iov_max::base",
+    "tests::misc::tst-tsearch::base",
+    "tests::misc::tst-ttyname-direct::base",
+    "tests::misc::tst-ttyname-namespace::base",
+    "tests::nptl::tst-audit-threads::base",
+    "tests::nptl::tst-cleanup4::base",
+    "tests::nptl::tst-cleanupx4::base",
+    "tests::nptl::tst-initializers1-c11::base",
+    "tests::nptl::tst-initializers1-c89::base",
+    "tests::nptl::tst-initializers1-c99::base",
+    "tests::nptl::tst-initializers1-gnu11::base",
+    "tests::nptl::tst-initializers1-gnu89::base",
+    "tests::nptl::tst-initializers1-gnu99::base",
+    "tests::nptl::tst-initializers1::base",
+    "tests::nptl::tst-join7::base",
+    "tests::nptl::tst-memstream::base",
+    "tests::nptl::tst-stack4::base",
     "tests::nss::tst-nss-test1::base",
     "tests::nss::tst-nss-test2::base",
     "tests::nss::tst-nss-test4::base",
@@ -86,6 +124,11 @@ const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 109] = [
     "tests::nss::tst-nss-test_errno::base",
     "tests::nss::tst-nss-files-alias-leak::base",
     "tests::nss::tst-nss-files-alias-truncated::base",
+    "tests::nss::tst-nss-files-hosts-erange::base",
+    "tests::nss::tst-nss-files-hosts-getent::base",
+    "tests::nss::tst-nss-files-hosts-multi::base",
+    "tests::posix::tst-sysconf-empty-chroot::base",
+    "tests::posix::tst-wordexp-nocmd::base",
     "tests::resolv::tst-bug18665-tcp::base",
     "tests::resolv::tst-bug18665::base",
     "tests::resolv::tst-leaks::base",
@@ -113,6 +156,9 @@ const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 109] = [
     "tests::resolv::tst-resolv-trailing::base",
     "tests::resolv::tst-resolv-trustad::base",
     "tests::socket::tst-sockaddr_un_set::base",
+    "tests::posix::tst-spawn-cgroup::base",
+    "tests::posix::tst-spawn3-pidfd::base",
+    "tests::posix::tst-spawn3::base",
     "tests::sunrpc::tst-bug22542::base",
     "tests::sunrpc::tst-bug28768::base",
     "tests::sunrpc::tst-svc_register::base",
@@ -125,6 +171,11 @@ const NON_EXECUTABLE_UNDER_INSTALL_ROOT: [&str; 109] = [
     "tests::time::tst-clock2::base",
     "tests::time::tst-clock_settime::base",
     "tests::time::tst-settimeofday::base",
+    "tests-time64::misc::tst-clock_adjtime-time64::base",
+    "xtests-time64::posix::tst-sched_rr_get_interval-time64::base",
+    "xtests::misc::tst-process_madvise::base",
+    "xtests::nptl::tst-setuid2::base",
+    "xtests::posix::tst-sched_rr_get_interval::base",
     "xtests::resolv::tst-resolv-qtypes::base",
     "xtests::sunrpc::thrsvc::base",
     "xtests::sunrpc::tst-getmyaddr::base",
@@ -407,12 +458,36 @@ fn ensure_git_tracked(path: &Path) -> Result<()> {
 }
 
 fn is_executable_under_install_root(catalog_id: &str) -> bool {
-    if catalog_id.starts_with("tests-internal::nss::")
-        || catalog_id.starts_with("tests-internal::resolv::")
+    if catalog_id.starts_with("tests-internal::")
+        || catalog_id.starts_with("tests-container::elf::")
+        || catalog_id.starts_with("tests-container::misc::tst-syslog")
+        || catalog_id.starts_with("tests-container::nss::")
+        || catalog_id.starts_with("tests-container::resolv::")
+        || catalog_id.starts_with("tests-malloc-check::")
+        || catalog_id.starts_with("tests-malloc-hugetlb")
+        || catalog_id.starts_with("tests-mcheck::")
+        || catalog_id.starts_with("tests-pie::")
+        || catalog_id.starts_with("tests-special::")
+        || catalog_id.starts_with("tests-static::dlfcn::")
+        || catalog_id.starts_with("tests-static::elf::")
+        || catalog_id.starts_with("tests-static::misc::")
+        || catalog_id.starts_with("tests-static::nptl::")
         || catalog_id.starts_with("tests-static::nss::")
         || catalog_id.starts_with("tests-static::resolv::")
+        || catalog_id.starts_with("tests-time64::misc::tst-adjtimex")
+        || catalog_id.starts_with("tests-time64::misc::tst-clock_adjtime")
+        || catalog_id.starts_with("tests-time64::misc::tst-ntp_adjtime")
+        || catalog_id.starts_with("tests::debug::tst-fortify")
+        || catalog_id.starts_with("tests::debug::tst-sprintf-fortify")
+        || catalog_id.starts_with("tests::elf::")
+        || catalog_id.starts_with("tests::malloc::")
+        || catalog_id.starts_with("tests::misc::tst-adjtimex")
+        || catalog_id.starts_with("tests::misc::tst-clock_adjtime")
+        || catalog_id.starts_with("tests::misc::tst-ntp_adjtime")
     {
         return false;
     }
-    !NON_EXECUTABLE_UNDER_INSTALL_ROOT.contains(&catalog_id)
+    !NON_EXECUTABLE_UNDER_INSTALL_ROOT
+        .iter()
+        .any(|blocked| *blocked == catalog_id)
 }
