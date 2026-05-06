@@ -7769,19 +7769,6 @@
     },
     {
       "package": "libc6-dbg",
-      "path": "/usr/lib/debug/.build-id/59/79306f7ee1818a22c956ebeb49f33e1e6d54c6.debug",
-      "source_path": "/usr/lib64/libc_malloc_debug.so.0",
-      "source_origin": "derived_debug",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "debug_asset",
-      "executable": true,
-      "symlink_target": null,
-      "owner_phase": "impl_06_io_stdio_string_path",
-      "verification": "libc-family-cutover"
-    },
-    {
-      "package": "libc6-dbg",
       "path": "/usr/lib/debug/.build-id/59/c9494ffd31a0a7a14813b3dbd9b795e7e572ed.debug",
       "source_path": "/usr/lib64/gconv/CSN_369103.so",
       "source_origin": "derived_debug",
@@ -9716,6 +9703,19 @@
       "symlink_target": null,
       "owner_phase": null,
       "verification": "basic-required-packages"
+    },
+    {
+      "package": "libc6-dbg",
+      "path": "/usr/lib/debug/.build-id/e2/d9d24dadcdf160f7f81885a71ca0e62df89374.debug",
+      "source_path": "/usr/lib64/libc_malloc_debug.so.0",
+      "source_origin": "derived_debug",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "debug_asset",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "libc-family-cutover"
     },
     {
       "package": "libc6-dbg",

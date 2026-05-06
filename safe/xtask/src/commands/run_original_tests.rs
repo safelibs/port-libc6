@@ -1749,9 +1749,10 @@ fn build_root_prefix(build_root: &Path) -> String {
 
 fn run_program_env_string(config: &RunConfig) -> String {
     format!(
-        "GCONV_PATH={} LOCPATH={} LC_ALL=C",
+        "GCONV_PATH={} LOCPATH={} LC_ALL=C SAFELIBS_BACKEND_ROOT={}",
         config.build_root.join("iconvdata").display(),
-        runtime_locale_path(config).display()
+        runtime_locale_path(config).display(),
+        runtime_backend_root(config).display()
     )
 }
 
@@ -1763,10 +1764,15 @@ fn script_run_program_env_string(config: &RunConfig, locale_root: &Path) -> Stri
         format!("{}:{}", locale_root.display(), runtime_locale.display())
     };
     format!(
-        "GCONV_PATH={} LOCPATH={} LC_ALL=C",
+        "GCONV_PATH={} LOCPATH={} LC_ALL=C SAFELIBS_BACKEND_ROOT={}",
         config.build_root.join("iconvdata").display(),
-        locale_path
+        locale_path,
+        runtime_backend_root(config).display()
     )
+}
+
+fn runtime_backend_root(config: &RunConfig) -> PathBuf {
+    config.install_root.join("usr/libexec/safelibs/backends")
 }
 
 fn runtime_locale_path(config: &RunConfig) -> PathBuf {
@@ -1907,7 +1913,8 @@ fn apply_harness_env(command: &mut Command, config: &RunConfig) {
     command
         .env("GCONV_PATH", config.build_root.join("iconvdata"))
         .env("LOCPATH", runtime_locale_path(config))
-        .env("LC_ALL", "C");
+        .env("LC_ALL", "C")
+        .env("SAFELIBS_BACKEND_ROOT", runtime_backend_root(config));
     if config.privileged_container_tests {
         command
             .env("XTASK_PRIVILEGED_CONTAINER_TESTS", "1")

@@ -441,7 +441,7 @@ fn is_public_cutover_dso(dso_id: &str) -> bool {
 }
 
 fn uses_functional_public_body(dso_id: &str) -> bool {
-    dso_id == "ld.so" || dso_id == "libc"
+    dso_id == "ld.so" || dso_id == "libc" || dso_id == "libc_malloc_debug"
 }
 
 fn write_rust_anchor_object(baseline: &AbiBaseline, scratch_root: &Path) -> Result<PathBuf> {
