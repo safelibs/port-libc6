@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "phase": "impl_08_locale_iconv_posix_parsers",
+    "phase": "impl_09_math_and_aux_dsos",
     "notes": [
       "This corpus is the authoritative relink-compatibility case list for original-object verification.",
       "Phase 6 seeds startup-object, ordinary dynamic, PIE, static, static-PIE, and GLIBC_PRIVATE coverage.",
@@ -282,7 +282,9 @@
       "fixture_source_path": "safe/tests/math/link-compat-libm.c",
       "upstream_object_path": null,
       "original_object_relpath": "math-libm/main.o",
-      "compile_args": [],
+      "compile_args": [
+        "-fno-builtin"
+      ],
       "link_args": [
         "-lm"
       ],

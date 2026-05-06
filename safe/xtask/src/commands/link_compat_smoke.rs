@@ -283,6 +283,7 @@ fn expected_dt_needed_sonames(case: &crate::common::LinkCompatCase) -> Vec<&'sta
         .iter()
         .filter_map(|dso| match dso.as_str() {
             "libanl" => Some("libanl.so.1"),
+            "libm" => Some("libm.so.6"),
             "libresolv" => Some("libresolv.so.2"),
             _ => None,
         })
