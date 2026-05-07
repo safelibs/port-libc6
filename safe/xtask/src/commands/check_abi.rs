@@ -7,27 +7,82 @@ use clap::Args as ClapArgs;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use std::sync::atomic::{AtomicBool, Ordering};
+
+#[derive(Debug)]
+pub struct Args {
+    pub all_dsos: bool,
+    pub dso: Vec<String>,
+    pub build_root: Option<PathBuf>,
+}
 
 #[derive(ClapArgs, Debug)]
-pub struct Args {
+struct CliArgs {
     #[arg(long)]
-    pub all_dsos: bool,
+    all_dsos: bool,
     #[arg(long)]
-    pub dso: Vec<String>,
+    dso: Vec<String>,
     #[arg(long)]
-    pub build_root: Option<PathBuf>,
+    build_root: Option<PathBuf>,
     #[arg(long, default_value_t = false)]
-    pub strict_symbol_metadata: bool,
+    strict_symbol_metadata: bool,
 }
+
+static STRICT_SYMBOL_METADATA: AtomicBool = AtomicBool::new(false);
 
 pub fn run(args: Args) -> Result<()> {
     super::build::refresh_phase_outputs()?;
     let build_root = resolve_build_root(args.build_root.clone())?;
     let selected = select_dsos(&args)?;
+    let strict_symbol_metadata = STRICT_SYMBOL_METADATA.load(Ordering::Relaxed);
     for baseline in selected {
-        check_one(&baseline, &build_root, args.strict_symbol_metadata)?;
+        check_one(&baseline, &build_root, strict_symbol_metadata)?;
     }
     Ok(())
+}
+
+impl clap::FromArgMatches for Args {
+    fn from_arg_matches(matches: &clap::ArgMatches) -> std::result::Result<Self, clap::Error> {
+        let cli = <CliArgs as clap::FromArgMatches>::from_arg_matches(matches)?;
+        Ok(apply_cli_args(cli))
+    }
+
+    fn update_from_arg_matches(
+        &mut self,
+        matches: &clap::ArgMatches,
+    ) -> std::result::Result<(), clap::Error> {
+        let cli = <CliArgs as clap::FromArgMatches>::from_arg_matches(matches)?;
+        *self = apply_cli_args(cli);
+        Ok(())
+    }
+
+    fn update_from_arg_matches_mut(
+        &mut self,
+        matches: &mut clap::ArgMatches,
+    ) -> std::result::Result<(), clap::Error> {
+        let cli = <CliArgs as clap::FromArgMatches>::from_arg_matches_mut(matches)?;
+        *self = apply_cli_args(cli);
+        Ok(())
+    }
+}
+
+impl clap::Args for Args {
+    fn augment_args(cmd: clap::Command) -> clap::Command {
+        <CliArgs as clap::Args>::augment_args(cmd)
+    }
+
+    fn augment_args_for_update(cmd: clap::Command) -> clap::Command {
+        <CliArgs as clap::Args>::augment_args_for_update(cmd)
+    }
+}
+
+fn apply_cli_args(cli: CliArgs) -> Args {
+    STRICT_SYMBOL_METADATA.store(cli.strict_symbol_metadata, Ordering::Relaxed);
+    Args {
+        all_dsos: cli.all_dsos,
+        dso: cli.dso,
+        build_root: cli.build_root,
+    }
 }
 
 fn select_dsos(args: &Args) -> Result<Vec<AbiBaseline>> {

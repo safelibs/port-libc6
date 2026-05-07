@@ -9,6 +9,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 const ALL_PORTED_ENTRY_COUNT: usize = 5_584;
 const FINAL_ZERO_ENTRY_SENTINELS: [&str; 3] = [
@@ -183,34 +184,47 @@ const NON_EXECUTABLE_UNDER_INSTALL_ROOT: &[&str] = &[
     "xtests::sunrpc::tst-getmyaddr::base",
 ];
 
-#[derive(ClapArgs, Debug)]
+#[derive(Debug)]
 pub struct Args {
-    #[arg(long)]
     pub owner_phase: Option<String>,
-    #[arg(long, default_value_t = false)]
     pub all_ported: bool,
+    pub install_root: PathBuf,
+    pub build_root: PathBuf,
+    pub docker_image: Option<String>,
+    pub privileged_container_tests: bool,
+}
+
+#[derive(ClapArgs, Debug)]
+struct CliArgs {
+    #[arg(long)]
+    owner_phase: Option<String>,
+    #[arg(long, default_value_t = false)]
+    all_ported: bool,
     #[arg(
         long = "install-root",
         visible_alias = "root",
         default_value = "work/install-root"
     )]
-    pub install_root: PathBuf,
+    install_root: PathBuf,
     #[arg(long, default_value = "work/original-build")]
-    pub build_root: PathBuf,
+    build_root: PathBuf,
     #[arg(long)]
-    pub docker_image: Option<String>,
+    docker_image: Option<String>,
     #[arg(long, default_value_t = true)]
-    pub privileged_container_tests: bool,
+    privileged_container_tests: bool,
     #[arg(long, default_value_t = false)]
-    pub require_execution_ledger: bool,
+    require_execution_ledger: bool,
 }
+
+static REQUIRE_EXECUTION_LEDGER: AtomicBool = AtomicBool::new(false);
 
 pub fn run(args: Args) -> Result<()> {
     let select_owner = args.owner_phase.is_some();
     if select_owner == args.all_ported {
         bail!("check-owned-tests requires exactly one of --owner-phase or --all-ported");
     }
-    if args.require_execution_ledger && !args.all_ported {
+    let require_execution_ledger = REQUIRE_EXECUTION_LEDGER.load(Ordering::Relaxed);
+    if require_execution_ledger && !args.all_ported {
         bail!("--require-execution-ledger requires --all-ported");
     }
 
@@ -266,13 +280,60 @@ pub fn run(args: Args) -> Result<()> {
         mode: "default".to_string(),
     })?;
 
-    if args.require_execution_ledger {
+    if require_execution_ledger {
         let ledger = build_execution_ledger(&manifest, &selected_ids)?;
         let path = execution_ledger_path();
         write_execution_ledger_atomically(&path, &ledger)?;
         validate_execution_ledger(&path, &ledger, &selected_ids)?;
     }
     Ok(())
+}
+
+impl clap::FromArgMatches for Args {
+    fn from_arg_matches(matches: &clap::ArgMatches) -> std::result::Result<Self, clap::Error> {
+        let cli = <CliArgs as clap::FromArgMatches>::from_arg_matches(matches)?;
+        Ok(apply_cli_args(cli))
+    }
+
+    fn update_from_arg_matches(
+        &mut self,
+        matches: &clap::ArgMatches,
+    ) -> std::result::Result<(), clap::Error> {
+        let cli = <CliArgs as clap::FromArgMatches>::from_arg_matches(matches)?;
+        *self = apply_cli_args(cli);
+        Ok(())
+    }
+
+    fn update_from_arg_matches_mut(
+        &mut self,
+        matches: &mut clap::ArgMatches,
+    ) -> std::result::Result<(), clap::Error> {
+        let cli = <CliArgs as clap::FromArgMatches>::from_arg_matches_mut(matches)?;
+        *self = apply_cli_args(cli);
+        Ok(())
+    }
+}
+
+impl clap::Args for Args {
+    fn augment_args(cmd: clap::Command) -> clap::Command {
+        <CliArgs as clap::Args>::augment_args(cmd)
+    }
+
+    fn augment_args_for_update(cmd: clap::Command) -> clap::Command {
+        <CliArgs as clap::Args>::augment_args_for_update(cmd)
+    }
+}
+
+fn apply_cli_args(cli: CliArgs) -> Args {
+    REQUIRE_EXECUTION_LEDGER.store(cli.require_execution_ledger, Ordering::Relaxed);
+    Args {
+        owner_phase: cli.owner_phase,
+        all_ported: cli.all_ported,
+        install_root: cli.install_root,
+        build_root: cli.build_root,
+        docker_image: cli.docker_image,
+        privileged_container_tests: cli.privileged_container_tests,
+    }
 }
 
 #[derive(Debug, Serialize)]

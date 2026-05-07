@@ -10,20 +10,29 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::atomic::{AtomicBool, Ordering};
+
+#[derive(Debug)]
+pub struct Args {
+    pub install_root: PathBuf,
+    pub build_root: PathBuf,
+}
 
 #[derive(ClapArgs, Debug)]
-pub struct Args {
+struct CliArgs {
     #[arg(
         long = "install-root",
         visible_alias = "root",
         default_value = "work/install-root"
     )]
-    pub install_root: PathBuf,
+    install_root: PathBuf,
     #[arg(long, default_value = "work/original-build")]
-    pub build_root: PathBuf,
+    build_root: PathBuf,
     #[arg(long, default_value_t = false)]
-    pub strict_dev_assets: bool,
+    strict_dev_assets: bool,
 }
+
+static STRICT_DEV_ASSETS: AtomicBool = AtomicBool::new(false);
 
 pub fn run(args: Args) -> Result<()> {
     if !link_compat_corpus_path().exists() {
@@ -46,7 +55,7 @@ pub fn run(args: Args) -> Result<()> {
     let corpus = load_link_compat_corpus()?;
     verify_final_corpus_coverage(&corpus)?;
     verify_final_manifest_closure()?;
-    if args.strict_dev_assets {
+    if STRICT_DEV_ASSETS.load(Ordering::Relaxed) {
         verify_strict_dev_assets(&install_root, &build_root)?;
     }
     let scratch = safe_root().join("work/link-smoke");
@@ -80,6 +89,49 @@ pub fn run(args: Args) -> Result<()> {
         run_case(&case, &binary, &install_root)?;
     }
     Ok(())
+}
+
+impl clap::FromArgMatches for Args {
+    fn from_arg_matches(matches: &clap::ArgMatches) -> std::result::Result<Self, clap::Error> {
+        let cli = <CliArgs as clap::FromArgMatches>::from_arg_matches(matches)?;
+        Ok(apply_cli_args(cli))
+    }
+
+    fn update_from_arg_matches(
+        &mut self,
+        matches: &clap::ArgMatches,
+    ) -> std::result::Result<(), clap::Error> {
+        let cli = <CliArgs as clap::FromArgMatches>::from_arg_matches(matches)?;
+        *self = apply_cli_args(cli);
+        Ok(())
+    }
+
+    fn update_from_arg_matches_mut(
+        &mut self,
+        matches: &mut clap::ArgMatches,
+    ) -> std::result::Result<(), clap::Error> {
+        let cli = <CliArgs as clap::FromArgMatches>::from_arg_matches_mut(matches)?;
+        *self = apply_cli_args(cli);
+        Ok(())
+    }
+}
+
+impl clap::Args for Args {
+    fn augment_args(cmd: clap::Command) -> clap::Command {
+        <CliArgs as clap::Args>::augment_args(cmd)
+    }
+
+    fn augment_args_for_update(cmd: clap::Command) -> clap::Command {
+        <CliArgs as clap::Args>::augment_args_for_update(cmd)
+    }
+}
+
+fn apply_cli_args(cli: CliArgs) -> Args {
+    STRICT_DEV_ASSETS.store(cli.strict_dev_assets, Ordering::Relaxed);
+    Args {
+        install_root: cli.install_root,
+        build_root: cli.build_root,
+    }
 }
 
 fn verify_final_corpus_coverage(corpus: &crate::common::LinkCompatCorpus) -> Result<()> {

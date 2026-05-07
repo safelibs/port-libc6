@@ -4,26 +4,42 @@ use clap::Args as ClapArgs;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::{Mutex, OnceLock};
+
+#[derive(Debug)]
+pub struct Args {
+    pub install_root: PathBuf,
+    pub lang: Vec<String>,
+}
 
 #[derive(ClapArgs, Debug)]
-pub struct Args {
+struct CliArgs {
     #[arg(
         long = "root",
         visible_alias = "install-root",
         default_value = "work/install-root"
     )]
-    pub install_root: PathBuf,
+    install_root: PathBuf,
     #[arg(long)]
-    pub lang: Vec<String>,
+    lang: Vec<String>,
     #[arg(long, default_value_t = false)]
-    pub all_installed: bool,
+    all_installed: bool,
     #[arg(long, value_delimiter = ',')]
-    pub feature_profiles: Vec<String>,
+    feature_profiles: Vec<String>,
+}
+
+static HEADER_CLI_OPTIONS: OnceLock<Mutex<HeaderCliOptions>> = OnceLock::new();
+
+#[derive(Debug, Default)]
+struct HeaderCliOptions {
+    all_installed: bool,
+    feature_profiles: Vec<String>,
 }
 
 pub fn run(args: Args) -> Result<()> {
     super::build::refresh_phase_outputs()?;
     let staged_build_root = super::stage_upstream_build::ensure_default_staged_upstream_build()?;
+    let options = header_cli_options()?;
     let install_root = if args.install_root.is_absolute() {
         args.install_root
     } else {
@@ -43,12 +59,12 @@ pub fn run(args: Args) -> Result<()> {
     } else {
         args.lang
     };
-    let headers = if args.all_installed {
+    let headers = if options.all_installed {
         installed_public_headers(&install_root)?
     } else {
         representative_headers(&install_root)?
     };
-    let feature_profiles = resolve_feature_profiles(&args.feature_profiles)?;
+    let feature_profiles = resolve_feature_profiles(&options.feature_profiles)?;
     for lang in &langs {
         validate_lang(lang)?;
         for profile in &feature_profiles {
@@ -80,6 +96,63 @@ pub fn run(args: Args) -> Result<()> {
         &log_dir.join("check-wrapper-headers.log"),
     )?;
     Ok(())
+}
+
+impl clap::FromArgMatches for Args {
+    fn from_arg_matches(matches: &clap::ArgMatches) -> std::result::Result<Self, clap::Error> {
+        let cli = <CliArgs as clap::FromArgMatches>::from_arg_matches(matches)?;
+        Ok(apply_cli_args(cli))
+    }
+
+    fn update_from_arg_matches(
+        &mut self,
+        matches: &clap::ArgMatches,
+    ) -> std::result::Result<(), clap::Error> {
+        let cli = <CliArgs as clap::FromArgMatches>::from_arg_matches(matches)?;
+        *self = apply_cli_args(cli);
+        Ok(())
+    }
+
+    fn update_from_arg_matches_mut(
+        &mut self,
+        matches: &mut clap::ArgMatches,
+    ) -> std::result::Result<(), clap::Error> {
+        let cli = <CliArgs as clap::FromArgMatches>::from_arg_matches_mut(matches)?;
+        *self = apply_cli_args(cli);
+        Ok(())
+    }
+}
+
+impl clap::Args for Args {
+    fn augment_args(cmd: clap::Command) -> clap::Command {
+        <CliArgs as clap::Args>::augment_args(cmd)
+    }
+
+    fn augment_args_for_update(cmd: clap::Command) -> clap::Command {
+        <CliArgs as clap::Args>::augment_args_for_update(cmd)
+    }
+}
+
+fn apply_cli_args(cli: CliArgs) -> Args {
+    let options = HEADER_CLI_OPTIONS.get_or_init(|| Mutex::new(HeaderCliOptions::default()));
+    let mut options = options.lock().expect("header CLI options mutex poisoned");
+    options.all_installed = cli.all_installed;
+    options.feature_profiles = cli.feature_profiles;
+    Args {
+        install_root: cli.install_root,
+        lang: cli.lang,
+    }
+}
+
+fn header_cli_options() -> Result<HeaderCliOptions> {
+    let options = HEADER_CLI_OPTIONS.get_or_init(|| Mutex::new(HeaderCliOptions::default()));
+    let options = options
+        .lock()
+        .map_err(|_| anyhow::anyhow!("header CLI options mutex poisoned"))?;
+    Ok(HeaderCliOptions {
+        all_installed: options.all_installed,
+        feature_profiles: options.feature_profiles.clone(),
+    })
 }
 
 fn representative_headers(install_root: &PathBuf) -> Result<Vec<String>> {
