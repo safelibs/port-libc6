@@ -185,6 +185,8 @@ fn stage_package(
         Command::new("dpkg-deb")
             .arg("--build")
             .arg("--root-owner-group")
+            .arg("-Zgzip")
+            .arg("-z1")
             .arg(&package_root)
             .arg(&out_path),
     )
