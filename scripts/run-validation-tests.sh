@@ -105,23 +105,13 @@ if (( build_status != 0 )); then
   exit "$build_status"
 fi
 
-validator_run_dir="$validator_dir"
-if [[ "$SAFELIBS_LIBRARY" == "libc6" ]]; then
-  validator_run_dir="$work_dir/validator-libc6-preinstalled"
-  note "preparing libc6 validator checkout with image-level override deb install"
-  python3 "$repo_root/scripts/lib/prepare_libc6_validator.py" \
-    "$validator_dir" \
-    "$validator_run_dir" \
-    "$override_root/$SAFELIBS_LIBRARY"
-fi
-
 cast_arg=()
 if [[ -n "${SAFELIBS_RECORD_CASTS:-}" ]]; then
   cast_arg=(--record-casts)
 fi
 
 note "running validator matrix for $SAFELIBS_LIBRARY"
-bash "$validator_run_dir/test.sh" \
+bash "$validator_dir/test.sh" \
   --library "$SAFELIBS_LIBRARY" \
   --mode port \
   --override-deb-root "$override_root" \
