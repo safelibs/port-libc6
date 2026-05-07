@@ -157,6 +157,10 @@ fn stage_package(
         stage_package_entry(&package_root, &entry)?;
     }
 
+    if spec.name == "libc-bin" {
+        stage_builtin_c_utf8_locale(&package_root)?;
+    }
+
     if spec.name == "libc6" || spec.name == "libc6-dev" {
         stage_multiarch_compat(&package_root)?;
     }
@@ -563,6 +567,38 @@ fn stage_multiarch_compat(package_root: &Path) -> Result<()> {
         ensure_parent_dir(&include_link)?;
         symlink(".", &include_link)
             .with_context(|| format!("failed to create {}", include_link.display()))?;
+    }
+    Ok(())
+}
+
+fn stage_builtin_c_utf8_locale(package_root: &Path) -> Result<()> {
+    let locale_root = package_root.join("usr/lib/locale");
+    fs::create_dir_all(&locale_root)
+        .with_context(|| format!("failed to create {}", locale_root.display()))?;
+
+    let output = locale_root.join("C.utf8");
+    remove_path_if_exists(&output)?;
+    run_command(
+        Command::new("localedef")
+            .arg("--no-archive")
+            .arg(format!("--prefix={}", package_root.display()))
+            .args(["-i", "C", "-f", "UTF-8", "C.UTF-8"]),
+    )
+    .context("failed to generate built-in C.UTF-8 locale for libc-bin")?;
+
+    for required in [
+        "LC_CTYPE",
+        "LC_COLLATE",
+        "LC_TIME",
+        "LC_MESSAGES/SYS_LC_MESSAGES",
+    ] {
+        let path = output.join(required);
+        if !path.is_file() {
+            bail!(
+                "generated C.UTF-8 locale is missing required category {}",
+                path.display()
+            );
+        }
     }
     Ok(())
 }
