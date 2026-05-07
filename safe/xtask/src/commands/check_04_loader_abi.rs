@@ -14,6 +14,5 @@ pub fn run(args: Args) -> Result<()> {
         all_dsos: false,
         dso: vec!["ld.so".to_string()],
         build_root: args.build_root,
-        strict_symbol_metadata: false,
     })
 }

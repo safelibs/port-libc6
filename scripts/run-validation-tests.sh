@@ -16,9 +16,6 @@
 #   - SAFELIBS_VALIDATOR_REF    git ref to clone (default: main)
 #   - SAFELIBS_VALIDATOR_REPO   git remote (default: https://github.com/safelibs/validator)
 #   - SAFELIBS_RECORD_CASTS     non-empty -> pass --record-casts to test.sh
-#   - SAFELIBS_VALIDATOR_UNPORTED_PACKAGES
-#                               optional comma/space-separated canonical packages
-#                               to leave on validator apt originals
 #
 # A library that has no entry in the validator's repositories.yml is a soft
 # success (typical for the template itself or in-progress ports). A library
@@ -34,53 +31,6 @@ fail() {
 
 note() {
   printf 'run-validation-tests: %s\n' "$*"
-}
-
-prepare_libc6_validator_docker_wrapper() {
-  local real_docker docker_bin helper
-  real_docker="$(command -v docker)" || fail "docker is required for validator tests"
-  helper="$repo_root/scripts/lib/libc6-validator-fast-install.sh"
-  [[ -x "$helper" ]] || fail "missing executable libc6 validator installer: $helper"
-
-  docker_bin="$work_dir/docker-bin"
-  mkdir -p -- "$docker_bin"
-  cat >"$docker_bin/docker" <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-
-real_docker=${SAFELIBS_REAL_DOCKER:?}
-helper=${SAFELIBS_LIBC6_VALIDATOR_FAST_INSTALL:?}
-
-if [[ ${1:-} == "run" ]]; then
-  args=("$@")
-  image_index=-1
-  for i in "${!args[@]}"; do
-    if [[ ${args[$i]} == "validator-libc6-shared" ]]; then
-      image_index=$i
-      break
-    fi
-  done
-  if ((image_index >= 0)); then
-    new_args=(
-      "${args[@]:0:image_index}"
-      "--mount"
-      "type=bind,src=${helper},dst=/validator/tests/_shared/safelibs_fast_install_override.sh,readonly"
-      "${args[@]:image_index}"
-    )
-    command_index=$((image_index + 5))
-    if ((command_index < ${#new_args[@]})); then
-      new_args[$command_index]=${new_args[$command_index]//\/validator\/tests\/_shared\/install_override_debs.sh/\/validator\/tests\/_shared\/safelibs_fast_install_override.sh}
-    fi
-    exec "$real_docker" "${new_args[@]}"
-  fi
-fi
-
-exec "$real_docker" "$@"
-EOF
-  chmod +x "$docker_bin/docker"
-  export SAFELIBS_REAL_DOCKER="$real_docker"
-  export SAFELIBS_LIBC6_VALIDATOR_FAST_INSTALL="$helper"
-  export PATH="$docker_bin:$PATH"
 }
 
 package_env="$repo_root/packaging/package.env"
@@ -140,20 +90,12 @@ mkdir -p -- "$override_root" "$artifact_root"
 
 note "synthesizing port lock for $SAFELIBS_LIBRARY at commit ${commit_sha:0:12}"
 build_status=0
-if [[ -z "${SAFELIBS_VALIDATOR_UNPORTED_PACKAGES+x}" && "$SAFELIBS_LIBRARY" == "libc6" ]]; then
-  # The libc6 validator matrix reinstalls override debs inside every testcase.
-  # Dev, locale, and service packages are covered by package-install smokes;
-  # leaving them on the validator base image keeps the behavioral matrix inside
-  # testcase budgets while still cutting runtime execution over to safe libc6.
-  SAFELIBS_VALIDATOR_UNPORTED_PACKAGES="libc6-dev,libc-dev-bin,locales,nscd"
-fi
 SAFELIBS_LIBRARY="$SAFELIBS_LIBRARY" \
 SAFELIBS_COMMIT_SHA="$commit_sha" \
 SAFELIBS_DIST_DIR="$dist_dir" \
 SAFELIBS_VALIDATOR_DIR="$validator_dir" \
 SAFELIBS_LOCK_PATH="$lock_path" \
 SAFELIBS_OVERRIDE_ROOT="$override_root" \
-SAFELIBS_VALIDATOR_UNPORTED_PACKAGES="${SAFELIBS_VALIDATOR_UNPORTED_PACKAGES:-}" \
 python3 "$repo_root/scripts/lib/build_port_lock.py" || build_status=$?
 if (( build_status == 2 )); then
   note "library $SAFELIBS_LIBRARY has no validator manifest entry; skipping validator tests"
@@ -161,11 +103,6 @@ if (( build_status == 2 )); then
 fi
 if (( build_status != 0 )); then
   exit "$build_status"
-fi
-
-if [[ "$SAFELIBS_LIBRARY" == "libc6" &&
-      "${SAFELIBS_VALIDATOR_UNPORTED_PACKAGES:-}" == "libc6-dev,libc-dev-bin,locales,nscd" ]]; then
-  prepare_libc6_validator_docker_wrapper
 fi
 
 cast_arg=()

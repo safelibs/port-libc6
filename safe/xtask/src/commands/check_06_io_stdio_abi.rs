@@ -42,7 +42,6 @@ pub fn run(args: Args) -> Result<()> {
             "libmemusage".to_string(),
         ],
         build_root: args.build_root.clone(),
-        strict_symbol_metadata: false,
     })?;
     ensure_phase06_public_artifacts_are_safe_built(args.build_root.clone())?;
     super::link_compat_smoke::run(super::link_compat_smoke::Args {
@@ -51,13 +50,10 @@ pub fn run(args: Args) -> Result<()> {
             .build_root
             .clone()
             .unwrap_or_else(|| PathBuf::from("work/original-build")),
-        strict_dev_assets: false,
     })?;
     super::check_headers::run(super::check_headers::Args {
         install_root: args.install_root,
         lang: Vec::new(),
-        all_installed: false,
-        feature_profiles: Vec::new(),
     })
 }
 

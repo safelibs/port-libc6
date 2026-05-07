@@ -32,13 +32,11 @@ pub fn run(args: Args) -> Result<()> {
             "libc".to_string(),
         ],
         build_root: args.build_root.clone(),
-        strict_symbol_metadata: false,
     })?;
     super::link_compat_smoke::run(super::link_compat_smoke::Args {
         install_root: args.install_root,
         build_root: args
             .build_root
             .unwrap_or_else(|| PathBuf::from("work/original-build")),
-        strict_dev_assets: false,
     })
 }

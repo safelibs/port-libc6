@@ -342,16 +342,12 @@ fn run_one(config: &RunConfig, entry: &TestsManifestEntry) -> Result<()> {
             super::check_headers::run(super::check_headers::Args {
                 install_root: PathBuf::from("work/install-root"),
                 lang: vec!["c".to_string()],
-                all_installed: false,
-                feature_profiles: Vec::new(),
             })
         }
         "tests-special::top-level::check-installed-headers-cxx::base" => {
             super::check_headers::run(super::check_headers::Args {
                 install_root: PathBuf::from("work/install-root"),
                 lang: vec!["c++".to_string()],
-                all_installed: false,
-                feature_profiles: Vec::new(),
             })
         }
         "tests-special::top-level::check-local-headers::base" => run_script(
@@ -5013,8 +5009,6 @@ fn run_phase_owned_installed_headers_check(config: &RunConfig, lang: &str) -> Re
     super::check_headers::run(super::check_headers::Args {
         install_root: config.install_root.clone(),
         lang: vec![lang.to_string()],
-        all_installed: false,
-        feature_profiles: Vec::new(),
     })?;
     fs::write(&stamp, b"ok").with_context(|| format!("failed to write {}", stamp.display()))?;
     Ok(())

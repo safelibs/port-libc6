@@ -19,6 +19,5 @@ pub fn run(args: Args) -> Result<()> {
     super::link_compat_smoke::run(super::link_compat_smoke::Args {
         install_root: args.install_root,
         build_root: args.build_root,
-        strict_dev_assets: false,
     })
 }
