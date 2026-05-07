@@ -9,6 +9,9 @@ Driven entirely by environment variables set by run-validation-tests.sh:
   SAFELIBS_VALIDATOR_DIR  validator checkout (reads repositories.yml)
   SAFELIBS_LOCK_PATH      output path for the generated lock JSON
   SAFELIBS_OVERRIDE_ROOT  output root for <root>/<library>/*.deb layout
+  SAFELIBS_VALIDATOR_UNPORTED_PACKAGES
+                          optional comma/space-separated canonical packages
+                          to leave on validator apt originals
 
 Exit codes:
   0  lock written, override populated
@@ -29,6 +32,7 @@ from pathlib import Path
 
 LIBRARY_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 SHA256_HEX_RE = re.compile(r"^[0-9a-f]{40,}$")
+PACKAGE_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9+.-]*$")
 
 
 def fail(message: str, code: int = 1) -> "None":
@@ -81,6 +85,17 @@ def parse_canonical_packages(repositories_yml: Path, library: str) -> list[str] 
     return None
 
 
+def parse_forced_unported_packages() -> set[str]:
+    raw = os.environ.get("SAFELIBS_VALIDATOR_UNPORTED_PACKAGES", "")
+    if raw.strip() in {"", "none"}:
+        return set()
+    packages = {part for part in re.split(r"[\s,]+", raw.strip()) if part}
+    invalid = sorted(package for package in packages if not PACKAGE_NAME_RE.match(package))
+    if invalid:
+        fail("invalid SAFELIBS_VALIDATOR_UNPORTED_PACKAGES entries: " + ", ".join(invalid))
+    return packages
+
+
 def dpkg_field(deb_path: Path, field_name: str) -> str:
     completed = subprocess.run(
         ["dpkg-deb", "--field", str(deb_path), field_name],
@@ -121,6 +136,13 @@ def main() -> int:
         return 2
     if not canonical_packages:
         fail(f"library {library} has empty apt_packages in validator manifest")
+    forced_unported = parse_forced_unported_packages()
+    unknown_forced = sorted(forced_unported.difference(canonical_packages))
+    if unknown_forced:
+        fail(
+            "SAFELIBS_VALIDATOR_UNPORTED_PACKAGES contains non-canonical package(s) "
+            f"for {library}: {', '.join(unknown_forced)}"
+        )
 
     debs = sorted(dist_dir.glob("*.deb"))
     if not debs:
@@ -141,6 +163,12 @@ def main() -> int:
             print(
                 f"build_port_lock: skipping {deb_path.name}: "
                 f"Package {package!r} is not canonical for {library}"
+            )
+            continue
+        if package in forced_unported:
+            print(
+                f"build_port_lock: leaving {deb_path.name} on validator apt original "
+                f"per SAFELIBS_VALIDATOR_UNPORTED_PACKAGES"
             )
             continue
         if package in debs_by_package:
