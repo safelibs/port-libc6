@@ -50,7 +50,7 @@ Section: admin
 Priority: optional
 Multi-Arch: foreign
 Depends: libc6 (= @SAFE_VERSION@), libc-bin (= @SAFE_VERSION@)
-Pre-Depends: libc6 (= @SAFE_VERSION@)
+Pre-Depends: init-system-helpers (>= 1.54~)
 Description: GNU C Library: Name Service Cache Daemon
  This package contains the safe phase-07 nscd frontend together with the
  committed init, service, and tmpfiles metadata required by the harness.
