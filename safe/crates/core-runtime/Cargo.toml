@@ -3,5 +3,8 @@ name = "core-runtime"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+export-libc-symbols = []
+
 [dependencies]
 libc.workspace = true

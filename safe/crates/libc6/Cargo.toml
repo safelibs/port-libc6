@@ -6,4 +6,6 @@ edition = "2021"
 [dependencies]
 anyhow.workspace = true
 core-runtime = { path = "../core-runtime" }
+glob.workspace = true
 ldso = { path = "../ldso" }
+regex.workspace = true

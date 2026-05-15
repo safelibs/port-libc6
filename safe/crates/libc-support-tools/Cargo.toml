@@ -8,6 +8,7 @@ path = "src/lib.rs"
 
 [dependencies]
 anyhow.workspace = true
+libc6 = { path = "../libc6" }
 ldso = { path = "../ldso" }
 
 [[bin]]

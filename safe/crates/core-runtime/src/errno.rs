@@ -32,7 +32,7 @@ pub fn with_location<R>(f: impl FnOnce(*mut i32) -> R) -> R {
     ERRNO.with(|slot| f(slot.as_ptr()))
 }
 
-#[no_mangle]
+#[cfg_attr(feature = "export-libc-symbols", no_mangle)]
 pub extern "C" fn __errno_location() -> *mut i32 {
     with_location(|ptr| ptr)
 }

@@ -1,4 +1,9 @@
 use anyhow::{anyhow, bail, Context, Result};
+use libc6::iconv::{convert_bytes as libc_convert_bytes, ConversionOptions};
+use libc6::locale::{
+    category_keys, charmap_for_locale, current_locale_from_pairs, locale_environment_from_pairs,
+    normalize_locale_name,
+};
 use std::collections::BTreeSet;
 use std::env;
 use std::ffi::OsStr;
@@ -108,7 +113,8 @@ fn iconv_main(args: &[String]) -> Result<()> {
         }
     }
 
-    let converted = convert_bytes(&input_bytes, &from, &to, omit_invalid)?;
+    let converted =
+        libc_convert_bytes(&input_bytes, &from, &to, ConversionOptions { omit_invalid })?;
     if let Some(path) = output {
         if let Some(parent) = path.parent() {
             if !parent.as_os_str().is_empty() {
@@ -145,131 +151,6 @@ fn print_supported_encodings() {
         "UTF-16LE//",
     ] {
         println!("{name}");
-    }
-}
-
-fn convert_bytes(input: &[u8], from: &str, to: &str, omit_invalid: bool) -> Result<Vec<u8>> {
-    let from = normalize_encoding(from);
-    let to = normalize_encoding(to);
-    if from == to || is_utf8_alias(&from) && is_utf8_alias(&to) {
-        return Ok(input.to_vec());
-    }
-
-    let text = decode_to_string(input, &from, omit_invalid)?;
-    encode_from_string(&text, &to, omit_invalid)
-}
-
-fn normalize_encoding(value: &str) -> String {
-    value
-        .trim()
-        .trim_end_matches('/')
-        .chars()
-        .filter(|ch| ch.is_ascii_alphanumeric())
-        .map(|ch| ch.to_ascii_uppercase())
-        .collect()
-}
-
-fn is_utf8_alias(value: &str) -> bool {
-    value == "UTF8"
-}
-
-fn decode_to_string(input: &[u8], encoding: &str, omit_invalid: bool) -> Result<String> {
-    match encoding {
-        "UTF8" => {
-            if omit_invalid {
-                Ok(String::from_utf8_lossy(input).into_owned())
-            } else {
-                String::from_utf8(input.to_vec()).context("invalid UTF-8 input")
-            }
-        }
-        "ASCII" | "ANSIX341968" => {
-            let mut out = String::with_capacity(input.len());
-            for byte in input {
-                if byte.is_ascii() {
-                    out.push(*byte as char);
-                } else if !omit_invalid {
-                    bail!("invalid ASCII input byte 0x{byte:02x}");
-                }
-            }
-            Ok(out)
-        }
-        "ISO88591" | "LATIN1" => Ok(input.iter().map(|byte| *byte as char).collect()),
-        "UTF16LE" | "UTF16BE" => decode_utf16(input, encoding == "UTF16LE", omit_invalid),
-        _ => Ok(String::from_utf8_lossy(input).into_owned()),
-    }
-}
-
-fn decode_utf16(input: &[u8], little_endian: bool, omit_invalid: bool) -> Result<String> {
-    let mut words = Vec::with_capacity(input.len() / 2);
-    let mut chunks = input.chunks_exact(2);
-    for chunk in &mut chunks {
-        let word = if little_endian {
-            u16::from_le_bytes([chunk[0], chunk[1]])
-        } else {
-            u16::from_be_bytes([chunk[0], chunk[1]])
-        };
-        words.push(word);
-    }
-    if !chunks.remainder().is_empty() && !omit_invalid {
-        bail!("incomplete UTF-16 input unit");
-    }
-
-    let mut out = String::new();
-    for item in char::decode_utf16(words) {
-        match item {
-            Ok(ch) => out.push(ch),
-            Err(_) if omit_invalid => {}
-            Err(_) => bail!("invalid UTF-16 input sequence"),
-        }
-    }
-    Ok(out)
-}
-
-fn encode_from_string(text: &str, encoding: &str, omit_invalid: bool) -> Result<Vec<u8>> {
-    match encoding {
-        "UTF8" => Ok(text.as_bytes().to_vec()),
-        "ASCII" | "ANSIX341968" => {
-            let mut out = Vec::with_capacity(text.len());
-            for ch in text.chars() {
-                if ch.is_ascii() {
-                    out.push(ch as u8);
-                } else if !omit_invalid {
-                    bail!(
-                        "character U+{:04X} cannot be represented as ASCII",
-                        ch as u32
-                    );
-                }
-            }
-            Ok(out)
-        }
-        "ISO88591" | "LATIN1" => {
-            let mut out = Vec::with_capacity(text.len());
-            for ch in text.chars() {
-                let code = ch as u32;
-                if code <= 0xff {
-                    out.push(code as u8);
-                } else if !omit_invalid {
-                    bail!(
-                        "character U+{:04X} cannot be represented as ISO-8859-1",
-                        code
-                    );
-                }
-            }
-            Ok(out)
-        }
-        "UTF16LE" | "UTF16BE" => {
-            let mut out = Vec::with_capacity(text.len() * 2);
-            for word in text.encode_utf16() {
-                let bytes = if encoding == "UTF16LE" {
-                    word.to_le_bytes()
-                } else {
-                    word.to_be_bytes()
-                };
-                out.extend(bytes);
-            }
-            Ok(out)
-        }
-        _ => Ok(text.as_bytes().to_vec()),
     }
 }
 
@@ -363,47 +244,20 @@ fn locale_main(args: &[String]) -> Result<()> {
 }
 
 fn print_locale_environment() {
-    let lang = env::var("LANG").unwrap_or_else(|_| "C.UTF-8".to_string());
-    println!("LANG={lang}");
-    for key in [
-        "LC_CTYPE",
-        "LC_NUMERIC",
-        "LC_TIME",
-        "LC_COLLATE",
-        "LC_MONETARY",
-        "LC_MESSAGES",
-        "LC_PAPER",
-        "LC_NAME",
-        "LC_ADDRESS",
-        "LC_TELEPHONE",
-        "LC_MEASUREMENT",
-        "LC_IDENTIFICATION",
-    ] {
-        println!("{key}=\"{}\"", env::var(key).unwrap_or_default());
+    let locale_env = locale_environment_from_pairs(env::vars());
+    println!("LANG={}", locale_env.lang);
+    for (key, value) in locale_env.categories {
+        println!("{key}=\"{value}\"");
     }
-    println!("LC_ALL=\"{}\"", env::var("LC_ALL").unwrap_or_default());
+    println!("LC_ALL=\"{}\"", locale_env.lc_all);
 }
 
 fn current_locale() -> String {
-    for key in ["LC_ALL", "LC_CTYPE", "LANG"] {
-        if let Ok(value) = env::var(key) {
-            if !value.trim().is_empty() {
-                return value;
-            }
-        }
-    }
-    "C.UTF-8".to_string()
+    current_locale_from_pairs(env::vars())
 }
 
 fn current_charmap() -> &'static str {
-    let locale = current_locale().to_ascii_uppercase();
-    if locale == "C" || locale == "POSIX" {
-        "ANSI_X3.4-1968"
-    } else if locale.contains("UTF-8") || locale.contains("UTF8") {
-        "UTF-8"
-    } else {
-        "ISO-8859-1"
-    }
+    charmap_for_locale(&current_locale())
 }
 
 fn available_locales() -> Result<Vec<String>> {
@@ -439,6 +293,13 @@ fn available_charmaps() -> Result<Vec<String>> {
     let mut names = BTreeSet::new();
     for builtin in ["ANSI_X3.4-1968", "ISO-8859-1", "UTF-8"] {
         names.insert(builtin.to_string());
+    }
+    for key in category_keys() {
+        if let Ok(value) = env::var(key) {
+            if !value.is_empty() {
+                names.insert(charmap_for_locale(&value).to_string());
+            }
+        }
     }
     if let Ok(entries) = fs::read_dir("/usr/share/i18n/charmaps") {
         for entry in entries.flatten() {
@@ -597,16 +458,4 @@ fn locale_registry_paths() -> Vec<PathBuf> {
         PathBuf::from(LOCALE_ARCHIVE_REGISTRY),
         PathBuf::from("/usr/lib/locale/locale-archive"),
     ]
-}
-
-fn normalize_locale_name(value: &str) -> String {
-    let trimmed = value.trim();
-    let trimmed = trimmed.split_whitespace().next().unwrap_or(trimmed);
-    if trimmed == "C" || trimmed == "POSIX" {
-        return trimmed.to_string();
-    }
-    trimmed
-        .replace(".UTF-8", ".utf8")
-        .replace(".utf-8", ".utf8")
-        .replace(".UTF8", ".utf8")
 }

@@ -1,5 +1,8 @@
+pub mod iconv;
 pub mod io;
+pub mod locale;
 pub mod path;
+pub mod posix_parsers;
 pub mod startup;
 pub mod stdio;
 pub mod string;

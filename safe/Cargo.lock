@@ -303,6 +303,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "ldso",
+ "libc6",
 ]
 
 [[package]]
@@ -311,7 +312,9 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "core-runtime",
+ "glob",
  "ldso",
+ "regex",
 ]
 
 [[package]]
