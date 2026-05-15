@@ -11,6 +11,8 @@ pub struct Args {
 }
 
 pub fn run(args: Args) -> Result<()> {
+    super::stage_upstream_build::ensure_default_staged_upstream_build()?;
+
     super::package_deb::run(super::package_deb::Args {
         out: args.deb_dir.clone(),
         clean: true,

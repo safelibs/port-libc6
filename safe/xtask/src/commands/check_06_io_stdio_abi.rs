@@ -27,6 +27,15 @@ pub struct Args {
 }
 
 pub fn run(args: Args) -> Result<()> {
+    let original_build_root = args
+        .build_root
+        .clone()
+        .unwrap_or_else(|| PathBuf::from("work/original-build"));
+    super::stage_upstream_build::ensure_staged_upstream_build(
+        std::path::Path::new("original"),
+        &original_build_root,
+    )?;
+
     super::build::run(super::build::Args {
         target: "amd64".to_string(),
         profile: "dev".to_string(),
@@ -46,10 +55,7 @@ pub fn run(args: Args) -> Result<()> {
     ensure_phase06_public_artifacts_are_safe_built(args.build_root.clone())?;
     super::link_compat_smoke::run(super::link_compat_smoke::Args {
         install_root: args.install_root.clone(),
-        build_root: args
-            .build_root
-            .clone()
-            .unwrap_or_else(|| PathBuf::from("work/original-build")),
+        build_root: original_build_root,
     })?;
     super::check_headers::run(super::check_headers::Args {
         install_root: args.install_root,

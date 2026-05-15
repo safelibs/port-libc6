@@ -7,6 +7,8 @@ use std::process::Command;
 pub struct Args {}
 
 pub fn run(_args: Args) -> Result<()> {
+    super::stage_upstream_build::ensure_default_staged_upstream_build()?;
+
     let help = command_output(
         Command::new("cargo")
             .arg("run")
