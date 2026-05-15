@@ -23632,98 +23632,98 @@ reviewer = "phase-5-auto-review"
 site_id = "safe/crates/network-identity/src/lib.rs:107"
 
 [[reviewed_unsafe_entries]]
-line = 113
+line = 108
 owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
-site_id = "safe/crates/network-identity/src/lib.rs:113"
+site_id = "safe/crates/network-identity/src/lib.rs:108"
 
 [[reviewed_unsafe_entries]]
-line = 210
+line = 121
 owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
-site_id = "safe/crates/network-identity/src/lib.rs:210"
+site_id = "safe/crates/network-identity/src/lib.rs:121"
 
 [[reviewed_unsafe_entries]]
-line = 218
+line = 127
 owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
-site_id = "safe/crates/network-identity/src/lib.rs:218"
+site_id = "safe/crates/network-identity/src/lib.rs:127"
 
 [[reviewed_unsafe_entries]]
-line = 23
+line = 282
 owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
-site_id = "safe/crates/network-identity/src/lib.rs:23"
+site_id = "safe/crates/network-identity/src/lib.rs:282"
 
 [[reviewed_unsafe_entries]]
-line = 29
+line = 290
 owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
-site_id = "safe/crates/network-identity/src/lib.rs:29"
+site_id = "safe/crates/network-identity/src/lib.rs:290"
 
 [[reviewed_unsafe_entries]]
-line = 35
+line = 37
 owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
-site_id = "safe/crates/network-identity/src/lib.rs:35"
+site_id = "safe/crates/network-identity/src/lib.rs:37"
 
 [[reviewed_unsafe_entries]]
-line = 41
+line = 43
 owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
-site_id = "safe/crates/network-identity/src/lib.rs:41"
+site_id = "safe/crates/network-identity/src/lib.rs:43"
 
 [[reviewed_unsafe_entries]]
-line = 47
+line = 49
 owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
-site_id = "safe/crates/network-identity/src/lib.rs:47"
+site_id = "safe/crates/network-identity/src/lib.rs:49"
 
 [[reviewed_unsafe_entries]]
-line = 57
+line = 55
 owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
-site_id = "safe/crates/network-identity/src/lib.rs:57"
+site_id = "safe/crates/network-identity/src/lib.rs:55"
 
 [[reviewed_unsafe_entries]]
-line = 70
+line = 61
 owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
-site_id = "safe/crates/network-identity/src/lib.rs:70"
+site_id = "safe/crates/network-identity/src/lib.rs:61"
 
 [[reviewed_unsafe_entries]]
-line = 93
+line = 71
 owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
-site_id = "safe/crates/network-identity/src/lib.rs:93"
+site_id = "safe/crates/network-identity/src/lib.rs:71"
 
 [[reviewed_unsafe_entries]]
-line = 94
+line = 84
 owning_phase = "impl_07_nss_resolver_nscd"
 path = "safe/crates/network-identity/src/lib.rs"
 rationale = "This unsafe site is a narrow FFI or process-boundary escape hatch reviewed for phase ownership."
 reviewer = "phase-5-auto-review"
-site_id = "safe/crates/network-identity/src/lib.rs:94"
+site_id = "safe/crates/network-identity/src/lib.rs:84"
 
