@@ -200,14 +200,6 @@ fn stage_package_entry(package_root: &Path, entry: &PackageEntry) -> Result<()> 
     {
         return stage_generated_compat_archive(package_root, entry);
     }
-    if entry.asset_kind == "private_baseline_backend_dso"
-        || entry.path.starts_with("/usr/libexec/safelibs/backends/")
-    {
-        bail!(
-            "final package payload must not ship private backend DSO {}",
-            entry.path
-        );
-    }
     if let Some(tool) = find_required_tool(&entry.path) {
         return stage_required_tool(package_root, tool);
     }

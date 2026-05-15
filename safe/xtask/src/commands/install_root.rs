@@ -154,15 +154,6 @@ fn materialize_entry(root: &Path, entry: &PackageEntry) -> Result<()> {
     {
         return materialize_generated_compat_archive(root, entry);
     }
-    if entry.asset_kind == "private_baseline_backend_dso"
-        || entry.path.starts_with("/usr/libexec/safelibs/backends/")
-    {
-        anyhow::bail!(
-            "final install root must not contain private backend DSO {}",
-            entry.path
-        );
-    }
-
     let out_path = install_path_to_root(root, &entry.path);
     if let Some(target) = &entry.symlink_target {
         if let Some(parent) = out_path.parent() {

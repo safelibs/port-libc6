@@ -10702,6 +10702,66 @@ shipped_status = "testroot_only"
 source_path = "build/testroot.pristine/usr/libexec/getconf/XBS5_LP64_OFF64"
 
 [[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+package = "libc6"
+path = "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2"
+rationale = "Phase 6 private baseline backend DSO: non-public copy used only by generated forwarding veneers or loader delegation while the public libc-family path is safe-built."
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/ld-linux-x86-64.so.2"
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+package = "libc6"
+path = "/usr/libexec/safelibs/backends/libc.so.6"
+rationale = "Phase 6 private baseline backend DSO: non-public copy used only by generated forwarding veneers or loader delegation while the public libc-family path is safe-built."
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/libc.so.6"
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+package = "libc6"
+path = "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0"
+rationale = "Phase 6 private baseline backend DSO: non-public copy used only by generated forwarding veneers or loader delegation while the public libc-family path is safe-built."
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/libc_malloc_debug.so.0"
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+package = "libc6"
+path = "/usr/libexec/safelibs/backends/libmemusage.so"
+rationale = "Phase 6 private baseline backend DSO: non-public copy used only by generated forwarding veneers or loader delegation while the public libc-family path is safe-built."
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/libmemusage.so"
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+package = "libc6"
+path = "/usr/libexec/safelibs/backends/libpthread.so.0"
+rationale = "Phase 6 private baseline backend DSO: non-public copy used only by generated forwarding veneers or loader delegation while the public libc-family path is safe-built."
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/libpthread.so.0"
+
+[[files]]
+asset_kind = "private_baseline_backend_dso"
+executable = false
+package = "libc6"
+path = "/usr/libexec/safelibs/backends/libthread_db.so.1"
+rationale = "Phase 6 private baseline backend DSO: non-public copy used only by generated forwarding veneers or loader delegation while the public libc-family path is safe-built."
+scope = "required_package"
+shipped_status = "shipped"
+source_path = "build/testroot.pristine/usr/lib64/libthread_db.so.1"
+
+[[files]]
 asset_kind = "tracked_backend_binary"
 executable = true
 package = "libc-bin"

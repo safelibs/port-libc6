@@ -106,6 +106,61 @@ compare_public_payload() {
   fi
 }
 
+assert_private_backend_inventory() {
+  local path=$1
+  for manifest in \
+    /workspace/safe/generated/baseline/package-files/libc6.json \
+    /workspace/safe/generated/install-manifests/required-packages.json \
+    /workspace/safe/generated/install-manifests/test-install-root.json; do
+    jq -e --arg path "$path" '
+      .entries[]
+      | select(.path == $path
+          and .asset_kind == "private_baseline_backend_dso"
+          and .source_origin == "build_testroot"
+          and .shipped_status == "shipped"
+          and (.source_path | startswith("build/testroot.pristine/")))
+    ' "$manifest" >/dev/null
+  done
+  jq -e --arg path "$path" '
+    .entries[]
+    | select(.path == $path
+        and .classification == "private_baseline_backend_dso"
+        and .shipped == true)
+  ' /workspace/safe/generated/baseline/fallback-c-inventory.json >/dev/null
+  awk -v target="$path" '
+    function trim_value(line) {
+      sub(/^[^=]*= "/, "", line)
+      sub(/"$/, "", line)
+      return line
+    }
+    function flush_entry() {
+      if (entry_path == target &&
+          asset_kind == "private_baseline_backend_dso" &&
+          shipped_status == "shipped") {
+        found = 1
+      }
+      entry_path = ""
+      asset_kind = ""
+      shipped_status = ""
+    }
+    /^\[\[files\]\]$/ {
+      flush_entry()
+      in_file = 1
+      next
+    }
+    in_file && /^path = / { entry_path = trim_value($0); next }
+    in_file && /^asset_kind = / { asset_kind = trim_value($0); next }
+    in_file && /^shipped_status = / { shipped_status = trim_value($0); next }
+    END {
+      flush_entry()
+      exit(found ? 0 : 1)
+    }
+  ' /workspace/safe/upstream-compat/package-scope.toml || {
+    printf 'package-scope is missing shipped private backend entry for %s\n' "$path" >&2
+    return 1
+  }
+}
+
 assert_no_backend_payloads_in_manifests() {
   log "Checking final manifests for private backend payload closure"
   for manifest in /workspace/safe/generated/baseline/package-files/*.json \
@@ -540,7 +595,7 @@ smoke_libc_family_cutover() {
     done
   done
 
-  log "Checking removed private backend inventory"
+  log "Checking private backend inventory"
   for path in \
     /usr/libexec/safelibs/backends/ld-linux-x86-64.so.2 \
     /usr/libexec/safelibs/backends/libc.so.6 \
@@ -548,10 +603,11 @@ smoke_libc_family_cutover() {
     /usr/libexec/safelibs/backends/libthread_db.so.1 \
     /usr/libexec/safelibs/backends/libc_malloc_debug.so.0 \
     /usr/libexec/safelibs/backends/libmemusage.so; do
-    if [ -e "$path" ]; then
-      printf 'private libc-family backend payload still ships: %s\n' "$path" >&2
+    if [ ! -f "$path" ]; then
+      printf 'missing private libc-family backend payload: %s\n' "$path" >&2
       exit 1
     fi
+    assert_private_backend_inventory "$path"
   done
 
   log "Comparing installed public payloads with staged safe-build sources"

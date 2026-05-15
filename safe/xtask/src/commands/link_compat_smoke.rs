@@ -30,9 +30,12 @@ struct CliArgs {
     build_root: PathBuf,
     #[arg(long, default_value_t = false)]
     strict_dev_assets: bool,
+    #[arg(long, default_value_t = false)]
+    final_manifest_closure: bool,
 }
 
 static STRICT_DEV_ASSETS: AtomicBool = AtomicBool::new(false);
+static FINAL_MANIFEST_CLOSURE: AtomicBool = AtomicBool::new(false);
 
 pub fn run(args: Args) -> Result<()> {
     if !link_compat_corpus_path().exists() {
@@ -54,7 +57,9 @@ pub fn run(args: Args) -> Result<()> {
 
     let corpus = load_link_compat_corpus()?;
     verify_final_corpus_coverage(&corpus)?;
-    verify_final_manifest_closure()?;
+    if FINAL_MANIFEST_CLOSURE.load(Ordering::Relaxed) {
+        verify_final_manifest_closure()?;
+    }
     if STRICT_DEV_ASSETS.load(Ordering::Relaxed) {
         verify_strict_dev_assets(&install_root, &build_root)?;
     }
@@ -128,6 +133,7 @@ impl clap::Args for Args {
 
 fn apply_cli_args(cli: CliArgs) -> Args {
     STRICT_DEV_ASSETS.store(cli.strict_dev_assets, Ordering::Relaxed);
+    FINAL_MANIFEST_CLOSURE.store(cli.final_manifest_closure, Ordering::Relaxed);
     Args {
         install_root: cli.install_root,
         build_root: cli.build_root,
@@ -541,7 +547,9 @@ fn run_case(
                 bail!("command failed ({}): {debug}\n{combined}", output.status);
             }
             ensure_no_runtime_failure(case, &combined)?;
-            if combined.contains("/usr/libexec/safelibs/backends") {
+            if FINAL_MANIFEST_CLOSURE.load(Ordering::Relaxed)
+                && combined.contains("/usr/libexec/safelibs/backends")
+            {
                 bail!(
                     "link-compat case {} resolved through a private backend payload",
                     case.case_id

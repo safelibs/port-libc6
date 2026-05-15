@@ -3,9 +3,9 @@
     "notes": [
       "This inventory is the single committed ledger of non-Rust source, script, assembly, template, and fallback assets planned under safe/**.",
       "Later phases must update this file in place instead of maintaining ad hoc fallback lists.",
-      "Phase 10 removes shipped private baseline backend DSOs and leaves no temporary fallback binaries in the package payload."
+      "Phase 6 explicitly tracks private libc-family baseline backend DSOs under /usr/libexec/safelibs/backends/** while public DSO paths come from the safe build root."
     ],
-    "phase": "impl_10_final_fixup_and_audit"
+    "phase": "impl_06_io_stdio_string_path"
   },
   "entries": [
     {
@@ -128,6 +128,72 @@
         "/usr/lib64/rcrt1.o"
       ],
       "audit_notes": "Final amd64 startup object is staged from the safe build root and tracked as a compatibility assembly payload for Debian libc6-dev link compatibility."
+    },
+    {
+      "path": "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2",
+      "source_path": "build/testroot.pristine/usr/lib64/ld-linux-x86-64.so.2",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_06_io_stdio_string_path",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2"
+      ],
+      "audit_notes": "Phase 6 keeps this original libc-family DSO as a private dlvsym/exec backend while the public package path is sourced from the safe build root."
+    },
+    {
+      "path": "/usr/libexec/safelibs/backends/libc.so.6",
+      "source_path": "build/testroot.pristine/usr/lib64/libc.so.6",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_06_io_stdio_string_path",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/libc.so.6"
+      ],
+      "audit_notes": "Phase 6 keeps this original libc-family DSO as a private dlvsym/exec backend while the public package path is sourced from the safe build root."
+    },
+    {
+      "path": "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0",
+      "source_path": "build/testroot.pristine/usr/lib64/libc_malloc_debug.so.0",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_06_io_stdio_string_path",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0"
+      ],
+      "audit_notes": "Phase 6 keeps this original libc-family DSO as a private dlvsym/exec backend while the public package path is sourced from the safe build root."
+    },
+    {
+      "path": "/usr/libexec/safelibs/backends/libmemusage.so",
+      "source_path": "build/testroot.pristine/usr/lib64/libmemusage.so",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_06_io_stdio_string_path",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/libmemusage.so"
+      ],
+      "audit_notes": "Phase 6 keeps this original libc-family DSO as a private dlvsym/exec backend while the public package path is sourced from the safe build root."
+    },
+    {
+      "path": "/usr/libexec/safelibs/backends/libpthread.so.0",
+      "source_path": "build/testroot.pristine/usr/lib64/libpthread.so.0",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_06_io_stdio_string_path",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/libpthread.so.0"
+      ],
+      "audit_notes": "Phase 6 keeps this original libc-family DSO as a private dlvsym/exec backend while the public package path is sourced from the safe build root."
+    },
+    {
+      "path": "/usr/libexec/safelibs/backends/libthread_db.so.1",
+      "source_path": "build/testroot.pristine/usr/lib64/libthread_db.so.1",
+      "classification": "private_baseline_backend_dso",
+      "owning_phase": "impl_06_io_stdio_string_path",
+      "shipped": true,
+      "package_scope_refs": [
+        "/usr/libexec/safelibs/backends/libthread_db.so.1"
+      ],
+      "audit_notes": "Phase 6 keeps this original libc-family DSO as a private dlvsym/exec backend while the public package path is sourced from the safe build root."
     },
     {
       "path": "/usr/libexec/safelibs/loader-tools/ld.so.backend",

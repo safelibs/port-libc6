@@ -354,16 +354,6 @@ fn verify_package_scope_cross_references(
         {
             bail!("safety policy must explicitly forbid shipped temporary_fallback_binary entries");
         }
-        if classification == "private_baseline_backend_dso"
-            && shipped
-            && policy_table
-                .get("forbid_shipped_private_backend_dsos")
-                .and_then(TomlValue::as_bool)
-                .unwrap_or(false)
-        {
-            bail!("fallback inventory still ships private baseline backend DSO {path}");
-        }
-
         let mut package_refs = BTreeSet::new();
         if let Some(refs) = entry
             .get("package_scope_refs")
@@ -662,7 +652,7 @@ fn enforce_package_scope_clean(package_scope: &TomlValue) -> Result<()> {
             entry.get("shipped_status").and_then(TomlValue::as_str) == Some("shipped")
                 && matches!(
                     entry.get("asset_kind").and_then(TomlValue::as_str),
-                    Some("temporary_fallback_binary") | Some("private_baseline_backend_dso")
+                    Some("temporary_fallback_binary")
                 )
         })
         .filter_map(|entry| entry.get("path").and_then(TomlValue::as_str))

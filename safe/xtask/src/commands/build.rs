@@ -66,7 +66,32 @@ const PHASE_07_PUBLIC_DEV_LINKNAMES: [&str; 4] = [
 
 const PHASE_09_PUBLIC_DEV_LINKNAMES: [&str; 2] = ["/usr/lib64/libm.so", "/usr/lib64/libmvec.so"];
 
-const PRIVATE_BACKEND_DSO_PREFIX: &str = "/usr/libexec/safelibs/backends/";
+const PHASE_06_PRIVATE_BACKEND_DSOS: [(&str, &str); 6] = [
+    (
+        "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2",
+        "/usr/lib64/ld-linux-x86-64.so.2",
+    ),
+    (
+        "/usr/libexec/safelibs/backends/libc.so.6",
+        "/usr/lib64/libc.so.6",
+    ),
+    (
+        "/usr/libexec/safelibs/backends/libpthread.so.0",
+        "/usr/lib64/libpthread.so.0",
+    ),
+    (
+        "/usr/libexec/safelibs/backends/libthread_db.so.1",
+        "/usr/lib64/libthread_db.so.1",
+    ),
+    (
+        "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0",
+        "/usr/lib64/libc_malloc_debug.so.0",
+    ),
+    (
+        "/usr/libexec/safelibs/backends/libmemusage.so",
+        "/usr/lib64/libmemusage.so",
+    ),
+];
 
 const FINAL_STARTFILES: [&str; 8] = [
     "/usr/lib64/Mcrt1.o",
@@ -2302,6 +2327,21 @@ fn refresh_fallback_inventory() -> Result<()> {
         }
     }
 
+    for (backend_path, public_path) in PHASE_06_PRIVATE_BACKEND_DSOS {
+        upsert_fallback_entry(
+            &mut inventory.entries,
+            FallbackInventoryEntry {
+                path: backend_path.to_string(),
+                source_path: Some(build_testroot_source_path(public_path)),
+                classification: "private_baseline_backend_dso".to_string(),
+                owning_phase: PHASE_06_ID.to_string(),
+                shipped: true,
+                package_scope_refs: vec![backend_path.to_string()],
+                audit_notes: "Phase 6 keeps this original libc-family DSO as a private dlvsym/exec backend while the public package path is sourced from the safe build root.".to_string(),
+            },
+        );
+    }
+
     for path in FINAL_STARTFILES {
         upsert_fallback_entry(
             &mut inventory.entries,
@@ -2347,9 +2387,9 @@ fn refresh_fallback_inventory() -> Result<()> {
         "notes": [
             "This inventory is the single committed ledger of non-Rust source, script, assembly, template, and fallback assets planned under safe/**.",
             "Later phases must update this file in place instead of maintaining ad hoc fallback lists.",
-            "Phase 10 removes shipped private baseline backend DSOs and leaves no temporary fallback binaries in the package payload."
+            "Phase 6 explicitly tracks private libc-family baseline backend DSOs under /usr/libexec/safelibs/backends/** while public DSO paths come from the safe build root."
         ],
-        "phase": FINAL_CUTOVER_PHASE
+        "phase": PHASE_06_ID
     });
     write_pretty_json(&path, &inventory)
 }
@@ -2360,9 +2400,6 @@ fn normalize_libc_family_package_manifests() -> Result<()> {
     let libc6_path = safe_root().join("generated/baseline/package-files/libc6.json");
     let mut libc6: PackageManifest = load_json(&libc6_path)?;
     set_package_manifest_phase(&mut libc6);
-    libc6
-        .entries
-        .retain(|entry| !entry.path.starts_with(PRIVATE_BACKEND_DSO_PREFIX));
     for path in [
         "/usr/lib64/ld-linux-x86-64.so.2",
         "/usr/lib64/libBrokenLocale.so.1",
@@ -2386,6 +2423,24 @@ fn normalize_libc_family_package_manifests() -> Result<()> {
                 symlink_target: None,
                 owner_phase: Some(owner_phase_for_libc_family_path(path).to_string()),
                 verification: Some(verification_for_libc_family_path(path).to_string()),
+            },
+        );
+    }
+    for (backend_path, public_path) in PHASE_06_PRIVATE_BACKEND_DSOS {
+        upsert_package_entry(
+            &mut libc6.entries,
+            PackageEntry {
+                package: "libc6".to_string(),
+                path: backend_path.to_string(),
+                source_path: Some(build_testroot_source_path(public_path)),
+                source_origin: "build_testroot".to_string(),
+                scope: "required_package".to_string(),
+                shipped_status: "shipped".to_string(),
+                asset_kind: "private_baseline_backend_dso".to_string(),
+                executable: false,
+                symlink_target: None,
+                owner_phase: Some(PHASE_06_ID.to_string()),
+                verification: Some("libc-family-cutover".to_string()),
             },
         );
     }
@@ -2696,6 +2751,13 @@ fn public_build_source_path(build_root: &str, install_path: &str) -> String {
     )
 }
 
+fn build_testroot_source_path(install_path: &str) -> String {
+    format!(
+        "build/testroot.pristine/{}",
+        install_path.trim_start_matches('/')
+    )
+}
+
 fn owner_phase_for_dso_id(dso_id: &str) -> &'static str {
     match dso_id {
         "libanl" | "libnsl" | "libnss_compat" | "libnss_dns" | "libnss_files" | "libnss_hesiod"
@@ -2844,14 +2906,6 @@ fn normalize_tool_package_manifests() -> Result<()> {
 
 fn update_package_scope_libc_family_files(files: &mut Vec<TomlValue>) -> Result<()> {
     let build_root = phase06_public_build_root();
-    files.retain(|entry| {
-        entry
-            .as_table()
-            .and_then(|table| table.get("path"))
-            .and_then(TomlValue::as_str)
-            .map(|path| !path.starts_with(PRIVATE_BACKEND_DSO_PREFIX))
-            .unwrap_or(true)
-    });
     for path in [
         "/usr/lib64/ld-linux-x86-64.so.2",
         "/usr/lib64/libBrokenLocale.so.1",
@@ -2893,6 +2947,23 @@ fn update_package_scope_libc_family_files(files: &mut Vec<TomlValue>) -> Result<
             "shipped",
         );
         clear_package_scope_temporary(files, path);
+    }
+    for (backend_path, public_path) in PHASE_06_PRIVATE_BACKEND_DSOS {
+        upsert_package_scope_file(
+            files,
+            backend_path,
+            "libc6",
+            &build_testroot_source_path(public_path),
+            "private_baseline_backend_dso",
+            false,
+            "required_package",
+            "shipped",
+        );
+        set_package_scope_rationale(
+            files,
+            backend_path,
+            "Phase 6 private baseline backend DSO: non-public copy used only by generated forwarding veneers or loader delegation while the public libc-family path is safe-built.",
+        );
     }
     for path in [
         "/usr/lib64/libBrokenLocale.so",

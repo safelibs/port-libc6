@@ -3589,6 +3589,84 @@
       "symlink_target": null,
       "owner_phase": "impl_09_math_and_aux_dsos",
       "verification": "dev-and-time-tools"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/ld-linux-x86-64.so.2",
+      "source_path": "build/testroot.pristine/usr/lib64/ld-linux-x86-64.so.2",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "libc-family-cutover"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/libc.so.6",
+      "source_path": "build/testroot.pristine/usr/lib64/libc.so.6",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "libc-family-cutover"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/libc_malloc_debug.so.0",
+      "source_path": "build/testroot.pristine/usr/lib64/libc_malloc_debug.so.0",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "libc-family-cutover"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/libmemusage.so",
+      "source_path": "build/testroot.pristine/usr/lib64/libmemusage.so",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "libc-family-cutover"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/libpthread.so.0",
+      "source_path": "build/testroot.pristine/usr/lib64/libpthread.so.0",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "libc-family-cutover"
+    },
+    {
+      "package": "libc6",
+      "path": "/usr/libexec/safelibs/backends/libthread_db.so.1",
+      "source_path": "build/testroot.pristine/usr/lib64/libthread_db.so.1",
+      "source_origin": "build_testroot",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "private_baseline_backend_dso",
+      "executable": false,
+      "symlink_target": null,
+      "owner_phase": "impl_06_io_stdio_string_path",
+      "verification": "libc-family-cutover"
     }
   ]
 }
