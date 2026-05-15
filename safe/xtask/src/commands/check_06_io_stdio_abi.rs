@@ -89,6 +89,10 @@ fn ensure_phase06_public_artifacts_are_safe_built(build_root: Option<PathBuf>) -
             Command::new("objcopy")
                 .arg("--remove-section")
                 .arg(".note.safelibs")
+                .arg("--remove-section")
+                .arg(".safelibs.rust_anchor")
+                .arg("--remove-section")
+                .arg(".comment.safelibs_forwarding_veneers")
                 .arg(&stripped),
         )?;
         let generated = fs::read(&stripped)
@@ -97,7 +101,7 @@ fn ensure_phase06_public_artifacts_are_safe_built(build_root: Option<PathBuf>) -
             .with_context(|| format!("failed to read {}", baseline.display()))?;
         if generated == baseline_bytes {
             bail!(
-                "phase-06 public artifact {} at {} is still the baseline upstream DSO after removing .note.safelibs",
+                "phase-06 public artifact {} at {} is still the baseline upstream DSO after removing safelibs metadata sections",
                 dso_id,
                 artifact.display()
             );

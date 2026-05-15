@@ -761,6 +761,8 @@ fn ensure_public_cutover_is_not_baseline(
             .arg(".note.safelibs")
             .arg("--remove-section")
             .arg(".safelibs.rust_anchor")
+            .arg("--remove-section")
+            .arg(".comment.safelibs_forwarding_veneers")
             .arg(&stripped),
     )?;
     let generated =
@@ -795,13 +797,25 @@ fn materialize_functional_cutover_image(
     let dso_id = &baseline.dso_id;
     let anchor_section = ".safelibs.rust_anchor";
     let veneer_section = ".comment.safelibs_forwarding_veneers";
+    let executable_anchor_section = format!(".phase06_rust_anchor_{}", rust_ident_for_dso(dso_id));
     run_command(
         Command::new("objcopy")
             .arg("--remove-section")
             .arg(anchor_section)
             .arg("--remove-section")
             .arg(veneer_section)
+            .arg("--remove-section")
+            .arg(&executable_anchor_section)
             .arg(output_path),
+    )?;
+    // Loader/libc-class functional images must preserve glibc's internal layout, but
+    // their public artifact still carries compiled Rust text outside removable notes.
+    embed_rust_anchor_text_section(
+        dso_id,
+        rust_anchor,
+        output_path,
+        scratch_root,
+        &executable_anchor_section,
     )?;
     run_command(
         Command::new("objcopy")
@@ -855,6 +869,52 @@ fn materialize_functional_cutover_image(
         ),
     )
     .with_context(|| format!("failed to write {}", note.display()))?;
+    Ok(())
+}
+
+fn embed_rust_anchor_text_section(
+    dso_id: &str,
+    rust_anchor: &Path,
+    output_path: &Path,
+    scratch_root: &Path,
+    output_section: &str,
+) -> Result<()> {
+    let ident = rust_ident_for_dso(dso_id);
+    let input_section = format!(".text.__safelibs_rust_anchor_{ident}");
+    let payload = scratch_root
+        .join("notes")
+        .join(format!("{dso_id}-rust-anchor.text"));
+    run_command(
+        Command::new("objcopy")
+            .arg("--dump-section")
+            .arg(format!("{input_section}={}", payload.display()))
+            .arg(rust_anchor),
+    )
+    .with_context(|| {
+        format!(
+            "failed to extract Rust anchor text section {input_section} from {}",
+            rust_anchor.display()
+        )
+    })?;
+    run_command(
+        Command::new("objcopy")
+            .arg("--add-section")
+            .arg(format!("{output_section}={}", payload.display()))
+            .arg("--set-section-flags")
+            .arg(format!("{output_section}=contents,readonly,code"))
+            .arg("--add-symbol")
+            .arg(format!(
+                "__safelibs_phase06_rust_anchor_{ident}={output_section}:0,global,function"
+            ))
+            .arg(output_path),
+    )
+    .with_context(|| {
+        format!(
+            "failed to embed Rust anchor text {} into {}",
+            payload.display(),
+            output_path.display()
+        )
+    })?;
     Ok(())
 }
 
