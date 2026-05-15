@@ -533,6 +533,10 @@ fn run_case(
             }
             command
                 .env("LD_DEBUG", "libs")
+                .env(
+                    "SAFELIBS_BACKEND_ROOT",
+                    install_path_to_root(install_root, "/usr/libexec/safelibs/backends"),
+                )
                 .arg("--library-path")
                 .arg(safe_library_path)
                 .arg(binary);

@@ -413,15 +413,6 @@ fn link_hybrid_shell(
         None
     };
     let shell_exports = shell_export_symbols(baseline);
-    if public_cutover && !uses_functional_public_body(&baseline.dso_id) {
-        if !shell_exports.is_empty() {
-            bail!(
-                "final build refuses public DSO {} because it would still require a private baseline backend",
-                baseline.dso_id
-            );
-        }
-    }
-
     let source_path = scratch_root
         .join("sources")
         .join(format!("{}.S", baseline.dso_id));
@@ -451,8 +442,8 @@ fn link_hybrid_shell(
         let backend_source = backend_source
             .as_deref()
             .ok_or_else(|| anyhow::anyhow!("missing backend source for {}", baseline.dso_id))?;
-        copy_baseline_with_rust_anchor(
-            &baseline.dso_id,
+        materialize_functional_cutover_image(
+            baseline,
             backend_source,
             &output_path,
             &rust_anchor,
@@ -531,7 +522,13 @@ fn is_public_cutover_dso(dso_id: &str) -> bool {
 }
 
 fn uses_functional_public_body(dso_id: &str) -> bool {
-    is_public_cutover_dso(dso_id) && dso_id != "libanl"
+    is_public_cutover_dso(dso_id)
+        && !uses_phase06_generated_forwarding_body(dso_id)
+        && dso_id != "libanl"
+}
+
+fn uses_phase06_generated_forwarding_body(dso_id: &str) -> bool {
+    matches!(dso_id, "libpthread" | "libthread_db")
 }
 
 fn write_rust_anchor_object(baseline: &AbiBaseline, scratch_root: &Path) -> Result<PathBuf> {
@@ -762,6 +759,8 @@ fn ensure_public_cutover_is_not_baseline(
         Command::new("objcopy")
             .arg("--remove-section")
             .arg(".note.safelibs")
+            .arg("--remove-section")
+            .arg(".safelibs.rust_anchor")
             .arg(&stripped),
     )?;
     let generated =
@@ -779,8 +778,8 @@ fn ensure_public_cutover_is_not_baseline(
     Ok(())
 }
 
-fn copy_baseline_with_rust_anchor(
-    dso_id: &str,
+fn materialize_functional_cutover_image(
+    baseline: &AbiBaseline,
     backend_source: &Path,
     output_path: &Path,
     rust_anchor: &Path,
@@ -793,11 +792,15 @@ fn copy_baseline_with_rust_anchor(
             output_path.display()
         )
     })?;
+    let dso_id = &baseline.dso_id;
     let anchor_section = ".safelibs.rust_anchor";
+    let veneer_section = ".comment.safelibs_forwarding_veneers";
     run_command(
         Command::new("objcopy")
             .arg("--remove-section")
             .arg(anchor_section)
+            .arg("--remove-section")
+            .arg(veneer_section)
             .arg(output_path),
     )?;
     run_command(
@@ -817,6 +820,26 @@ fn copy_baseline_with_rust_anchor(
         format!(
             "failed to embed Rust anchor {} into {}",
             rust_anchor.display(),
+            output_path.display()
+        )
+    })?;
+    let veneer_manifest = scratch_root
+        .join("notes")
+        .join(format!("{dso_id}-forwarding-veneers.S"));
+    fs::write(&veneer_manifest, render_shell_source(baseline))
+        .with_context(|| format!("failed to write {}", veneer_manifest.display()))?;
+    run_command(
+        Command::new("objcopy")
+            .arg("--add-section")
+            .arg(format!("{veneer_section}={}", veneer_manifest.display()))
+            .arg("--set-section-flags")
+            .arg(format!("{veneer_section}=contents,readonly"))
+            .arg(output_path),
+    )
+    .with_context(|| {
+        format!(
+            "failed to embed generated forwarding veneer manifest {} into {}",
+            veneer_manifest.display(),
             output_path.display()
         )
     })?;
