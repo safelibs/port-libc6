@@ -522,6 +522,9 @@ fn run_case(
                 install_root,
                 "/usr/lib64/ld-linux-x86-64.so.2",
             ));
+            if let Some(parent) = binary.parent() {
+                command.current_dir(parent);
+            }
             command
                 .env("LD_DEBUG", "libs")
                 .arg("--library-path")
@@ -551,8 +554,12 @@ fn run_case(
 }
 
 fn run_direct_case(case: &crate::common::LinkCompatCase, binary: &Path) -> Result<()> {
-    let debug = format!("{:?}", Command::new(binary));
-    let output = Command::new(binary)
+    let mut command = Command::new(binary);
+    if let Some(parent) = binary.parent() {
+        command.current_dir(parent);
+    }
+    let debug = format!("{command:?}");
+    let output = command
         .output()
         .with_context(|| format!("failed to spawn {debug}"))?;
     if output.status.success() {

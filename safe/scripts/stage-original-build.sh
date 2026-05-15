@@ -4,16 +4,16 @@ set -euo pipefail
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 
 usage() {
-  printf 'Usage: %s --source <upstream-source-dir> --build <build-dir>\n' "$0" >&2
+  printf 'Usage: %s --source ../original --build work/original-build\n' "$0" >&2
   exit 1
 }
 
 resolve_path() {
   local path=$1
   if [[ "$path" = /* ]]; then
-    printf '%s\n' "$path"
+    realpath -m "$path"
   else
-    printf '%s\n' "$ROOT_DIR/$path"
+    realpath -m "$ROOT_DIR/$path"
   fi
 }
 
@@ -27,30 +27,13 @@ validate_build_tree() {
   return 0
 }
 
-SOURCE_ARG=
-BUILD_ARG=
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --source)
-      [[ $# -ge 2 ]] || usage
-      SOURCE_ARG=$2
-      shift 2
-      ;;
-    --build)
-      [[ $# -ge 2 ]] || usage
-      BUILD_ARG=$2
-      shift 2
-      ;;
-    *)
-      usage
-      ;;
-  esac
-done
+[[ $# -eq 4 ]] || usage
+[[ "$1" == "--source" && "$3" == "--build" ]] || usage
 
-[[ -n "$SOURCE_ARG" && -n "$BUILD_ARG" ]] || usage
-
-SOURCE_DIR=$(resolve_path "$SOURCE_ARG")
-BUILD_DIR=$(resolve_path "$BUILD_ARG")
+SOURCE_DIR=$(resolve_path "$2")
+BUILD_DIR=$(resolve_path "$4")
+[[ "$SOURCE_DIR" == "$(resolve_path "../original")" ]] || usage
+[[ "$BUILD_DIR" == "$(resolve_path "work/original-build")" ]] || usage
 INSTALL_STAMP=$BUILD_DIR/testroot.pristine/install.stamp
 
 if [[ ! -d "$SOURCE_DIR" ]]; then

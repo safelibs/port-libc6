@@ -4,6 +4,8 @@ safe/Cargo.toml
 safe/README.md
 safe/crates/aux-dsos/README.md
 safe/crates/compat-asm/x86_64/README.md
+safe/crates/compat-asm/x86_64/forwarding-veneer-template.S
+safe/crates/compat-asm/x86_64/startfiles.S
 safe/crates/core-runtime/Cargo.toml
 safe/crates/core-runtime/README.md
 safe/crates/core-runtime/src/allocator.rs
@@ -68,6 +70,9 @@ safe/crates/libthread-db/README.md
 safe/crates/libthread-db/src/lib.rs
 safe/crates/libthread-db/src/proc_service.rs
 safe/crates/libthread-db/src/thread_db.rs
+safe/crates/network-identity/Cargo.toml
+safe/crates/network-identity/README.md
+safe/crates/network-identity/src/lib.rs
 safe/debian/control
 safe/debian/copyright
 safe/debian/generate-supported.mk
@@ -183,7 +188,9 @@ safe/generated/baseline/abi/libresolv.json
 safe/generated/baseline/abi/librt.json
 safe/generated/baseline/abi/libthread_db.json
 safe/generated/baseline/abi/libutil.json
+safe/generated/baseline/client-app-regressions.json
 safe/generated/baseline/committed-safe-frontier.txt
+safe/generated/baseline/dependent-app-test-plan.json
 safe/generated/baseline/fallback-c-inventory.json
 safe/generated/baseline/install-root-files.json
 safe/generated/baseline/link-compat-corpus.json
@@ -201,6 +208,7 @@ safe/generated/baseline/package-files/testroot-only.json
 safe/generated/baseline/test-catalog.json
 safe/generated/baseline/test-port-plan.json
 safe/generated/baseline/test-results.json
+safe/generated/baseline/upstream-test-execution-ledger.json
 safe/generated/install-manifests/required-packages.json
 safe/generated/install-manifests/test-install-root.json
 safe/generated/localedata/SUPPORTED
@@ -2299,6 +2307,7 @@ safe/tests/io/ftwtest.c
 safe/tests/io/link-compat-glibc-private.c
 safe/tests/io/link-compat-ordinary-dynamic.c
 safe/tests/io/link-compat-pie.c
+safe/tests/io/link-compat-profiling-startfile.c
 safe/tests/io/link-compat-startup.c
 safe/tests/io/link-compat-static-pie.c
 safe/tests/io/link-compat-static.c
