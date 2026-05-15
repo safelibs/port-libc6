@@ -9056,6 +9056,19 @@
     },
     {
       "package": "libc6-dbg",
+      "path": "/usr/lib/debug/.build-id/b9/b0287ddb37ab9032e3f16a2b82b87cac450206.debug",
+      "source_path": "/usr/lib64/libanl.so.1",
+      "source_origin": "derived_debug",
+      "scope": "required_package",
+      "shipped_status": "shipped",
+      "asset_kind": "debug_asset",
+      "executable": true,
+      "symlink_target": null,
+      "owner_phase": "impl_07_nss_resolver_nscd",
+      "verification": "network-tools"
+    },
+    {
+      "package": "libc6-dbg",
       "path": "/usr/lib/debug/.build-id/ba/c7fd7d248107c970cfb96b4809a70ee0414701.debug",
       "source_path": "/usr/lib64/gconv/IBM902.so",
       "source_origin": "derived_debug",
@@ -9729,19 +9742,6 @@
       "symlink_target": null,
       "owner_phase": null,
       "verification": "basic-required-packages"
-    },
-    {
-      "package": "libc6-dbg",
-      "path": "/usr/lib/debug/.build-id/e2/ca33e6a2ba942a86c1db25ba01bf8aaea71cd0.debug",
-      "source_path": "/usr/lib64/libanl.so.1",
-      "source_origin": "derived_debug",
-      "scope": "required_package",
-      "shipped_status": "shipped",
-      "asset_kind": "debug_asset",
-      "executable": true,
-      "symlink_target": null,
-      "owner_phase": "impl_07_nss_resolver_nscd",
-      "verification": "network-tools"
     },
     {
       "package": "libc6-dbg",
